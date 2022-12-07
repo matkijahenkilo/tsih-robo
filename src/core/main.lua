@@ -69,7 +69,7 @@ end
 client:on("ready", function()
   clock:start();
   client:setGame(statusTable[math.random(#statusTable)]);
-  emoticonsServer = client:getGuild("579432155546124306");
+  emoticonsServer = client:getGuild(settings.emoticonsServerId);
 
   print("Ready nanora!\nPrefix = ", prefix);
 end)
