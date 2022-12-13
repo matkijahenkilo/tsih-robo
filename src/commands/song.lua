@@ -1,3 +1,6 @@
+-- song.lua works fetching direct stream url from websites and streaming them.
+-- the streaming url tends to lose its connection very frequently.
+
 local discordia = require("discordia");
 local spawn = require('coro-spawn');
 local cache = {};
