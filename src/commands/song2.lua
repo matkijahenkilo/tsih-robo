@@ -4,6 +4,7 @@ local MUSIC_FOLDER = "assets/sounds/yt-dlp/";
 
 local discordia = require("discordia");
 local spawn = require('coro-spawn');
+local fs = require("fs");
 local cache = {};
 discordia.extensions();
 
@@ -143,6 +144,33 @@ local function play(message, args)
 
 end
 
+local function deleteExistingFiles(message, args)
+  local function getFileName(link)
+    local child = spawn("yt-dlp", {
+      args = {
+        "--paths", MUSIC_FOLDER,
+        "--print", "id",
+        link,
+      }
+    });
+    child.waitExit();
+    return child.stdout.read():split('\n');
+  end
+
+  message:reply("Deleting old song from host. Re-downloading nora.");
+
+  for _, link in ipairs(args) do
+    local t = getFileName(link);
+    table.remove(t, #t);
+    for _, id in ipairs(t) do
+      fs.unlinkSync(MUSIC_FOLDER .. id .. ".mp3");
+      fs.unlinkSync(MUSIC_FOLDER .. id .. ".webm");
+    end
+  end
+
+  play(message, args);
+end
+
 local function showWhatIsPlayingCurrently(message)
   local voiceChannel = cache[message.guild.id];
   if voiceChannel == nil then return end
@@ -250,9 +278,13 @@ return {
 
     local command = args[2]:lower();
     if command == "play" or command == 'p' then
-      table.remove(args, 1)
-      table.remove(args, 1)
+      table.remove(args, 1);
+      table.remove(args, 1);
       play(message, args);
+    elseif command == "redownload" or command == "forceplay" then
+      table.remove(args, 1);
+      table.remove(args, 1);
+      deleteExistingFiles(message, args);
     elseif command == "skip" or command == 's' then
       skip(message);
     elseif command == "nowplaying" or command == "np" then
