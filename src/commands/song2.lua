@@ -37,8 +37,8 @@ local function downloadSong(url, message)
   local t = info:split('\n');
 
   return {
-    title    = t[1],
-    id       = t[2],
+    title = t[1],
+    id    = t[2],
   };
 end
 
@@ -99,7 +99,13 @@ local function play(message, args)
     addSongIntourlsForDownloadDeque(link, urlsForDownload, message.member.user);
   end
 
-  message:reply("Song added into the playlist nora!");
+  message.channel:send {
+    content = "Song added into the playlist nora!",
+    reference = {
+      message = message,
+      mention = false,
+    };
+  };
 
   if not voiceChannel.isPlaying then
     coroutine.wrap(function ()
