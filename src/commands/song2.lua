@@ -1,162 +1,132 @@
--- planning to replace song.lua. WIP.
+-- song2.lua works downloading .mp3 files and streaming them directly from the host's computer.
+
+local MUSIC_FOLDER = "assets/sounds/yt-dlp/";
 
 local discordia = require("discordia");
-local fs = require("fs");
 local spawn = require('coro-spawn');
 local cache = {};
 discordia.extensions();
 
-local function downloadSong(url)
-  local child = spawn("yt-dlp", {
-    args = {
-      "-P", "./yt-dlp/",
-      "-x", "--audio-format", "mp3",
-      "-o", "%(id)s.mp3",
-      url,
-    }
-  });
-  local i = 0;
-  while true do
-    local info = child.stdout.read();
-    i = i + 1;
-    p(i, info);
-    if not info then return end
-  end
-end
-
-local function printSongInfo(url, user)
-  local child = spawn("yt-dlp", { args = { "--print", "title", "--print", "id", url } });
-  local t = {};
-  while true do
-    local info = child.stdout.read();
-    p(info);
-    if info then
-      table.insert(t, info);
-    else
-      break;
-    end
-  end
-
-  t = table.concat(t):split('\n');
-
-  return {
-    title = t[1],
-    id    = t[2],
-    user  = user
-  }
-end
-
 local function connectAndCacheNewConnection(message)
   cache[message.guild.id] = {
     connection      = message.member.voiceChannel:join();
-    songsToDownload = discordia.Deque();
-    songsToPlay     = discordia.Deque();
+    urlsForDownload = discordia.Deque();
     whoRequested    = {};
     nowPlaying      = '';
-    remainingToPlay = 0;
     isPlaying       = false;
   }
-  return cache[message.guild.id]
+  return cache[message.guild.id];
 end
 
-local function addSongIntoSongsToDownloadDeque(deque, args)
-  local urls = table.concat(args, ' ', 3):split(' ');
-  for _, value in ipairs(urls) do
-    deque:pushRight(value);
+local function downloadSong(url, message)
+  local child = spawn("yt-dlp", {
+    args = {
+      "--no-simulate",
+      "--paths", MUSIC_FOLDER,
+      "--print", "title",
+      "--print", "id",
+      "--extract-audio", "--audio-format", "mp3",
+      "--output", "%(id)s.mp3",
+      url,
+    }
+  });
+
+  local msg = message:reply("Fetching song, please wait nanora!");
+  child.waitExit();
+  local info = child.stdout.read();
+  if not info then
+    return;
   end
+  local t = info:split('\n');
+
+  return {
+    title    = t[1],
+    id       = t[2],
+  };
 end
 
-local function addSongIntoSongsToPlayDeque(songsToDownload, songsToPlay, user)
-  local song = songsToDownload:popLeft();
-  if not song then return end;
-  downloadSong(song);
-  songsToPlay:pushRight(printSongInfo(song, user));
+local function getListOfVideosFromPlaylist(url)
+  local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } });
+  child.waitExit();
+  return child.stdout.read():split('\n');
 end
 
-local function getNextSongs(deque)
-  local readObject = deque:iter();
-  local i = 1;
-  local t = {};
-  while true do
-    local music = readObject();
-    if not music then
-      return table.concat(t, '\n');
+local function addSongIntourlsForDownloadDeque(url, urlsForDownload, user)
+  local function iterateInPlaylist()
+    local list = getListOfVideosFromPlaylist(url);
+    for _, link in ipairs(list) do
+      if link ~= '' then
+        urlsForDownload:pushRight({["url"]=link, ["whoRequested"]=user});
+      end
     end
-    if not music["title"] then
-      table.insert(t, i .. " - **Unfetched song title**");
+  end
+
+  if url then
+    if url:find("playlist") or url:find("/sets/") then
+      iterateInPlaylist();
     else
-      table.insert(t, i .. " - " .. music["title"]);
+      urlsForDownload:pushRight({["url"]=url, ["whoRequested"]=user});
     end
-    i = i + 1;
   end
 end
 
-local function showCurrentMusic(channel, song, quantity)
-  channel:send(song.title)
+local function showCurrentMusic(channel, song, user, count)
+  channel:send {
+    embed = {
+      title = "Enjoy this banger nora!",
+      color = 0x6f5ffc,
+      fields = {
+        {
+          name = song.title,
+          value = "There's " .. count .. " tracks left to play... nanora!"
+        },
+      },
+      footer = {
+        text = "Requested by " .. user.name .. " nora.",
+        icon_url = user.avatarURL;
+      }
+    },
+  };
 end
-
-
 
 local function play(message, args)
+
   local voiceChannel = cache[message.guild.id];
   if voiceChannel == nil then
     voiceChannel = connectAndCacheNewConnection(message);
   end
 
-  addSongIntoSongsToDownloadDeque(voiceChannel.songsToDownload, args);
-
   local room = voiceChannel.connection;
-  local songsToDownload = voiceChannel.songsToDownload;
-  local songsToPlay     = voiceChannel.songsToPlay;
-  addSongIntoSongsToPlayDeque(songsToDownload, songsToPlay, message.member);
+  local urlsForDownload = voiceChannel.urlsForDownload;
 
-  while songsToDownload:peekRight() do
+  for _, link in ipairs(args) do
+    addSongIntourlsForDownloadDeque(link, urlsForDownload, message.member.user);
+  end
 
-    if voiceChannel.isPlaying then
-      addSongIntoSongsToPlayDeque(songsToDownload, songsToPlay);
-    else
-      coroutine.wrap(function ()
+  if not voiceChannel.isPlaying then
+    coroutine.wrap(function ()
+
+      while true do
         voiceChannel.isPlaying = true;
-        --showCurrentMusic(message.channel, song, songsToDownload:getCount());
+        local currentSongInfo = urlsForDownload:popLeft();
+        if not currentSongInfo then break end
 
-        while voiceChannel.remainingToPlay do
-          local song = songsToPlay:popLeft();
-          if not song then return end
-          voiceChannel.nowPlaying = song.title;
-          voiceChannel.whoRequested = song.user;
-          print("left to play: ", voiceChannel.remainingToPlay);
-          room:playFFmpeg("yt-dlp/" .. song.id .. ".mp3")
-          voiceChannel.remainingToPlay = voiceChannel.remainingToPlay - 1;
-        end
-        room:close();
-        cache[message.guild.id] = nil;
-      end)();
-    end
+        local song = downloadSong(currentSongInfo["url"], message);
+        local whoRequested = currentSongInfo["whoRequested"];
+        if not song then break end
 
+        showCurrentMusic(message.channel, song, whoRequested, urlsForDownload:getCount());
+        voiceChannel.nowPlaying = song.title;
+        voiceChannel.whoRequested = whoRequested;
+        room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3")
+      end
+
+      room:close();
+      cache[message.guild.id] = nil;
+
+    end)();
   end
-end
 
-local function queue(message)
-  local voiceChannel = cache[message.guild.id];
-  if not voiceChannel then return end
-  local deque = voiceChannel.songsToPlay;
-  if deque:getCount() == 0 then
-    message:reply("Queueueueue is empty nanora!");
-    return;
-  end
-  local list = getNextSongs(deque);
-  print(list);
-
-  if #list > 4000 then
-    list = list:sub(1, 4000);
-  end
-  message.channel:send {
-    embed = {
-      title = "These are the next songs to play nanora!",
-      description = list,
-      color = 0x6f5ffc,
-    },
-  };
 end
 
 local function showWhatIsPlayingCurrently(message)
@@ -165,7 +135,7 @@ local function showWhatIsPlayingCurrently(message)
   local nowPlaying = voiceChannel.nowPlaying;
   local user = voiceChannel.whoRequested;
 
-  if not user[1] or not nowPlaying then return end
+  if not user or not user[1] or not nowPlaying then return end
   message.channel:send {
     embed = {
       title = "Now playing: " .. nowPlaying .. " ...nanora!",
@@ -198,44 +168,46 @@ local function skip(message)
   if voiceChannel == nil then return end
   message.channel:send("Skipping... nanora!");
   voiceChannel.connection:stopStream();
-  voiceChannel.isPlaying = false;
 end
 
 local function stop(message)
   local voiceChannel = cache[message.guild.id];
   if voiceChannel == nil then return end
   message.channel:send("Stopping... nanora!");
-  while voiceChannel.songsToDownload:peekLeft() do
-    voiceChannel.songsToDownload:popLeft();
-    while voiceChannel.songsToPlay:peekLeft() do
-      voiceChannel.songsToPlay:popLeft();
-    end
+  while voiceChannel.urlsForDownload:peekLeft() do
+    voiceChannel.urlsForDownload:popLeft();
   end
   voiceChannel.connection:close();
   cache[message.guild.id] = nil;
 end
 
-local function special(message)
-  local voiceChannel = cache[message.guild.id];
-  if voiceChannel == nil then
-    voiceChannel = connectAndCacheNewConnection(message);
-  end
-  voiceChannel.isPlaying = true;
-  coroutine.wrap(function()
-    voiceChannel.connection:playFFmpeg("assets/sounds/moan.mp3");
-    cache[message.guild.id] = nil;
-  end)();
-end
-
 return {
   description = {
     title = "Song",
-    description = "e.g: ts!song play link [link2 [link3 [...linkn]]]",
+    description = "I will play songs for you nanora! e.g:"
+      .. "\n`ts!song play url1 url2 ...`"
+      .. "\n`ts!song np`",
     color = 0xff5080,
     fields = {
       {
-        name = "play",
+        name = "play or p",
         value = "Will queue a new song or playlist for you, nora."
+      },
+      {
+        name = "nowplaying or np",
+        value = "Will show you what song is currently playing nora."
+      },
+      {
+        name = "stop",
+        value = "Will............... stop completly, nora."
+      },
+      {
+        name = "pause",
+        value = "Will......................... pause, nora."
+      },
+      {
+        name = "resume",
+        value = "Ugeeh!"
       },
     },
   },
@@ -264,9 +236,9 @@ return {
 
     local command = args[2]:lower();
     if command == "play" or command == 'p' then
+      table.remove(args, 1)
+      table.remove(args, 1)
       play(message, args);
-    elseif command == "queue" or command == 'q' then
-      queue(message);
     elseif command == "skip" or command == 's' then
       skip(message);
     elseif command == "nowplaying" or command == "np" then
@@ -277,6 +249,8 @@ return {
       pause(message);
     elseif command == "resume" then
       resume(message);
+    else
+      message:addReaction("❓");
     end
 
   end
