@@ -6,7 +6,7 @@ local commands = {
   pinch     = require("../commands/pinch"),
   question  = require("../commands/question"),
   tsihClock = require("../commands/tsihClock"),
-  song      = require("../commands/song"),
+  song      = require("../commands/song2"),
   giveRole  = require("../commands/giveRole"),
 };
 
