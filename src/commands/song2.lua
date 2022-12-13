@@ -31,12 +31,9 @@ local function downloadSong(url, message)
     }
   });
 
-  local msg = message:reply("Fetching song, please wait nanora!");
   child.waitExit();
   local info = child.stdout.read();
-  if not info then
-    return;
-  end
+  if not info then return end
   local t = info:split('\n');
 
   return {
@@ -70,22 +67,21 @@ local function addSongIntourlsForDownloadDeque(url, urlsForDownload, user)
   end
 end
 
-local function showCurrentMusic(channel, song, user, count)
-  channel:send {
-    embed = {
-      title = "Enjoy this banger nora!",
-      color = 0x6f5ffc,
-      fields = {
-        {
-          name = song.title,
-          value = "There's " .. count .. " tracks left to play... nanora!"
-        },
+local function showCurrentMusic(msg, song, user, count)
+  msg:setContent("Song fetched! Playing nora...");
+  msg:setEmbed {
+    title = "Enjoy this banger nora!",
+    color = 0x6f5ffc,
+    fields = {
+      {
+        name = song.title,
+        value = "There's " .. count .. " tracks left to play... nanora!"
       },
-      footer = {
-        text = "Requested by " .. user.name .. " nora.",
-        icon_url = user.avatarURL;
-      }
     },
+    footer = {
+      text = "Requested by " .. user.name .. " nora.",
+      icon_url = user.avatarURL;
+    }
   };
 end
 
@@ -103,22 +99,34 @@ local function play(message, args)
     addSongIntourlsForDownloadDeque(link, urlsForDownload, message.member.user);
   end
 
+  message:reply("Song added into the playlist nora!");
+
   if not voiceChannel.isPlaying then
     coroutine.wrap(function ()
 
       while true do
+
         voiceChannel.isPlaying = true;
         local currentSongInfo = urlsForDownload:popLeft();
         if not currentSongInfo then break end
 
-        local song = downloadSong(currentSongInfo["url"], message);
+        local msg = message:reply("Fetching song, please wait nanora!");
+        local song = downloadSong(currentSongInfo["url"]);
         local whoRequested = currentSongInfo["whoRequested"];
-        if not song then break end
+        if song then
+          showCurrentMusic(msg, song, whoRequested, urlsForDownload:getCount());
+          voiceChannel.nowPlaying = song.title;
+          voiceChannel.whoRequested = whoRequested;
+          room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3");
+        else
+          if urlsForDownload:peekLeft() then
+            msg:setContent("I couldn't fetch the song! Attempting to fetch the next song from the list~");
+          else
+            msg:setContent("Queue is empty nora! Stopping~");
+            break;
+          end
+        end
 
-        showCurrentMusic(message.channel, song, whoRequested, urlsForDownload:getCount());
-        voiceChannel.nowPlaying = song.title;
-        voiceChannel.whoRequested = whoRequested;
-        room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3")
       end
 
       room:close();
