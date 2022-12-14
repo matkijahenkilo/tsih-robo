@@ -10,11 +10,11 @@ discordia.extensions();
 
 local function connectAndCacheNewConnection(message)
   cache[message.guild.id] = {
-    connection      = message.member.voiceChannel:join();
-    urlsForDownload = discordia.Deque();
-    whoRequested    = {};
-    nowPlaying      = '';
-    isPlaying       = false;
+    connection   = message.member.voiceChannel:join();
+    playlist     = discordia.Deque();
+    whoRequested = {};
+    nowPlaying   = '';
+    isPlaying    = false;
   }
   return cache[message.guild.id];
 end
@@ -49,12 +49,12 @@ local function getListOfVideosFromPlaylist(url)
   return child.stdout.read():split('\n');
 end
 
-local function addSongIntourlsForDownloadDeque(url, urlsForDownload, user)
+local function addSongIntourlsForDownloadDeque(url, playlist, user)
   local function iterateInPlaylist()
     local list = getListOfVideosFromPlaylist(url);
     for _, link in ipairs(list) do
       if link ~= '' then
-        urlsForDownload:pushRight({["url"]=link, ["whoRequested"]=user});
+        playlist:pushRight({["url"]=link, ["whoRequested"]=user});
       end
     end
   end
@@ -63,7 +63,7 @@ local function addSongIntourlsForDownloadDeque(url, urlsForDownload, user)
     if url:find("playlist") or url:find("/sets/") then
       iterateInPlaylist();
     else
-      urlsForDownload:pushRight({["url"]=url, ["whoRequested"]=user});
+      playlist:pushRight({["url"]=url, ["whoRequested"]=user});
     end
   end
 end
@@ -94,8 +94,9 @@ local function play(message, args)
   end
 
   local room = voiceChannel.connection;
+
   for _, link in ipairs(args) do
-    addSongIntourlsForDownloadDeque(link, voiceChannel.urlsForDownload, message.member.user);
+    addSongIntourlsForDownloadDeque(link, voiceChannel.playlist, message.member.user);
   end
 
   message.channel:send {
@@ -112,19 +113,19 @@ local function play(message, args)
       while true do
 
         voiceChannel.isPlaying = true;
-        local currentSongInfo = voiceChannel.urlsForDownload:popLeft();
+        local currentSongInfo = voiceChannel.playlist:popLeft();
         if not currentSongInfo then break end
 
         local msg = message:reply("Fetching song, please wait nanora!");
         local song = downloadSong(currentSongInfo["url"]);
         local whoRequested = currentSongInfo["whoRequested"];
         if song then
-          showCurrentMusic(msg, song, whoRequested, voiceChannel.urlsForDownload:getCount());
+          showCurrentMusic(msg, song, whoRequested, voiceChannel.playlist:getCount());
           voiceChannel.nowPlaying = song.title;
           voiceChannel.whoRequested = whoRequested;
           room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3");
         else
-          if voiceChannel.urlsForDownload:peekLeft() then
+          if voiceChannel.playlist:peekLeft() then
             msg:setContent("I couldn't fetch the song! Attempting to fetch the next song from the list~");
           else
             msg:setContent("Queue is empty nora! Stopping~");
@@ -200,7 +201,6 @@ local function resume(message)
   if voiceChannel == nil then return end
   message.channel:send("Resuming... nanora!");
   voiceChannel.connection:resumeStream();
-  voiceChannel.isPlaying = true;
 end
 
 local function skip(message)
@@ -214,8 +214,8 @@ local function stop(message)
   local voiceChannel = cache[message.guild.id];
   if voiceChannel == nil then return end
   message.channel:send("Stopping... nanora!");
-  while voiceChannel.urlsForDownload:peekLeft() do
-    voiceChannel.urlsForDownload:popLeft();
+  while voiceChannel.playlist:peekLeft() do
+    voiceChannel.playlist:popLeft();
   end
   voiceChannel.connection:close();
   cache[message.guild.id] = nil;
@@ -233,9 +233,9 @@ local function shuffle(message)
   local voiceChannel = cache[message.guild.id];
 
   local function populateTableWithDequePlaylist(t)
-    local dequeCount = voiceChannel.urlsForDownload:getCount();
+    local dequeCount = voiceChannel.playlist:getCount();
     for i = 1, dequeCount do
-      t[i] = voiceChannel.urlsForDownload:popLeft();
+      t[i] = voiceChannel.playlist:popLeft();
     end
     return t;
   end
@@ -250,7 +250,7 @@ local function shuffle(message)
 
   local function populateDequeWithShuffledPlaylist(t)
     for i = 1, #t do
-      voiceChannel.urlsForDownload:pushRight(t[i]);
+      voiceChannel.playlist:pushRight(t[i]);
     end
   end
 
@@ -316,13 +316,11 @@ return {
     end
 
     local command = args[2]:lower();
+    table.remove(args, 1);
+    table.remove(args, 1);
     if command == "play" or command == 'p' then
-      table.remove(args, 1);
-      table.remove(args, 1);
       play(message, args);
     elseif command == "redownload" or command == "forceplay" then
-      table.remove(args, 1);
-      table.remove(args, 1);
       deleteExistingFiles(message, args);
     elseif command == "skip" or command == 's' then
       skip(message);
