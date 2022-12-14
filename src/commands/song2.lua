@@ -275,6 +275,15 @@ return {
         value = "Will queue a new song or playlist for you, nora."
       },
       {
+        name = "forceplay or redownload",
+        value = "Will download the audio file again from your link nora."
+          .."\nUse it if you notice that some song I try to play fails to play it 100% nanora!"
+      },
+      {
+        name = "shuffle",
+        value = "Will shuffle the my playlist nora."
+      },
+      {
         name = "nowplaying or np",
         value = "Will show you what song is currently playing nora."
       },
