@@ -156,7 +156,7 @@ local function deleteExistingFiles(message, args)
     return child.stdout.read():split('\n');
   end
 
-  message:reply("Deleting old song from host. Re-downloading nora.");
+  message:reply("Deleting possible corrupted songs from host to re-download nora!");
 
   for _, link in ipairs(args) do
     local t = getFileName(link);
