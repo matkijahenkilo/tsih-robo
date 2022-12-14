@@ -72,12 +72,10 @@ local function addSongIntourlsForDownloadDeque(url, playlist, user)
     return false;
   end
 
-  if url then
-    if isPlaylist() then
-      addIndividualUrlsFromPlaylistIntoDeque();
-    else
-      playlist:pushRight({["url"]=url, ["whoRequested"]=user});
-    end
+  if isPlaylist() then
+    addIndividualUrlsFromPlaylistIntoDeque();
+  else
+    playlist:pushRight({["url"]=url, ["whoRequested"]=user});
   end
 end
 
@@ -124,7 +122,9 @@ local function play(message, args)
   end
 
   for _, link in ipairs(args) do
-    addSongIntourlsForDownloadDeque(link, voiceChannel.playlist, message.member.user);
+    if link and link ~= '' then
+      addSongIntourlsForDownloadDeque(link, voiceChannel.playlist, message.member.user);
+    end
   end
 
   answerMember(voiceChannel);
