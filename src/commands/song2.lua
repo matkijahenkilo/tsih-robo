@@ -19,7 +19,7 @@ local function connectAndCacheNewConnection(message)
   return cache[message.guild.id];
 end
 
-local function downloadSong(url, message)
+local function downloadSong(url)
   local child = spawn("yt-dlp", {
     args = {
       "--no-simulate",
@@ -43,15 +43,15 @@ local function downloadSong(url, message)
   };
 end
 
-local function getListOfVideosFromPlaylist(url)
-  local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } });
-  child.waitExit();
-  return child.stdout.read():split('\n');
-end
-
 local function addSongIntourlsForDownloadDeque(url, playlist, user)
-  local function iterateInPlaylist()
-    local list = getListOfVideosFromPlaylist(url);
+  local function getListOfVideosFromPlaylist()
+    local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } });
+    child.waitExit();
+    return child.stdout.read():split('\n');
+  end
+
+  local function addIndividualUrlsFromPlaylistIntoDeque()
+    local list = getListOfVideosFromPlaylist();
     for _, link in ipairs(list) do
       if link ~= '' then
         playlist:pushRight({["url"]=link, ["whoRequested"]=user});
@@ -60,8 +60,8 @@ local function addSongIntourlsForDownloadDeque(url, playlist, user)
   end
 
   if url then
-    if url:find("playlist") or url:find("/sets/") then
-      iterateInPlaylist();
+    if url:find("?list=") or url:find("&list=") or url:find("/sets/") then
+      addIndividualUrlsFromPlaylistIntoDeque();
     else
       playlist:pushRight({["url"]=url, ["whoRequested"]=user});
     end
@@ -87,25 +87,36 @@ local function showCurrentMusic(msg, song, user, count)
 end
 
 local function play(message, args)
+  local function answerMember(voiceChannel)
+    local playlistAddResponse = "Song added into the playlist";
+    local playlistSize = voiceChannel.playlist:getCount();
+    if playlistSize > 5 then
+      playlistAddResponse = playlistAddResponse .. "~\nThere's now " .. playlistSize .. " tracks to play nora!"
+    else
+      playlistAddResponse = playlistAddResponse .. " nora!";
+    end
+
+    message.channel:send {
+      content = playlistAddResponse,
+      reference = {
+        message = message,
+        mention = false,
+      };
+    };
+  end
 
   local voiceChannel = cache[message.guild.id];
   if voiceChannel == nil then
     voiceChannel = connectAndCacheNewConnection(message);
   end
 
-  local room = voiceChannel.connection;
-
   for _, link in ipairs(args) do
     addSongIntourlsForDownloadDeque(link, voiceChannel.playlist, message.member.user);
   end
 
-  message.channel:send {
-    content = "Song added into the playlist nora!",
-    reference = {
-      message = message,
-      mention = false,
-    };
-  };
+  answerMember(voiceChannel);
+
+  local room = voiceChannel.connection;
 
   if not voiceChannel.isPlaying then
     coroutine.wrap(function ()
@@ -179,7 +190,8 @@ local function showWhatIsPlayingCurrently(message)
   if not user or not user[1] or not nowPlaying then return end
   message.channel:send {
     embed = {
-      title = "Now playing: " .. nowPlaying .. " ...nanora!",
+      title = "Now playing: **" .. nowPlaying .. "** ...nanora!",
+      description = voiceChannel.playlist:getCount() .. " tracks remaining nanora.",
       color = 0xff80fd,
       footer = {
         text = "Requested by " .. user.name .. " nora.",
@@ -259,7 +271,7 @@ local function shuffle(message)
   t = shuffleTable(t);
   populateDequeWithShuffledPlaylist(t);
 
-  msg:setContent("Playlist is now shuffled nanora!");
+  msg:setContent("Playlist has now " .. voiceChannel.playlist:getCount() .. " shuffled tracks nanora!");
 end
 
 return {
@@ -281,7 +293,7 @@ return {
       },
       {
         name = "shuffle",
-        value = "Will shuffle the my playlist nora."
+        value = "Will shuffle my current playlist nora."
       },
       {
         name = "nowplaying or np",
