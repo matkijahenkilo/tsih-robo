@@ -94,10 +94,8 @@ local function play(message, args)
   end
 
   local room = voiceChannel.connection;
-  local urlsForDownload = voiceChannel.urlsForDownload;
-
   for _, link in ipairs(args) do
-    addSongIntourlsForDownloadDeque(link, urlsForDownload, message.member.user);
+    addSongIntourlsForDownloadDeque(link, voiceChannel.urlsForDownload, message.member.user);
   end
 
   message.channel:send {
@@ -114,19 +112,19 @@ local function play(message, args)
       while true do
 
         voiceChannel.isPlaying = true;
-        local currentSongInfo = urlsForDownload:popLeft();
+        local currentSongInfo = voiceChannel.urlsForDownload:popLeft();
         if not currentSongInfo then break end
 
         local msg = message:reply("Fetching song, please wait nanora!");
         local song = downloadSong(currentSongInfo["url"]);
         local whoRequested = currentSongInfo["whoRequested"];
         if song then
-          showCurrentMusic(msg, song, whoRequested, urlsForDownload:getCount());
+          showCurrentMusic(msg, song, whoRequested, voiceChannel.urlsForDownload:getCount());
           voiceChannel.nowPlaying = song.title;
           voiceChannel.whoRequested = whoRequested;
           room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3");
         else
-          if urlsForDownload:peekLeft() then
+          if voiceChannel.urlsForDownload:peekLeft() then
             msg:setContent("I couldn't fetch the song! Attempting to fetch the next song from the list~");
           else
             msg:setContent("Queue is empty nora! Stopping~");
@@ -223,6 +221,47 @@ local function stop(message)
   cache[message.guild.id] = nil;
 end
 
+local function shuffle(message)
+  local msg = message:reply{
+    content = "Shuffling playlist nora...",
+    reference = {
+      message = message,
+      mention = false,
+    }
+  };
+
+  local voiceChannel = cache[message.guild.id];
+
+  local function populateTableWithDequePlaylist(t)
+    local dequeCount = voiceChannel.urlsForDownload:getCount();
+    for i = 1, dequeCount do
+      t[i] = voiceChannel.urlsForDownload:popLeft();
+    end
+    return t;
+  end
+
+  local function shuffleTable(t)
+    for i = #t, 2, -1 do
+      local j = math.random(i);
+      t[i], t[j] = t[j], t[i];
+    end
+    return t;
+  end
+
+  local function populateDequeWithShuffledPlaylist(t)
+    for i = 1, #t do
+      voiceChannel.urlsForDownload:pushRight(t[i]);
+    end
+  end
+
+  local t = {};
+  t = populateTableWithDequePlaylist(t);
+  t = shuffleTable(t);
+  populateDequeWithShuffledPlaylist(t);
+
+  msg:setContent("Playlist is now shuffled nanora!");
+end
+
 return {
   description = {
     title = "Song",
@@ -295,6 +334,8 @@ return {
       pause(message);
     elseif command == "resume" then
       resume(message);
+    elseif command == "shuffle" then
+      shuffle(message);
     else
       message:addReaction("❓");
     end
