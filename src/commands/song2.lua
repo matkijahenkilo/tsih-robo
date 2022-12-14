@@ -59,8 +59,21 @@ local function addSongIntourlsForDownloadDeque(url, playlist, user)
     end
   end
 
+  local function isPlaylist()
+    local playlistIndicators = {
+      "?list=", --youtube
+      "&list=", --youtube
+      "/sets/", --soundcloud
+      "/album/", --bandcamp
+    }
+    for _, value in ipairs(playlistIndicators) do
+      if url:find(value) then return true end
+    end
+    return false;
+  end
+
   if url then
-    if url:find("?list=") or url:find("&list=") or url:find("/sets/") then
+    if isPlaylist() then
       addIndividualUrlsFromPlaylistIntoDeque();
     else
       playlist:pushRight({["url"]=url, ["whoRequested"]=user});
