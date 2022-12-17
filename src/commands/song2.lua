@@ -19,7 +19,22 @@ local function connectAndCacheNewConnection(message)
   return cache[message.guild.id];
 end
 
-local function downloadSong(url)
+local function downloadSong(currentSongInfo, msg)
+  local function deleteExistingFiles(id)
+    msg:setContent("**Song was opted to be re-downloaded**. Deleting existing files and re-downloading possible corrupted song nanora! Please wait~");
+    fs.unlinkSync(MUSIC_FOLDER .. id .. ".mp3");
+    fs.unlinkSync(MUSIC_FOLDER .. id .. ".webm");
+  end
+
+  local url = currentSongInfo["url"];
+
+  if currentSongInfo["shouldRedownload"] and url then
+    local child = spawn("yt-dlp", {args = {"--print", "id", url}});
+    child.waitExit();
+    local id = child.stdout.read():gsub("%c", '');
+    deleteExistingFiles(id);
+  end
+
   local child = spawn("yt-dlp", {
     args = {
       "--no-simulate",
@@ -43,7 +58,7 @@ local function downloadSong(url)
   };
 end
 
-local function addSongIntourlsForDownloadDeque(url, playlist, user)
+local function addSongIntoUrlsForDownloadDeque(url, playlist, user, shouldRedownload)
   local function getListOfVideosFromPlaylist()
     local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } });
     child.waitExit();
@@ -54,7 +69,7 @@ local function addSongIntourlsForDownloadDeque(url, playlist, user)
     local list = getListOfVideosFromPlaylist();
     for _, link in ipairs(list) do
       if link ~= '' then
-        playlist:pushRight({["url"]=link, ["whoRequested"]=user});
+        playlist:pushRight({["url"]=link, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload});
       end
     end
   end
@@ -75,12 +90,11 @@ local function addSongIntourlsForDownloadDeque(url, playlist, user)
   if isPlaylist() then
     addIndividualUrlsFromPlaylistIntoDeque();
   else
-    playlist:pushRight({["url"]=url, ["whoRequested"]=user});
+    playlist:pushRight({["url"]=url, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload});
   end
 end
 
 local function showCurrentMusic(msg, song, user, count)
-  msg:setContent("Song fetched! Playing nora...");
   msg:setEmbed {
     title = "Enjoy this banger nora!",
     color = 0x6f5ffc,
@@ -95,12 +109,12 @@ local function showCurrentMusic(msg, song, user, count)
       icon_url = user.avatarURL;
     }
   };
+  msg:setContent("");
 end
 
-local function play(message, args)
-  local function answerMember(voiceChannel)
+local function play(message, args, shouldRedownload)
+  local function notifySongAdded(playlistSize)
     local playlistAddResponse = "Song added into the playlist";
-    local playlistSize = voiceChannel.playlist:getCount();
     if playlistSize > 5 then
       playlistAddResponse = playlistAddResponse .. "~\nThere's now " .. playlistSize .. " tracks to play nora!"
     else
@@ -116,82 +130,73 @@ local function play(message, args)
     };
   end
 
+  local function getQueuedSongInfo(currentSongInfo, msg)
+    if not currentSongInfo then return nil end
+    local song = downloadSong(currentSongInfo, msg);
+    local whoRequested = currentSongInfo["whoRequested"];
+    return song, whoRequested;
+  end
+
+  local function setInformationToCache(voiceChannel, song, whoRequested)
+    voiceChannel.nowPlaying = song.title;
+    voiceChannel.whoRequested = whoRequested;
+  end
+
+  local function addSongsIntoDeque(playlist, user)
+    for _, link in ipairs(args) do
+      if link and link ~= '' then
+        addSongIntoUrlsForDownloadDeque(link, playlist, user, shouldRedownload);
+      end
+    end
+  end
+
+  local function startStreaming(voiceChannel)
+    coroutine.wrap(function ()
+      while true do
+
+        local room = voiceChannel.connection;
+
+        voiceChannel.isPlaying = true;
+        local msg = message:reply("Fetching song, please wait nanora!");
+
+        local currentSongInfo = voiceChannel.playlist:popLeft();
+        local song, whoRequested = getQueuedSongInfo(currentSongInfo, msg);
+        if song then
+
+          showCurrentMusic(msg, song, whoRequested, voiceChannel.playlist:getCount());
+          setInformationToCache(voiceChannel, song, whoRequested);
+          room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3");
+
+        else
+
+          if voiceChannel.playlist:peekLeft() then
+            msg:setContent("I couldn't fetch the song! Attempting to fetch the next song from the list~");
+          else
+            msg:setContent("Queue is empty nora! Stopping~");
+            room:close();
+            cache[message.guild.id] = nil;
+            return;
+          end
+
+        end
+
+      end
+    end)();
+  end
+
   local voiceChannel = cache[message.guild.id];
   if voiceChannel == nil then
     voiceChannel = connectAndCacheNewConnection(message);
   end
 
-  for _, link in ipairs(args) do
-    if link and link ~= '' then
-      addSongIntourlsForDownloadDeque(link, voiceChannel.playlist, message.member.user);
-    end
-  end
+  addSongsIntoDeque(voiceChannel.playlist, message.member.user);
 
-  answerMember(voiceChannel);
-
-  local room = voiceChannel.connection;
+  notifySongAdded(voiceChannel.playlist:getCount());
 
   if not voiceChannel.isPlaying then
-    coroutine.wrap(function ()
-
-      while true do
-
-        voiceChannel.isPlaying = true;
-        local currentSongInfo = voiceChannel.playlist:popLeft();
-        if not currentSongInfo then break end
-
-        local msg = message:reply("Fetching song, please wait nanora!");
-        local song = downloadSong(currentSongInfo["url"]);
-        local whoRequested = currentSongInfo["whoRequested"];
-        if song then
-          showCurrentMusic(msg, song, whoRequested, voiceChannel.playlist:getCount());
-          voiceChannel.nowPlaying = song.title;
-          voiceChannel.whoRequested = whoRequested;
-          room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3");
-        else
-          if voiceChannel.playlist:peekLeft() then
-            msg:setContent("I couldn't fetch the song! Attempting to fetch the next song from the list~");
-          else
-            msg:setContent("Queue is empty nora! Stopping~");
-            break;
-          end
-        end
-
-      end
-
-      room:close();
-      cache[message.guild.id] = nil;
-
-    end)();
+    startStreaming(voiceChannel)
   end
 
-end
-
-local function deleteExistingFiles(message, args)
-  local function getFileName(link)
-    local child = spawn("yt-dlp", {
-      args = {
-        "--paths", MUSIC_FOLDER,
-        "--print", "id",
-        link,
-      }
-    });
-    child.waitExit();
-    return child.stdout.read():split('\n');
-  end
-
-  message:reply("Deleting possible corrupted songs from host to re-download nora!");
-
-  for _, link in ipairs(args) do
-    local t = getFileName(link);
-    table.remove(t, #t);
-    for _, id in ipairs(t) do
-      fs.unlinkSync(MUSIC_FOLDER .. id .. ".mp3");
-      fs.unlinkSync(MUSIC_FOLDER .. id .. ".webm");
-    end
-  end
-
-  play(message, args);
 end
 
 local function showWhatIsPlayingCurrently(message)
@@ -353,9 +358,9 @@ return {
     table.remove(args, 1);
     table.remove(args, 1);
     if command == "play" or command == 'p' then
-      play(message, args);
+      play(message, args, false);
     elseif command == "redownload" or command == "forceplay" then
-      deleteExistingFiles(message, args);
+      play(message, args, true);
     elseif command == "skip" or command == 's' then
       skip(message);
     elseif command == "nowplaying" or command == "np" then
