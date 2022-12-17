@@ -1,8 +1,12 @@
 # tsih-robo
 
-It's just a fun project I always wanted to create and also my first programming project ever! Tsih-Robo at first was made for fun/entertainment porpuses, but after a long time studying and managing to program my primary objective into her, I decided to leave the cosmetics functions in her code~
+Tsih-Robo is a discord bot chosen to be written in Lua because the language shares the same color as her hair. Tsih-robo was made using [Discordia](https://github.com/SinisterRectus/discordia) API.
 
-Tsih's **primary function** is to fill the gap of badly embeded links on discord for websites links like Pixiv, Pawoo, Baraag, Exhentai and etc. Pretty much what [SaucyBot](https://github.com/Sn0wCrack/saucybot-discord) does, but with more websites and a flexible list for adding more websites as you see fit, but only websites that are compatible with [gallery-dl](https://github.com/mikf/gallery-dl).
+It's just a fun project I always wanted to create but ended up wanting to maintain, and also my first programming project ever! 
+
+Inicially she was made for fun/entertainment porpuses, but after a long time studying and managing to program my primary objective into her, I decided to leave the cosmetics functions in her code~
+
+Tsih's **primary function** is to fill the gap of badly embeded links on discord for websites links like Pixiv, Pawoo, Baraag, Exhentai and etc using [gallery-dl](https://github.com/mikf/gallery-dl). Pretty much what [SaucyBot](https://github.com/Sn0wCrack/saucybot-discord) does, but with more websites that you can insert into a table as you see fit, but only websites that are compatible with [gallery-dl](https://github.com/mikf/gallery-dl).
 
 I wanted to make her act canonically as she would act in one of the games she's in, but I'm kinda bad at this. w
 
