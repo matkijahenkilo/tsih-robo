@@ -166,9 +166,11 @@ local function sendDirectImageUrl(value, message, limit)
 
   local url = getUrl(value, limit);
   if hasUrl(url) then
-    --if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then end
+
+    --if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
     local success, err = sendUrl(message, url);
     checkSuccess(success, err, message, value);
+    --end
 
   end
 end
@@ -184,7 +186,36 @@ local function downloadSendAndDeleteImages(value, message, limit)
 
   end
 
-  deleteDownloadedImage(file, id);
+  --deleteDownloadedImage(file, id);
+end
+
+local function createJson(newLimit, guildId, channelId)
+  local newGuildRule = {
+    [guildId] = {
+      [channelId] = newLimit
+    }
+  };
+  fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(newGuildRule));
+end
+
+local function verifyIfRuleExists(t, guildId, channelId)
+  if t[guildId] then
+    return t[guildId][channelId] ~= nil;
+  end
+  return false;
+end
+
+local function replaceChannelRule(t, newLimit, guildId, channelId)
+  t[guildId][channelId] = newLimit;
+
+  fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(t));
+end
+
+local function addGuildAndChannelRule(t, newLimit, guildId, channelId)
+  if not t[guildId] then t[guildId] = {} end
+  t[guildId][channelId] = newLimit;
+
+  fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(t));
 end
 
 local sauce = {};
@@ -209,37 +240,6 @@ function sauce.setSauceLimit(message)
     newLimit = 10;
   end
 
-  local function createJson()
-    local newGuildRule = {
-      [guildId] = {
-        [channelId] = newLimit
-      }
-    };
-    fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(newGuildRule));
-  end
-
-  local function verifyIfRuleExists(t)
-    if t[guildId] then
-      return t[guildId][channelId] ~= nil;
-    end
-    return false;
-  end
-
-  local function replaceChannelRule(t)
-    t[guildId][channelId] = newLimit;
-
-    fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(t));
-  end
-
-  local function addGuildAndChannelRule(t)
-    if not t[guildId] then t[guildId] = {} end
-    t[guildId][channelId] = newLimit;
-
-    fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(t));
-  end
-
-
-
   local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
   local jsonContent = nil;
   if rawJson then
@@ -247,14 +247,14 @@ function sauce.setSauceLimit(message)
   end
 
   if not jsonContent then
-    createJson();
+    createJson(newLimit, guildId, channelId);
     return;
   end
 
-  if verifyIfRuleExists(jsonContent) then
-    replaceChannelRule(jsonContent);
+  if verifyIfRuleExists(jsonContent, guildId, channelId) then
+    replaceChannelRule(jsonContent, newLimit, guildId, channelId);
   else
-    addGuildAndChannelRule(jsonContent);
+    addGuildAndChannelRule(jsonContent, newLimit, guildId, channelId);
   end
 
   if newLimit > 0 then
@@ -264,29 +264,27 @@ function sauce.setSauceLimit(message)
   end
 end
 
-function sauce.sendSauce(message)
+local function getRoomImageLimit(message)
+  if not message.guild then return end
+  local guildId = message.guild.id;
+  local channelId = message.channel.id;
 
-  local function getRoomImageLimit()
-    if not message.guild then return end
-    local guildId = message.guild.id;
-    local channelId = message.channel.id;
-
-    local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
-    if rawJson then
-      local t = json.decode(rawJson);
-      if not t then return end
-      if t[guildId] then
-        return t[guildId][channelId];
-      end
+  local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
+  if rawJson then
+    local t = json.decode(rawJson);
+    if not t then return end
+    if t[guildId] then
+      return t[guildId][channelId];
     end
   end
+end
 
-
+function sauce.sendSauce(message)
 
   local content = message.content:gsub('\n', ' '):gsub('|', ' ');
   local t = content:split(' ');
 
-  local limit = getRoomImageLimit() or 5;
+  local limit = getRoomImageLimit(message) or 5;
   if limit == 0 then return end
 
   for _, value in ipairs(t) do
@@ -310,5 +308,13 @@ function sauce.sendSauce(message)
   end
 
 end
+
+--[[
+  return {
+    description = {},
+    exec = {},
+    autoExec = {}
+  }
+--]]
 
 return sauce;

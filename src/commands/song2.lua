@@ -1,5 +1,3 @@
--- song2.lua works downloading .mp3 files and streaming them directly from the host's computer.
-
 local MUSIC_FOLDER = "assets/sounds/yt-dlp/";
 
 local discordia = require("discordia");
@@ -7,6 +5,8 @@ local spawn = require('coro-spawn');
 local fs = require("fs");
 local cache = {};
 discordia.extensions();
+
+
 
 local function connectAndCacheNewConnection(message)
   cache[message.guild.id] = {
@@ -19,20 +19,26 @@ local function connectAndCacheNewConnection(message)
   return cache[message.guild.id];
 end
 
-local function downloadSong(currentSongInfo, msg)
-  local function deleteExistingFiles(id)
-    msg:setContent("**Song was opted to be re-downloaded**. Deleting existing files and re-downloading possible corrupted song nanora! Please wait~");
-    fs.unlinkSync(MUSIC_FOLDER .. id .. ".mp3");
-    fs.unlinkSync(MUSIC_FOLDER .. id .. ".webm");
-  end
+local function deleteExistingFiles(msg, id)
+  msg:setContent("**Song was opted to be re-downloaded**. Deleting existing files and re-downloading possible corrupted song nanora! Please wait~");
+  fs.unlinkSync(MUSIC_FOLDER .. id .. ".mp3");
+  fs.unlinkSync(MUSIC_FOLDER .. id .. ".webm");
+end
 
+local function findAndDeleteExistingFile(msg, url)
+  local child = spawn("yt-dlp", {args = {"--print", "id", url}});
+  if child then
+    child.waitExit();
+    local id = child.stdout.read():gsub("%c", '');
+    deleteExistingFiles(msg, id);
+  end
+end
+
+local function downloadSong(currentSongInfo, msg)
   local url = currentSongInfo["url"];
 
   if currentSongInfo["shouldRedownload"] and url then
-    local child = spawn("yt-dlp", {args = {"--print", "id", url}});
-    child.waitExit();
-    local id = child.stdout.read():gsub("%c", '');
-    deleteExistingFiles(id);
+    findAndDeleteExistingFile(msg, url);
   end
 
   local child = spawn("yt-dlp", {
@@ -47,10 +53,14 @@ local function downloadSong(currentSongInfo, msg)
     }
   });
 
-  child.waitExit();
-  local info = child.stdout.read();
-  if not info then return end
-  local t = info:split('\n');
+  local t = {};
+
+  if child then
+    child.waitExit();
+    local info = child.stdout.read();
+    if not info then return end
+    t = info:split('\n');
+  end
 
   return {
     title = t[1],
@@ -58,40 +68,39 @@ local function downloadSong(currentSongInfo, msg)
   };
 end
 
-local function addSongIntoUrlsForDownloadDeque(url, playlist, user, shouldRedownload)
-  local function getListOfVideosFromPlaylist()
-    local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } });
+local function setInformationToCache(voiceChannel, song, whoRequested)
+  voiceChannel.nowPlaying = song.title;
+  voiceChannel.whoRequested = whoRequested;
+end
+
+local function getListOfVideosFromPlaylist(url)
+  local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } });
+  if child then
     child.waitExit();
     return child.stdout.read():split('\n');
   end
+end
 
-  local function addIndividualUrlsFromPlaylistIntoDeque()
-    local list = getListOfVideosFromPlaylist();
-    for _, link in ipairs(list) do
-      if link ~= '' then
-        playlist:pushRight({["url"]=link, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload});
-      end
+local function addIndividualUrlsFromPlaylistIntoDeque(url, playlist, user, shouldRedownload)
+  local list = getListOfVideosFromPlaylist(url);
+  for _, link in ipairs(list) do
+    if link ~= '' then
+      playlist:pushRight({["url"]=link, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload});
     end
   end
+end
 
-  local function isPlaylist()
-    local playlistIndicators = {
-      "?list=", --youtube
-      "&list=", --youtube
-      "/sets/", --soundcloud
-      "/album/", --bandcamp
-    }
-    for _, value in ipairs(playlistIndicators) do
-      if url:find(value) then return true end
-    end
-    return false;
+local function isPlaylist(url)
+  local playlistIndicators = {
+    "?list=",
+    "&list=",
+    "/sets/",
+    "/album/",
+  }
+  for _, value in ipairs(playlistIndicators) do
+    if url:find(value) then return true end
   end
-
-  if isPlaylist() then
-    addIndividualUrlsFromPlaylistIntoDeque();
-  else
-    playlist:pushRight({["url"]=url, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload});
-  end
+  return false;
 end
 
 local function showCurrentMusic(msg, song, user, count)
@@ -112,89 +121,95 @@ local function showCurrentMusic(msg, song, user, count)
   msg:setContent("");
 end
 
-local function play(message, args, shouldRedownload)
-  local function notifySongAdded(playlistSize)
-    local playlistAddResponse = "Song added into the playlist";
-    if playlistSize > 5 then
-      playlistAddResponse = playlistAddResponse .. "~\nThere's now " .. playlistSize .. " tracks to play nora!"
-    else
-      playlistAddResponse = playlistAddResponse .. " nora!";
-    end
+local function notifySongAdded(message, playlistSize)
+  local playlistAddResponse = "Song added into the playlist";
+  if playlistSize > 5 then
+    playlistAddResponse = playlistAddResponse .. "~\nThere's now " .. playlistSize .. " tracks to play nora!"
+  else
+    playlistAddResponse = playlistAddResponse .. " nora!";
+  end
 
-    message.channel:send {
-      content = playlistAddResponse,
-      reference = {
-        message = message,
-        mention = false,
-      };
+  message.channel:send {
+    content = playlistAddResponse,
+    reference = {
+      message = message,
+      mention = false,
     };
+  };
+end
+
+local function getQueuedSongInfo(currentSongInfo, msg)
+  if not currentSongInfo then return end
+  local song = downloadSong(currentSongInfo, msg);
+  local whoRequested = currentSongInfo["whoRequested"];
+  return song, whoRequested;
+end
+
+local function addSongIntoUrlsForDownloadDeque(url, playlist, user, shouldRedownload)
+
+  if isPlaylist(url) then
+    addIndividualUrlsFromPlaylistIntoDeque(url, playlist, user, shouldRedownload);
+  else
+    playlist:pushRight({["url"]=url, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload});
   end
 
-  local function getQueuedSongInfo(currentSongInfo, msg)
-    if not currentSongInfo then return nil end
-    local song = downloadSong(currentSongInfo, msg);
-    local whoRequested = currentSongInfo["whoRequested"];
-    return song, whoRequested;
-  end
+end
 
-  local function setInformationToCache(voiceChannel, song, whoRequested)
-    voiceChannel.nowPlaying = song.title;
-    voiceChannel.whoRequested = whoRequested;
-  end
-
-  local function addSongsIntoDeque(playlist, user)
-    for _, link in ipairs(args) do
-      if link and link ~= '' then
-        addSongIntoUrlsForDownloadDeque(link, playlist, user, shouldRedownload);
-      end
+local function addSongsIntoDeque(playlist, user, args, shouldRedownload)
+  for _, link in ipairs(args) do
+    if link and link ~= '' then
+      addSongIntoUrlsForDownloadDeque(link, playlist, user, shouldRedownload);
     end
   end
+end
 
-  local function startStreaming(voiceChannel)
-    coroutine.wrap(function ()
-      while true do
+local function startStreaming(message, voiceChannel)
+  coroutine.wrap(function ()
+    while true do
 
-        local room = voiceChannel.connection;
+      local room = voiceChannel.connection;
 
-        voiceChannel.isPlaying = true;
-        local msg = message:reply("Fetching song, please wait nanora!");
+      voiceChannel.isPlaying = true;
+      local msg = message:reply("Fetching song, please wait nanora!");
 
-        local currentSongInfo = voiceChannel.playlist:popLeft();
-        local song, whoRequested = getQueuedSongInfo(currentSongInfo, msg);
-        if song then
+      local currentSongInfo = voiceChannel.playlist:popLeft();
+      local song, whoRequested = getQueuedSongInfo(currentSongInfo, msg);
+      if song then
 
-          showCurrentMusic(msg, song, whoRequested, voiceChannel.playlist:getCount());
-          setInformationToCache(voiceChannel, song, whoRequested);
-          room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3");
+        showCurrentMusic(msg, song, whoRequested, voiceChannel.playlist:getCount());
+        setInformationToCache(voiceChannel, song, whoRequested);
+        room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3");
 
+      else
+
+        if voiceChannel.playlist:peekLeft() then
+          msg:setContent("I couldn't fetch the song! Attempting to fetch the next song from the list~");
         else
-
-          if voiceChannel.playlist:peekLeft() then
-            msg:setContent("I couldn't fetch the song! Attempting to fetch the next song from the list~");
-          else
-            msg:setContent("Queue is empty nora! Stopping~");
-            room:close();
-            cache[message.guild.id] = nil;
-            return;
-          end
-
+          msg:setContent("Queue is empty nora! Stopping~");
+          room:close();
+          cache[message.guild.id] = nil;
+          return;
         end
 
       end
-    end)();
-  end
+
+    end
+  end)();
+end
+
+local function play(message, args, shouldRedownload)
 
   local voiceChannel = cache[message.guild.id];
   if voiceChannel == nil then
     voiceChannel = connectAndCacheNewConnection(message);
   end
 
-  addSongsIntoDeque(voiceChannel.playlist, message.member.user);
+  addSongsIntoDeque(voiceChannel.playlist, message.member.user, args, shouldRedownload);
 
-  notifySongAdded(voiceChannel.playlist:getCount());
+  notifySongAdded(message, voiceChannel.playlist:getCount());
 
   if not voiceChannel.isPlaying then
-    startStreaming(voiceChannel)
+    startStreaming(message, voiceChannel)
   end
 
 end
@@ -251,6 +266,28 @@ local function stop(message)
   cache[message.guild.id] = nil;
 end
 
+local function populateTableWithDequePlaylist(t, voiceChannel)
+  local dequeCount = voiceChannel.playlist:getCount();
+  for i = 1, dequeCount do
+    t[i] = voiceChannel.playlist:popLeft();
+  end
+  return t;
+end
+
+local function shuffleTable(t)
+  for i = #t, 2, -1 do
+    local j = math.random(i);
+    t[i], t[j] = t[j], t[i];
+  end
+  return t;
+end
+
+local function populateDequeWithShuffledPlaylist(t, voiceChannel)
+  for i = 1, #t do
+    voiceChannel.playlist:pushRight(t[i]);
+  end
+end
+
 local function shuffle(message)
   local msg = message:reply{
     content = "Shuffling playlist nora...",
@@ -262,32 +299,10 @@ local function shuffle(message)
 
   local voiceChannel = cache[message.guild.id];
 
-  local function populateTableWithDequePlaylist(t)
-    local dequeCount = voiceChannel.playlist:getCount();
-    for i = 1, dequeCount do
-      t[i] = voiceChannel.playlist:popLeft();
-    end
-    return t;
-  end
-
-  local function shuffleTable(t)
-    for i = #t, 2, -1 do
-      local j = math.random(i);
-      t[i], t[j] = t[j], t[i];
-    end
-    return t;
-  end
-
-  local function populateDequeWithShuffledPlaylist(t)
-    for i = 1, #t do
-      voiceChannel.playlist:pushRight(t[i]);
-    end
-  end
-
   local t = {};
-  t = populateTableWithDequePlaylist(t);
+  t = populateTableWithDequePlaylist(t, voiceChannel);
   t = shuffleTable(t);
-  populateDequeWithShuffledPlaylist(t);
+  populateDequeWithShuffledPlaylist(t, voiceChannel);
 
   msg:setContent("Playlist has now " .. voiceChannel.playlist:getCount() .. " shuffled tracks nanora!");
 end
