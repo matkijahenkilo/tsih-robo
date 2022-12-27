@@ -218,9 +218,7 @@ local function addGuildAndChannelRule(t, newLimit, guildId, channelId)
   fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(t));
 end
 
-local sauce = {};
-
-function sauce.setSauceLimit(message)
+local function setSauceLimit(message)
   if not message.guild then
     message:reply("This function does not work with DMs nanora!");
     return;
@@ -279,42 +277,55 @@ local function getRoomImageLimit(message)
   end
 end
 
-function sauce.sendSauce(message)
+local function sendSauce(message)
+  if message.content:find("https://") then
 
-  local content = message.content:gsub('\n', ' '):gsub('|', ' ');
-  local t = content:split(' ');
+    local content = message.content:gsub('\n', ' '):gsub('|', ' ');
+    local t = content:split(' ');
 
-  local limit = getRoomImageLimit(message) or 5;
-  if limit == 0 then return end
+    local limit = getRoomImageLimit(message) or 5;
+    if limit == 0 then return end
 
-  for _, value in ipairs(t) do
-    if value ~= '' then
-      coroutine.wrap(function ()
-        if verify(value, doesNotRequireDownload) then
+    for _, value in ipairs(t) do
+      if value ~= '' then
+        coroutine.wrap(function ()
+          if verify(value, doesNotRequireDownload) then
 
-          sendDirectImageUrl(value, message, limit);
+            sendDirectImageUrl(value, message, limit);
 
-        elseif verify(value, requireDownload) then
+          elseif verify(value, requireDownload) then
 
-          downloadSendAndDeleteImages(value, message, limit);
+            downloadSendAndDeleteImages(value, message, limit);
 
-        elseif value:find("https://twitter.com/") then
+          elseif value:find("https://twitter.com/") then
 
-          sendTwitterDirectVideoUrl(value, message, limit);
+            sendTwitterDirectVideoUrl(value, message, limit);
 
-        end
-      end)();
+          end
+        end)();
+      end
     end
-  end
 
+  end
 end
 
---[[
-  return {
-    description = {},
-    exec = {},
-    autoExec = {}
-  }
---]]
-
-return sauce;
+return {
+  description = {
+    title = "sauce",
+    description = "I'll automatically send the link's content if it's a link that doesn't not embed properly in Discord nora!"
+      .. "\n\nI try to not spam a lot of images by sending up to 5 images per link, but you can make me send up to 10 images per link with `ts!sauce 10` if there's a lot of images in, let's say, a Pixiv post nora!"
+      .. "\nYou can disable this automatic command by using `ts!sauce 0` too nora.",
+    fields = {
+      {
+        name = "Integer",
+        value = "Sets a limit of images that I can send per message nanora!"
+      }
+    }
+  },
+  execute = function (message)
+    setSauceLimit(message);
+  end,
+  autoExecute = function (message)
+    sendSauce(message);
+  end
+}

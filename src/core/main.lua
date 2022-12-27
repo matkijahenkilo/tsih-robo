@@ -7,13 +7,13 @@ local settings      = require("../data/settings");
 local handler       = require("./commandsHandler");
 local secretHandler = require("./secretCommandsHandler");
 local help          = require("./help");
-local sauce         = require("../auto/sendSauce");
 local sendTsihClock = require("../commands/tsihClock").executeWithTimer;
 local statusTable   = require("../misc/statusTable");
 local randomReact   = require("../misc/randomReact");
 
 local emoticonsServer;
 local prefix = settings.prefix;
+
 discordia.extensions.string();
 
 local function hasTsihMention(str)
@@ -34,16 +34,6 @@ local function rollRandomReactionDice(message, args)
   elseif math.random() <= 0.01 then
     randomReact.sendRandomReaction(message, emoticonsServer);
   end
-end
-
-local function isSauceCommand(message, args)
-  if message.content:find("https://") then
-    sauce.sendSauce(message);
-  elseif args[1]:find("setsaucelimit") then
-    sauce.setSauceLimit(message);
-    return true;
-  end
-  return false;
 end
 
 local function checkForCommand(message, args)
@@ -79,9 +69,9 @@ client:on("messageCreate", function(message)
   local args = message.content:gsub('%c', ' '):split(' ');
 
   rollRandomReactionDice(message, args);
-  if not isSauceCommand(message, args) then
-    checkForCommand(message, args);
-  end
+
+  handler["sauce"].autoExecute(message);
+  checkForCommand(message, args);
 end)
 
 clock:on("min", function()

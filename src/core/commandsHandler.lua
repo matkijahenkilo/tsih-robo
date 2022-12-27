@@ -8,6 +8,7 @@ local commands = {
   tsihClock = require("../commands/tsihClock"),
   song      = require("../commands/song2"),
   giveRole  = require("../commands/giveRole"),
+  sauce     = require("../auto/sendSauce.lua"),
 };
 
 local answers = {
