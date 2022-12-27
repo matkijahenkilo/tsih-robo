@@ -316,7 +316,7 @@ return {
     color = 0xff5080,
     fields = {
       {
-        name = "play or p",
+        name = "play or p or add [link]",
         value = "Will queue a new song or playlist for you, nora."
       },
       {
@@ -343,8 +343,8 @@ return {
       {
         name = "resume",
         value = "Ugeeh!"
-      },
-    },
+      }
+    }
   },
   execute = function(message, args)
     local function isMemberOnVoiceChannel(voiceChannel)
@@ -372,7 +372,7 @@ return {
     local command = args[2]:lower();
     table.remove(args, 1);
     table.remove(args, 1);
-    if command == "play" or command == 'p' then
+    if command == "play" or command == 'p' or command == "add" then
       play(message, args, false);
     elseif command == "redownload" or command == "forceplay" then
       play(message, args, true);

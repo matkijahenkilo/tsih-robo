@@ -21,7 +21,13 @@ return {
     title = "question",
     description = "Will reply you with a random answer! (with " .. #answer .. " possibilites of replies nanora!)\n"
 			.. "e.g: ts!question isn't Ikusene a cutie?\n\n:smiling_face_with_3_hearts:~~",
-    color = 0xff5080
+    color = 0xff5080,
+    fields = {
+      {
+        name = "[string]",
+        value = "A random question nanora."
+      }
+    }
   },
 	execute = function (message, args)
 		if args[2] == nil then

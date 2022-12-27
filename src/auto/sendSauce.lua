@@ -312,12 +312,13 @@ end
 return {
   description = {
     title = "sauce",
-    description = "I'll automatically send the link's content if it's a link that doesn't not embed properly in Discord nora!"
+    description = "I'll automatically send the link's content if it's a link that does not embed properly in Discord nora!"
       .. "\n\nI try to not spam a lot of images by sending up to 5 images per link, but you can make me send up to 10 images per link with `ts!sauce 10` if there's a lot of images in, let's say, a Pixiv post nora!"
       .. "\nYou can disable this automatic command by using `ts!sauce 0` too nora.",
+    color = 0xff5080,
     fields = {
       {
-        name = "Integer",
+        name = "[Integer]",
         value = "Sets a limit of images that I can send per message nanora!"
       }
     }

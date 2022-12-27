@@ -28,13 +28,13 @@ return {
   description = {
     title = "Avatar",
     description = "Sends your or another user's avatar's URL!\ne.g: ts!avatar @ᵉˢᵘᵏᶦ",
+    color = 0xff5080,
     fields = {
       {
         name = "[mention] (optional)",
         value = "If a user is mentioned, I'll send their avatar nanora!"
-      },
-    },
-    color = 0xff5080
+      }
+    }
   },
   execute = function(message, args, client)
     if args[2] == nil then
