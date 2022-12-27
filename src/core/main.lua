@@ -7,7 +7,6 @@ local settings      = require("../data/settings");
 local handler       = require("./commandsHandler");
 local secretHandler = require("./secretCommandsHandler");
 local help          = require("./help");
-local sendTsihClock = require("../commands/tsihClock").executeWithTimer;
 local statusTable   = require("../misc/statusTable");
 local randomReact   = require("../misc/randomReact");
 
@@ -16,27 +15,19 @@ local prefix = settings.prefix;
 
 discordia.extensions.string();
 
-local function hasTsihMention(str)
-  local t = { "tsih", "nanora", "nora", };
-  for _, tValue in ipairs(t) do
-    for __, strValue in ipairs(str) do
-      if strValue:lower():find(tValue) then
-        return true;
-      end
-    end
-  end
-  return false;
+local function hasTsihMention(message)
+  return message.content:lower():find("tsih") or message.content:lower():find("nora");
 end
 
-local function rollRandomReactionDice(message, args)
-  if hasTsihMention(args) then
+local function rollRandomReactionDice(message)
+  if hasTsihMention(message) then
     randomReact.sendRandomReaction(message, emoticonsServer);
   elseif math.random() <= 0.01 then
     randomReact.sendRandomReaction(message, emoticonsServer);
   end
 end
 
-local function checkForCommand(message, args)
+local function executeCommand(message, args)
   if args[1]:sub(1, #prefix) == prefix then
 
     args[1] = args[1]:sub(#prefix + 1, -1);
@@ -60,7 +51,6 @@ client:on("ready", function()
   clock:start();
   client:setGame(statusTable[math.random(#statusTable)]);
   emoticonsServer = client:getGuild(settings.emoticonsServerId);
-
   print("Ready nanora!\nPrefix = ", prefix);
 end)
 
@@ -68,10 +58,11 @@ client:on("messageCreate", function(message)
   if message.author.bot then return end
   local args = message.content:gsub('%c', ' '):split(' ');
 
-  rollRandomReactionDice(message, args);
+  rollRandomReactionDice(message);
+
+  executeCommand(message, args);
 
   handler["sauce"].autoExecute(message);
-  checkForCommand(message, args);
 end)
 
 clock:on("min", function()
@@ -80,7 +71,7 @@ end)
 
 clock:on("hour", function(now)
   if now.hour == 18 then
-    sendTsihClock(client);
+    handler["tsihClock"].executeWithTimer(client);
   end
 end)
 
