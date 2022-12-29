@@ -12,65 +12,25 @@ I wanted to make her act canonically as she would act in one of the games she's 
 
 ## Commands
 
-You can write `ts!help` for more information for running commands. For now, the command below is not listed in the help command.
-
-`ts!setsaucelimit NUMBER` - Sets a limit for downloaded images to be sent on a specific channel. Default: 5.
+You can write `ts!help` for more information for running commands.
 
 ## Installation
 
-**Be aware that simply installing tsih-robo may cause crashes during runtime because of the absence of the /assets/ folder.**
+**Be aware that simply installing tsih-robo may cause crashes during runtime because of the absence of the /assets folder.**
 
-### pre-requisites packages
+### pre-requisites programs
 
-`base-devel ffmpeg yt-dlp gallery-dl`
+`ffmpeg yt-dlp gallery-dl`
 
 ### bot installation:
 
-open you terminal, turn off your brain and copy and paste the following commands:
+Follow [Discordia](https://github.com/SinisterRectus/discordia)'s installation guide.
 
-clone this repository
-```
-git clone https://github.com/Defalts2/tsih-robo
-```
+Download and put [coro-spawn.lua](https://raw.githubusercontent.com/luvit/lit/master/deps/coro-spawn.lua) into deps/
 
-```
-cd tsih-robo/
-```
+I recommend you do the same with [http-codec.lua](https://raw.githubusercontent.com/luvit/lit/master/deps/http-codec.lua), because the one that Discordia has is outdated.
 
-download lit, luvi and luvit
-```
-curl -L https://github.com/luvit/lit/raw/master/get-lit.sh | sh
-```
-
-install [Discordia](https://github.com/SinisterRectus/discordia) API
-```
-./lit install SinisterRectus/discordia
-```
-
-wget and move coro-spawn
-```
-wget https://raw.githubusercontent.com/luvit/lit/master/deps/coro-spawn.lua
-```
-
-```
-mv coro-spawn.lua deps/
-```
-
-wget and replace http-codec.lua, the one that exists in deps/ is outdated.
-```
-wget https://raw.githubusercontent.com/luvit/lit/master/deps/http-codec.lua
-```
-
-```
-mv http-codec.lua deps/
-```
-
-and finally start the bot with your token as an argument! (be sure to turn your brain on at this step)
-```
-./luvit src/core/main.lua [token]
-```
-
-*oooor simply copy this entire block and paste it into a terminal, if you want to speedrun it:*
+For a fast setup, simply copy and paste this command block into a Linux terminal:
 
 ```
 git clone https://github.com/Defalts2/tsih-robo
@@ -86,8 +46,11 @@ mv http-codec.lua deps/
 
 ### gallery-dl configuration
 
-Please check [here](https://github.com/mikf/gallery-dl#configuration) to understand how to configurate your gallery-dl.
+Depending of which website Tsih-Robo is going to get the images and send, you will need to configurate your gallery-dl to work in those websites.
+For that, you will usually need to create an account for example, Inkbunny in order to get the link for the bot to send.
+Some websites like Pixiv will need you to run an [oauth](https://github.com/mikf/gallery-dl#oauth) command in gallery-dl in order to download the images from the website and send it to Discord.
+It's recommended to export your browser's cookies for gallery-dl.
 
-Export your browser's cookies using an addon and drag it inside this repository's folder.
+Please check [here](https://github.com/mikf/gallery-dl#configuration) to understand how to configurate your gallery-dl.
 
 When using `gallery-dl.conf`, be sure to drag it inside tsih-robo folder in case you're on Windows. If you're on Linux just put it to /etc/
