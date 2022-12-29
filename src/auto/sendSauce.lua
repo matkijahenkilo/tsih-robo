@@ -186,7 +186,7 @@ local function downloadSendAndDeleteImages(value, message, limit)
 
   end
 
-  --deleteDownloadedImage(file, id);
+  deleteDownloadedImage(file, id);
 end
 
 local function createJson(newLimit, guildId, channelId)
