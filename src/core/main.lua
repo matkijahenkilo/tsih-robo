@@ -16,7 +16,8 @@ local prefix = settings.prefix;
 discordia.extensions.string();
 
 local function hasTsihMention(message)
-  return message.content:lower():find("tsih") or message.content:lower():find("nora");
+  local content = message.content:lower();
+  return content:find("tsih") or content:find("nora");
 end
 
 local function rollRandomReactionDice(message)
