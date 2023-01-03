@@ -356,6 +356,11 @@ return {
       return;
     end
 
+    if not args[2] then
+      message.channel:send("Wich command nora?")
+      return;
+    end
+
     if not message.member.voiceChannel then
       message.channel:send("You're not even in a voice chat nora!");
       return;
