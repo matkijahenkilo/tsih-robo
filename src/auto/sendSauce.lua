@@ -126,7 +126,7 @@ local function sendUrl(message, url)
     }
   };
 end
---[[ This used to be useful before Twitter was bought.
+
 local function shouldSendBaraagLinks(url)
   local quantity = 0;
   for _, value in ipairs(url:split('\n')) do
@@ -136,9 +136,10 @@ local function shouldSendBaraagLinks(url)
       quantity = quantity + 1;
     end
   end
+
   return quantity > 1;
 end
-]]
+
 local function verify(string, list)
   for _, value in pairs(list) do
     if string:find(value) then
@@ -167,10 +168,10 @@ local function sendDirectImageUrl(value, message, limit)
   local url = getUrl(value, limit);
   if hasUrl(url) then
 
-    --if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
-    local success, err = sendUrl(message, url);
-    checkSuccess(success, err, message, value);
-    --end
+    if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
+      local success, err = sendUrl(message, url);
+      checkSuccess(success, err, message, value);
+    end
 
   end
 end
