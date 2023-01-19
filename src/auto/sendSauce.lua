@@ -34,14 +34,24 @@ local function hasUrl(url)
   return url ~= '';
 end
 
-local function getOnlyTwitterVideos(t)
-  local twitterVideos = {};
+local function getSpecificLinks(t, string)
+  local specificLinks = {};
   for _, value in ipairs(t:split("\n")) do
-    if value:find("video.twimg") then
-      table.insert(twitterVideos, value);
+    if value:find(string) then
+      table.insert(specificLinks, value);
     end
   end
-  return twitterVideos;
+  return specificLinks;
+end
+
+local function getBaraagImageFromTheSecondLink(t)
+  local baraagLink = {};
+  for index, value in ipairs(t:split("\n")) do
+    if index > 1 then
+      table.insert(baraagLink, value);
+    end
+  end
+  return baraagLink;
 end
 
 local function readProcess(child)
@@ -52,7 +62,9 @@ local function readProcess(child)
   table.insert(linksTable, link);
   if link then
     if link:find("pbs.twimg") then
-      return getOnlyTwitterVideos(link);
+      return getSpecificLinks(link, "video.twimg");
+    elseif link:find("media.baraag.net") then
+      return getBaraagImageFromTheSecondLink(link);
     end
   end
 
