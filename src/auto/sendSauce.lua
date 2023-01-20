@@ -293,7 +293,7 @@ end
 local function sendSauce(message)
   if message.content:find("https://") then
 
-    local content = message.content:gsub('\n', ' '):gsub('|', ' ');
+    local content = message.content:gsub('\n', ' '):gsub('||', ' ');
     local t = content:split(' ');
 
     local limit = getRoomImageLimit(message) or 5;
