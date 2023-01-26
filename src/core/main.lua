@@ -50,7 +50,7 @@ end
 
 client:on("ready", function()
   clock:start();
-  client:setGame(statusTable[math.random(#statusTable)]);
+  client:setActivity(statusTable[math.random(#statusTable)]);
   emoticonsServer = client:getGuild(settings.emoticonsServerId);
   print("Ready nanora!\nPrefix = ", prefix);
 end)
@@ -67,7 +67,7 @@ client:on("messageCreate", function(message)
 end)
 
 clock:on("min", function()
-  client:setGame(statusTable[math.random(#statusTable)]);
+  client:setActivity(statusTable[math.random(#statusTable)]);
 end)
 
 clock:on("hour", function(now)
