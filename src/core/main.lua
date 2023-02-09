@@ -22,9 +22,7 @@ local function hasTsihMention(message)
 end
 
 local function rollRandomReactionDice(message)
-  if hasTsihMention(message) then
-    randomReact.sendRandomReaction(message, emoticonsServer);
-  elseif math.random() <= 0.01 then
+  if hasTsihMention(message) or math.random() <= 0.01 then
     randomReact.sendRandomReaction(message, emoticonsServer);
   end
 end
