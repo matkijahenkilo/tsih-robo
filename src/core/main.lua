@@ -12,6 +12,7 @@ local randomReact   = require("../misc/randomReact");
 
 local emoticonsServer;
 local prefix = settings.prefix;
+local wrap = coroutine.wrap;
 
 discordia.extensions.string();
 
@@ -59,9 +60,9 @@ client:on("messageCreate", function(message)
   if message.author.bot then return end
   local args = message.content:gsub('%c', ' '):split(' ');
 
-  rollRandomReactionDice(message);
+  wrap(function () rollRandomReactionDice(message) end)();
 
-  executeCommand(message, args);
+  wrap(function () executeCommand(message, args)   end)();
 
   handler["sauce"].autoExecute(message);
 end)
