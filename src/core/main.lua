@@ -16,6 +16,10 @@ local wrap = coroutine.wrap;
 
 discordia.extensions.string();
 
+local function unfuckTsihRobo()
+  client:getChannel("1016454439726481539"):send('a');
+end
+
 local function hasTsihMention(message)
   local content = message.content:lower();
   return content:find("tsih") or content:find("nora");
@@ -23,11 +27,13 @@ end
 
 local function rollRandomReactionDice(message)
   if hasTsihMention(message) or math.random() <= 0.01 then
+    wrap(function () unfuckTsihRobo() end)();
     randomReact.sendRandomReaction(message, emoticonsServer);
   end
 end
 
 local function executeCommand(message, args)
+  wrap(function () unfuckTsihRobo() end)();
   if args[1]:sub(1, #prefix) == prefix then
 
     args[1] = args[1]:sub(#prefix + 1, -1);
