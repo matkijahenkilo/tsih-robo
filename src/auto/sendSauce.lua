@@ -47,7 +47,9 @@ end
 local function getBaraagImageFromTheSecondLink(t)
   local baraagLink = {};
   for index, value in ipairs(t:split("\n")) do
-    if index > 1 then
+    if index == 2 then
+      table.insert(baraagLink, value);
+    elseif index > 2 then
       table.insert(baraagLink, '\n' .. value);
     end
   end
