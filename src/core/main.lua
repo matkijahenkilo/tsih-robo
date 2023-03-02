@@ -1,23 +1,41 @@
-if not args[2] then print("please especify a token!"); return; end
+if not args[2] then
+  print("please especify a token!");
+  return;
+end
 
-local discordia     = require("discordia");
-local client        = discordia.Client();
-local clock         = discordia.Clock();
-local settings      = require("../data/settings");
-local handler       = require("./commandsHandler");
-local secretHandler = require("./secretCommandsHandler");
-local help          = require("./help");
-local statusTable   = require("../misc/statusTable");
-local randomReact   = require("../misc/randomReact");
+local discordia   = require("discordia");
+local tools       = require("discordia-slash").util.tools();
+local client      = discordia.Client():useApplicationCommands();
+local clock       = discordia.Clock();
+local settings    = require("../data/settings");
+local statusTable = require("../misc/statusTable");
+local randomReact = require("../misc/randomReact");
 
+local fs      = require("fs");
+local wrap    = coroutine.wrap;
+local handler
 local emoticonsServer;
-local prefix = settings.prefix;
-local wrap = coroutine.wrap;
-
 discordia.extensions.string();
+require("./timedFunctions")(clock, client, statusTable, handler);
 
-local function unfuckTsihRobo()
-  client:getChannel("1016454439726481539"):send('a');
+local function readCommands(handl)
+  local commands = {};
+  for _, value in ipairs(handl) do
+    local commandName = value:sub(1, value:find(".lua") - 1);
+    local commandTable = require(".." .. "/slashCommands/" .. value);
+    commands[commandName] = commandTable;
+  end
+  local commandsMetaTable = {
+    __index = function()
+      local M = {};
+      function M.execute(message)
+        client:warning("Something went wrong.")
+      end
+
+      return M;
+    end
+  };
+  return setmetatable(commands, commandsMetaTable);
 end
 
 local function hasTsihMention(message)
@@ -27,58 +45,64 @@ end
 
 local function rollRandomReactionDice(message)
   if hasTsihMention(message) or math.random() <= 0.01 then
-    wrap(function () unfuckTsihRobo() end)();
     randomReact.sendRandomReaction(message, emoticonsServer);
   end
 end
 
-local function executeCommand(message, args)
-  wrap(function () unfuckTsihRobo() end)();
-  if args[1]:sub(1, #prefix) == prefix then
-
-    args[1] = args[1]:sub(#prefix + 1, -1);
-
-    if args[1]:find("secret") and message.author.id == "206755895181312003" then
-      secretHandler[args[1]].execute(message, args, client);
-    else
-      handler[args[1]].execute(message, args, client);
+local function initializeCommands(commandsHandler, shouldResetCommands)
+  if shouldResetCommands then
+    client:info("Bot was opted to reset all global commands~");
+    for commandId in pairs(client:getGlobalApplicationCommands()) do
+      client:deleteGlobalApplicationCommand(commandId);
     end
 
-  elseif args[1] == "<@" .. client.user.id .. ">" then
+    client:info("Starting commands...");
 
-    help.execute(message, args);
+    for _, command in pairs(commandsHandler) do
+      if command.getSlashCommand then
+        client:createGlobalApplicationCommand(command.getSlashCommand(tools));
+      end
+      if command.getMessageCommand then
+        client:createGlobalApplicationCommand(command.getMessageCommand(tools));
+      end
+    end
 
+    client:info("Done!");
   end
 end
 
 
 
 client:on("ready", function()
+  handler = readCommands(fs.readdirSync("src/slashCommands"));
+
+  client:info("I'm currently serving in " .. #client.guilds .. " servers nanora!");
+  for _, guild in pairs(client.guilds) do print(guild.id, guild.name) end
+
+  initializeCommands(handler, args[3]);
+
   clock:start();
   client:setActivity(statusTable[math.random(#statusTable)]);
   emoticonsServer = client:getGuild(settings.emoticonsServerId);
-  print("Ready nanora!\nPrefix = ", prefix);
+
+  client:info("💙Ready nanora!💜");
 end)
 
 client:on("messageCreate", function(message)
   if message.author.bot then return end
-  local args = message.content:gsub('%c', ' '):split(' ');
-
-  wrap(function () rollRandomReactionDice(message) end)();
-
-  wrap(function () executeCommand(message, args)   end)();
-
-  handler["sauce"].autoExecute(message);
+  wrap(function() rollRandomReactionDice(message) end)();
+  handler["sauce"].sendSauce(message);
 end)
 
-clock:on("min", function()
-  client:setActivity(statusTable[math.random(#statusTable)]);
+client:on("slashCommand", function(interaction, command, args)
+  p(command);
+  handler[command.name].executeSlashCommand(interaction, command, args, client);
 end)
 
-clock:on("hour", function(now)
-  if now.hour == 18 then
-    handler["tsihClock"].executeWithTimer(client);
-  end
+client:on("messageCommand", function(interaction, command, message)
+  p(command);
+  command.name = command.name:gsub("Send", '');
+  handler[command.name].executeMessageCommand(interaction, command, message);
 end)
 
 client:run('Bot ' .. args[2])

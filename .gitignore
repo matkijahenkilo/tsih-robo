@@ -6,6 +6,9 @@ luvit
 # not necessary for staging
 deps/
 temp/
+discordia-ext.lua
+discordia.lua
+interaction.lua
 
 # sensitive info
 cookies.txt

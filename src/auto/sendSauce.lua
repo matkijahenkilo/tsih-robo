@@ -338,6 +338,12 @@ return {
       }
     }
   },
+  getSlashCommand = function (tools)
+    return tools.getSlashCommand("setsaucelimit", "Sets a limit for images I send on this text channel when getting images from websites nanora!")
+      :addOption(tools.integer("limit", "Default is 5 nanora!")
+      :setRequired(true)
+    );
+  end,
   execute = function (message)
     setSauceLimit(message);
   end,
