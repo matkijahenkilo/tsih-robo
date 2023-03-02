@@ -8,19 +8,14 @@ local answer = {
   "Don't just hug me all of sudden nora!",
 }
 
-local function normalHug(interaction)
-  interaction:reply {
-    content = answer[math.random(1, #answer)],
-    file = omori.getOmoriReactionGif(2, math.random(0, 2));
-  }
-end
-
 return {
   getSlashCommand = function (tools)
     return tools.slashCommand("hug", "You hug a kiddo!")
-      --:addOption(tools.user("somebody", "To hug somebody else"))
   end,
   executeSlashCommand = function(interaction)
-    normalHug(interaction);
+    interaction:reply {
+      content = answer[math.random(1, #answer)],
+      file = omori.getOmoriReactionGif(2, math.random(0, 2));
+    }
   end
 };

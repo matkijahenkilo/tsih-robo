@@ -95,13 +95,11 @@ client:on("messageCreate", function(message)
 end)
 
 client:on("slashCommand", function(interaction, command, args)
-  p(command);
   handler[command.name].executeSlashCommand(interaction, command, args, client);
 end)
 
 client:on("messageCommand", function(interaction, command, message)
-  command.name = command.name:gsub("Send ", '');
-  handler[command.name].executeMessageCommand(interaction, command, message);
+  handler[command.name:gsub("Send ", '')].executeMessageCommand(interaction, command, message);
 end)
 
 client:run('Bot ' .. args[2])
