@@ -5,7 +5,7 @@ return function (clock, client, statusTable, slashHandler)
 
   clock:on("hour", function(now)
     if now.hour == 18 then
-      slashHandler["tsihClock"].executeWithTimer(client);
+      slashHandler["tsihoclock"].executeWithTimer(client);
     end
   end)
 end

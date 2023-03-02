@@ -48,15 +48,15 @@ local fileTables = {
   gif = fs.readdirSync(ORIGIN .. "gif"),
 }
 
-local function sendCuteness(interaction, fileType, isSlashCommand)
-  local channel = interaction.channel;
-  if channel == nil then return end
-
-  local list = fileTables[fileType];
+local function getTsihArtworkWithEmbedMessage(fileFormat)
+  local list = fileTables[fileFormat];
 
   local fileToSend = list[math.random(#list)]; -- filename must not have weird characters, spaces nor '()' and '+'
-  local file = ORIGIN .. fileType .. '/' .. fileToSend;
-  local embed = {
+  local file = ORIGIN .. fileFormat .. '/' .. fileToSend;
+
+  print("Got Tsih O'Clock file: " .. fileToSend);
+
+  return {
     file = file,
     embed = {
       title = randomTitle[math.random(#randomTitle)],
@@ -73,24 +73,22 @@ local function sendCuteness(interaction, fileType, isSlashCommand)
       },
     },
   };
-
-  if isSlashCommand then
-    interaction:reply(embed, true);
-  else
-    channel:send(embed);
-  end
-
-  print("Sent Tsih O'Clock file: " .. fileToSend);
 end
 
-local function tsihClock(interaction, fileType, isSlashCommand)
+local function sendCuteness(channel, fileType)
+  if not channel then return end
+
+  channel:send(getTsihArtworkWithEmbedMessage(fileType));
+end
+
+local function tsihClock(interaction, fileType)
   if fileType == "gif" or fileType == "image" then
-    sendCuteness(interaction, fileType, isSlashCommand);
+    sendCuteness(interaction, fileType);
   else
     if math.random() <= 0.1 then
-      sendCuteness(interaction, "gif", isSlashCommand);
+      sendCuteness(interaction, "gif");
     else
-      sendCuteness(interaction, "image", isSlashCommand);
+      sendCuteness(interaction, "image");
     end
   end
 end
@@ -151,10 +149,22 @@ local function sendAllTOC(client)
   end
 end
 
+local function tsihClockSlash(interaction, format)
+  if format then
+    interaction:reply(getTsihArtworkWithEmbedMessage(format))
+  else
+    if math.random() <= 0.1 then
+      interaction:reply(getTsihArtworkWithEmbedMessage("gif"))
+    else
+      interaction:reply(getTsihArtworkWithEmbedMessage("image"))
+    end
+  end
+end
+
 local functions = {
   sign   = sign,
   unsign = remove,
-  manual = tsihClock
+  manual = tsihClockSlash
 }
 
 return {

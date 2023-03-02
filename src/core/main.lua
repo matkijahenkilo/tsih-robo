@@ -16,7 +16,6 @@ local wrap    = coroutine.wrap;
 local handler
 local emoticonsServer;
 discordia.extensions.string();
-require("./timedFunctions")(clock, client, statusTable, handler);
 
 local function readCommands(handl)
   local commands = {};
@@ -84,6 +83,7 @@ client:on("ready", function()
   emoticonsServer = client:getGuild(settings.emoticonsServerId);
 
   initializeCommands(handler, args[3]);
+  require("./timedFunctions")(clock, client, statusTable, handler);
 
   client:info("💙Ready nanora!💜");
 end)
