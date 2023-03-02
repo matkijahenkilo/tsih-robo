@@ -79,11 +79,11 @@ client:on("ready", function()
   client:info("I'm currently serving in " .. #client.guilds .. " servers nanora!");
   for _, guild in pairs(client.guilds) do print(guild.id, guild.name) end
 
-  initializeCommands(handler, args[3]);
-
   clock:start();
   client:setActivity(statusTable[math.random(#statusTable)]);
   emoticonsServer = client:getGuild(settings.emoticonsServerId);
+
+  initializeCommands(handler, args[3]);
 
   client:info("💙Ready nanora!💜");
 end)
@@ -100,8 +100,7 @@ client:on("slashCommand", function(interaction, command, args)
 end)
 
 client:on("messageCommand", function(interaction, command, message)
-  p(command);
-  command.name = command.name:gsub("Send", '');
+  command.name = command.name:gsub("Send ", '');
   handler[command.name].executeMessageCommand(interaction, command, message);
 end)
 
