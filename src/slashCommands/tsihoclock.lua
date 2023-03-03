@@ -54,8 +54,6 @@ local function getTsihArtworkWithEmbedMessage(fileFormat)
   local fileToSend = list[math.random(#list)]; -- filename must not have weird characters, spaces nor '()' and '+'
   local file = ORIGIN .. fileFormat .. '/' .. fileToSend;
 
-  print("Got Tsih O'Clock file: " .. fileToSend);
-
   return {
     file = file,
     embed = {
@@ -96,6 +94,7 @@ end
 local function sign(interaction)
   local ids = fs.readFileSync(IDS_PATH);
   local id = interaction.channel.id;
+  local guildName = interaction.guild.name;
   local t = {};
   if ids then
     t = json.decode(ids);
@@ -110,7 +109,7 @@ local function sign(interaction)
     end
   end
 
-  table.insert(t, { id = id });
+  table.insert(t, { id = id, guildName = guildName });
   fs.writeFileSync(IDS_PATH, json.encode(t));
 
   interaction:reply("This room is now signed for Tsih O'Clock nanora!");
@@ -143,6 +142,7 @@ local function sendAllTOC(client)
       total = total + 1;
       coroutine.wrap(function()
         tsihClock(client:getChannel(value.id));
+        print("Sending artwork to " .. value.guildName);
       end)();
     end
     print("Sending " .. total .. " Tsih's fan arts nanora!");
@@ -183,15 +183,27 @@ return {
             :addChoice(tools.choice("gif", "gif"))
             :addChoice(tools.choice("image", "image"))
           )
-        );
+        )
+        :addOption(
+          tools.subCommand("auto", "For the strongest, nanora.")
+        )
   end,
-  executeSlashCommand = function(interaction, command, args)
+  executeSlashCommand = function(interaction, command, args, client, settings)
+    local commandName = command.options[1].name;
     local format;
     if args.manual then
       format = args.manual.format
     end
 
-    functions[command.options[1].name](interaction, format);
+    if commandName == "auto" then
+      if client.owner.id == settings.ownerid then
+        sendAllTOC(client);
+      else
+        interaction:reply(":eye::wavy_dash::eye:", true);
+      end
+    else
+      functions[commandName](interaction, format);
+    end
   end,
   executeWithTimer = function(client)
     sendAllTOC(client);
