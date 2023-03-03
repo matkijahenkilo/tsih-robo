@@ -12,7 +12,7 @@ I wanted to make her act canonically as she would act in one of the games she's 
 
 ## Commands
 
-You can write `ts!help` for more information for running commands.
+tsih-robo supports slash and message commands, to load them pass a third argument "true" when loading main.lua, you would prefer to do this only once.
 
 ## Installation
 
@@ -26,23 +26,43 @@ You can write `ts!help` for more information for running commands.
 
 Follow [Discordia](https://github.com/SinisterRectus/discordia)'s installation guide.
 
-Download and put [coro-spawn.lua](https://raw.githubusercontent.com/luvit/lit/master/deps/coro-spawn.lua) into deps/
+Git clone [discordia-interactions](https://github.com/Bilal2453/discordia-interactions) and [discordia-slash](https://github.com/GitSparTV/discordia-slash) inside `deps` folder
 
-I recommend you do the same with [http-codec.lua](https://raw.githubusercontent.com/luvit/lit/master/deps/http-codec.lua), because the one that Discordia has is outdated.
+Be aware that I modified discordia-slash's Client.lua file a bit: I've added the following methods into the file:
 
-For a fast setup, simply copy and paste this command block into a Linux terminal:
+```lua
+function Client:getGlobalApplicationCommands()
+	local data, err = self._api:getGlobalApplicationCommands(self:getApplicationInformation().id)
 
+	if data then
+		return Cache(data, ApplicationCommand, self)
+	else
+		return nil, err
+	end
+end
+
+function Client:createGlobalApplicationCommand(id, payload)
+	local data, err = self._api:createGlobalApplicationCommand(self:getApplicationInformation().id, id)
+
+	if data then
+		return ApplicationCommand(data, self)
+	else
+		return nil, err
+	end
+end
+
+function Client:deleteGlobalApplicationCommand(id)
+	local data, err = self._api:deleteGlobalApplicationCommand(self:getApplicationInformation().id, id)
+
+	if data then
+		return data
+	else
+		return nil, err
+	end
+end
 ```
-git clone https://github.com/Defalts2/tsih-robo
-cd tsih-robo/
-curl -L https://github.com/luvit/lit/raw/master/get-lit.sh | sh
-./lit install SinisterRectus/discordia
-wget https://raw.githubusercontent.com/luvit/lit/master/deps/coro-spawn.lua
-wget https://raw.githubusercontent.com/luvit/lit/master/deps/http-codec.lua
-mv coro-spawn.lua deps/
-mv http-codec.lua deps/
-./luvit src/core/main.lua
-```
+
+Without them, certain Client methods won't work in main.lua
 
 ### gallery-dl configuration
 
