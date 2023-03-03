@@ -151,12 +151,12 @@ end
 
 local function tsihClockSlash(interaction, format)
   if format then
-    interaction:reply(getTsihArtworkWithEmbedMessage(format))
+    interaction:reply(getTsihArtworkWithEmbedMessage(format), true)
   else
     if math.random() <= 0.1 then
-      interaction:reply(getTsihArtworkWithEmbedMessage("gif"))
+      interaction:reply(getTsihArtworkWithEmbedMessage("gif"), true)
     else
-      interaction:reply(getTsihArtworkWithEmbedMessage("image"))
+      interaction:reply(getTsihArtworkWithEmbedMessage("image"), true)
     end
   end
 end
@@ -191,7 +191,7 @@ return {
       format = args.manual.format
     end
 
-    functions[command.options[1].name](interaction, format, true);
+    functions[command.options[1].name](interaction, format);
   end,
   executeWithTimer = function(client)
     sendAllTOC(client);
