@@ -271,7 +271,7 @@ local function sendAnySauce(message)
       if limit == 0 then return end
 
       for _, value in ipairs(t) do
-        if value ~= '' then
+        if value ~= '' and value:find("https://") then
           coroutine.wrap(function()
             downloadSendAndDeleteImages(value, message, limit);
           end)();
