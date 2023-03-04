@@ -44,18 +44,6 @@ local function getSpecificLinks(t, string)
   return specificLinks;
 end
 
-local function getBaraagImageFromTheSecondLink(t)
-  local baraagLink = {};
-  for index, value in ipairs(t:split("\n")) do
-    if index == 2 then
-      table.insert(baraagLink, value);
-    elseif index > 2 then
-      table.insert(baraagLink, '\n' .. value);
-    end
-  end
-  return baraagLink;
-end
-
 local function readProcess(child)
   local linksTable = {};
   child:waitExit();
@@ -66,7 +54,9 @@ local function readProcess(child)
     if link:find("pbs.twimg") then
       return getSpecificLinks(link, "video.twimg");
     elseif link:find("media.baraag.net") then
-      return getBaraagImageFromTheSecondLink(link);
+      local baraagLinks = getSpecificLinks(link, "media.baraag.net");
+      table.remove(baraagLinks, 1);
+      return baraagLinks;
     end
   end
 
@@ -235,9 +225,10 @@ local function getRoomImageLimit(message)
   local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
   if rawJson then
     local t = json.decode(rawJson);
-    if not t then return end
-    if t[guildId] then
-      return t[guildId][channelId];
+    if t then
+      if t[guildId] then
+        return t[guildId][channelId];
+      end
     end
   end
 end
