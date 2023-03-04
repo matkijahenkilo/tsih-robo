@@ -269,6 +269,27 @@ local function sendSauce(message)
   end
 end
 
+local function sendAnySauce(message)
+  local content = message.content;
+  if content then
+    if content:find("https://") then
+      content = content:gsub('\n', ' '):gsub('||', ' ');
+      local t = content:split(' ');
+      local limit = getRoomImageLimit(message) or 5;
+
+      if limit == 0 then return end
+
+      for _, value in ipairs(t) do
+        if value ~= '' then
+          coroutine.wrap(function()
+            downloadSendAndDeleteImages(value, message, limit);
+          end)();
+        end
+      end
+    end
+  end
+end
+
 return {
   getSlashCommand = function(tools)
     return tools.slashCommand("sauce", "Sets a limit for images I send nanora!")
@@ -315,9 +336,9 @@ return {
       interaction:reply("I won't be sending the link's sauces in this room anymore nanora!");
     end
   end,
-  executeMessageCommand = function (interaction, command, message)
+  executeMessageCommand = function (interaction, _, message)
     interaction:reply("Alrighty nanora! One second...", true);
-    sendSauce(message);
+    sendAnySauce(message);
   end,
   sendSauce = function(message)
     sendSauce(message);
