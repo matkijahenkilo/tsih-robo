@@ -188,7 +188,7 @@ return {
           tools.subCommand("auto", "For the strongest, nanora.")
         )
   end,
-  executeSlashCommand = function(interaction, command, args, client, settings)
+  executeSlashCommand = function(interaction, command, args, client)
     local commandName = command.options[1].name;
     local format;
     if args.manual then
@@ -196,10 +196,11 @@ return {
     end
 
     if commandName == "auto" then
-      if client.owner.id == settings.ownerid then
+      if client.owner.id == interaction.user.id then
+        interaction:reply("Oki nanora!", true);
         sendAllTOC(client);
       else
-        interaction:reply(":eye::wavy_dash::eye:", true);
+        interaction:reply("👁️〰️👁️", true);
       end
     else
       functions[commandName](interaction, format);
