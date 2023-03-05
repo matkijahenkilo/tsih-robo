@@ -188,13 +188,13 @@ local function downloadSendAndDeleteImages(value, message, limit)
   deleteDownloadedImage(file, id);
 end
 
-local function createJson(newLimit, guildId, channelId)
-  local newGuildRule = {
+local function createJsonFileWithChannelRule(newLimit, guildId, channelId)
+  local newJsonFileWithRule = {
     [guildId] = {
       [channelId] = newLimit
     }
   };
-  fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(newGuildRule));
+  fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(newJsonFileWithRule));
 end
 
 local function verifyIfRuleExists(t, guildId, channelId)
@@ -230,6 +230,36 @@ local function getRoomImageLimit(message)
         return t[guildId][channelId];
       end
     end
+  end
+end
+
+local function setSauceLimitOnChannel(interaction, args)
+  if not interaction.guild then
+    interaction:reply("This function does not work with DMs nanora!", true);
+    return;
+  end
+
+  local newLimit = args.limit
+  local guildId = interaction.guild.id;
+  local channelId = interaction.channel.id;
+
+  local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
+
+  if rawJson then
+    local jsonContent = json.decode(rawJson);
+    if verifyIfRuleExists(jsonContent, guildId, channelId) then
+      replaceChannelRule(jsonContent, newLimit, guildId, channelId);
+    else
+      addGuildAndChannelRule(jsonContent, newLimit, guildId, channelId);
+    end
+  else
+    createJsonFileWithChannelRule(newLimit, guildId, channelId);
+  end
+
+  if newLimit ~= 0 then
+    interaction:reply("I will send up to " .. newLimit .. " images per link in this room nanora!");
+  else
+    interaction:reply("I won't be sending the link's sauces in this room anymore nanora!");
   end
 end
 
@@ -294,38 +324,8 @@ return {
   getMessageCommand = function(tools)
     return tools.messageCommand("Send sauce");
   end,
-  executeSlashCommand = function(interaction, command, args)
-    if not interaction.guild then
-      interaction:reply("This function does not work with DMs nanora!", true);
-      return;
-    end
-
-    local newLimit = args.limit
-    local guildId = interaction.guild.id;
-    local channelId = interaction.channel.id;
-
-    local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
-    local jsonContent = nil;
-    if rawJson then
-      jsonContent = json.decode(rawJson);
-    end
-
-    if not jsonContent then
-      createJson(newLimit, guildId, channelId);
-      return;
-    end
-
-    if verifyIfRuleExists(jsonContent, guildId, channelId) then
-      replaceChannelRule(jsonContent, newLimit, guildId, channelId);
-    else
-      addGuildAndChannelRule(jsonContent, newLimit, guildId, channelId);
-    end
-
-    if newLimit ~= 0 then
-      interaction:reply("I will send up to " .. newLimit .. " images per link in this room nanora!");
-    else
-      interaction:reply("I won't be sending the link's sauces in this room anymore nanora!");
-    end
+  executeSlashCommand = function(interaction, _, args)
+    setSauceLimitOnChannel(interaction, args);
   end,
   executeMessageCommand = function (interaction, _, message)
     interaction:reply("Alrighty nanora! One second...", true);
@@ -334,5 +334,4 @@ return {
   sendSauce = function(message)
     sendSauce(message);
   end
-
 }

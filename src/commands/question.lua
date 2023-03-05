@@ -24,8 +24,8 @@ return {
           tools.string("question", "The!!! question"):setRequired(true)
         )
   end,
-  executeSlashCommand = function(interaction, command, args)
-    interaction:reply(interaction.member.name .. " asked: "
-    .. args.string .. "\n" .. answer[math.random(#answer)]);
+  executeSlashCommand = function(interaction, _, args)
+    interaction:reply(interaction.member.name .. " asked: " .. args.question .. "\n"
+    .. answer[math.random(#answer)]);
   end
 }
