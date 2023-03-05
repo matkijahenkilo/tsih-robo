@@ -36,9 +36,9 @@ end
 
 local function getSpecificLinks(t, string)
   local specificLinks = {};
-  for _, value in ipairs(t:split("\n")) do
+  for _, value in ipairs(t:split('\n')) do
     if value:find(string) then
-      table.insert(specificLinks, value);
+      table.insert(specificLinks, value .. '\n');
     end
   end
   return specificLinks;
