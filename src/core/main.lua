@@ -76,7 +76,7 @@ client:on("ready", function()
   handler = readCommands(fs.readdirSync("src/commands"));
 
   client:info("I'm currently serving in " .. #client.guilds .. " servers nanora!");
-  for _, guild in pairs(client.guilds) do print(guild.id, guild.name) end
+  for _, guild in pairs(client.guilds) do client:info(guild.id .. ' ' .. guild.name) end
 
   clock:start();
   client:setActivity(statusTable[math.random(#statusTable)]);
