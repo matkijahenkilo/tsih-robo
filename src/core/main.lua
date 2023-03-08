@@ -14,7 +14,7 @@ local randomReact = require("../misc/randomReact");
 local fs      = require("fs");
 local wrap    = coroutine.wrap;
 local handler
-local emoticonsServer;
+local emoticonsServer = {};
 discordia.extensions.string();
 
 local function readCommands(handl)
@@ -80,7 +80,10 @@ client:on("ready", function()
 
   clock:start();
   client:setActivity(statusTable[math.random(#statusTable)]);
-  emoticonsServer = client:getGuild(settings.emoticonsServerId);
+
+  for index, id in ipairs(settings.emoticonsServers) do
+    emoticonsServer[index] = client:getGuild(id);
+  end
 
   initializeCommands(handler, args[3]);
 

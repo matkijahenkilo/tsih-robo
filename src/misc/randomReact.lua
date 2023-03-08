@@ -1,7 +1,7 @@
-local M = {}
+local M = {};
 
 function M.sendRandomReaction(message, emoticonServer)
-    message:addReaction(emoticonServer.emojis:random());
+    message:addReaction(emoticonServer[math.random(#emoticonServer)].emojis:random());
 end
 
 return M;
