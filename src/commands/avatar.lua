@@ -1,9 +1,11 @@
-local function sendMessage(interaction, args, client)
+local function sendMessage(interaction, args)
   local avatarLink;
   if not args then
-    avatarLink = interaction.user:getAvatarURL(1024);
+    avatarLink = interaction.member or interaction.user;
+    avatarLink = avatarLink:getAvatarURL(1024);
   else
-    avatarLink = args.user:getAvatarURL(1024);
+    avatarLink = args.member or args.user;
+    avatarLink = avatarLink:getAvatarURL(1024);
   end
 
   interaction:reply {
@@ -25,7 +27,7 @@ return {
           tools.user("user", "Somebody else's avatar")
         )
   end,
-  executeSlashCommand = function(interaction, _, args, client)
-    sendMessage(interaction, args, client);
+  executeSlashCommand = function(interaction, _, args)
+    sendMessage(interaction, args);
   end
 };
