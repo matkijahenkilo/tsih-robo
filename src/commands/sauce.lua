@@ -237,19 +237,40 @@ local function getRoomImageLimit(message)
     local t = json.decode(rawJson);
     if t then
       if t[guildId] then
-        return t[guildId][channelId];
+        return t[guildId][channelId] or t[guildId]["global"] ;
       end
     end
   end
 end
 
-local function setSauceLimitOnChannel(interaction, args)
+local function replyToSlash(interaction, newLimit, isGlobal)
+  if isGlobal then
+    if newLimit ~= 0 then
+      interaction:reply("I will send up to " .. newLimit .. " images per link in this **server** nanora!");
+    else
+      interaction:reply("I won't be sending the link's contents in this **server** anymore nanora!");
+    end
+  else
+    if newLimit ~= 0 then
+      interaction:reply("I will send up to " .. newLimit .. " images per link in this room nanora!");
+    else
+      interaction:reply("I won't be sending the link's contents in this room anymore nanora!");
+    end
+  end
+end
+
+local function isMemberOnGuild(interaction)
   if not interaction.guild then
     interaction:reply("This function does not work with DMs nanora!", true);
-    return;
+    return false;
   end
+  return true;
+end
 
-  local newLimit = args.limit
+local function setSauceLimitOnChannel(interaction, channelCommand)
+  if not isMemberOnGuild(interaction) then return end
+
+  local newLimit = channelCommand.limit
   local guildId = interaction.guild.id;
   local channelId = interaction.channel.id;
 
@@ -265,12 +286,29 @@ local function setSauceLimitOnChannel(interaction, args)
   else
     createJsonFileWithChannelRule(newLimit, guildId, channelId);
   end
+  replyToSlash(interaction, newLimit, false);
+end
 
-  if newLimit ~= 0 then
-    interaction:reply("I will send up to " .. newLimit .. " images per link in this room nanora!");
+local function setSauceLimitOnServer(interaction, globalCommand)
+  if not isMemberOnGuild(interaction) then return end
+
+  local newLimit = globalCommand.limit
+  local guildId = interaction.guild.id;
+
+  local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
+
+  if rawJson then
+    local jsonContent = json.decode(rawJson);
+    if verifyIfRuleExists(jsonContent, guildId, "global") then
+      replaceChannelRule(jsonContent, newLimit, guildId, "global");
+    else
+      addGuildAndChannelRule(jsonContent, newLimit, guildId, "global");
+    end
   else
-    interaction:reply("I won't be sending the link's sauces in this room anymore nanora!");
+    createJsonFileWithChannelRule(newLimit, guildId, "global");
   end
+
+  replyToSlash(interaction, newLimit, false);
 end
 
 local function sendSauce(message, client)
@@ -327,17 +365,34 @@ return {
   getSlashCommand = function(tools)
     return tools.slashCommand("sauce", "Sets a limit for images I send nanora!")
         :addOption(
-          tools.integer("limit", "Default is 5 nanora! Input 0 if you don't want me to send images again nora!")
-          :setMinValue(0)
-          :setMaxValue(10)
-          :setRequired(true)
-        );
+          tools.subCommand("channel", "Sets a limit for this channel only nanora!")
+          :addOption(
+            tools.integer("limit", "Default is 5 nanora! Input 0 if you don't want me to send images again nora!")
+            :setMinValue(0)
+            :setMaxValue(10)
+            :setRequired(true)
+          )
+        )
+        :addOption(
+          tools.subCommand("global", "Sets a limit for this entire server nanora!")
+            :addOption(
+              tools.integer("limit", "Default is 5 nanora! Input 0 if you don't want me to send images again nora!")
+              :setMinValue(0)
+              :setMaxValue(10)
+              :setRequired(true)
+            )
+        )
   end,
   getMessageCommand = function(tools)
     return tools.messageCommand("Send sauce");
   end,
   executeSlashCommand = function(interaction, _, args)
-    setSauceLimitOnChannel(interaction, args);
+    p(args)
+    if args.global then
+      setSauceLimitOnServer(interaction, args.global);
+    else
+      setSauceLimitOnChannel(interaction, args.channel);
+    end
   end,
   executeMessageCommand = function (interaction, _, message)
     interaction:reply("Alrighty nanora! One second...", true);
