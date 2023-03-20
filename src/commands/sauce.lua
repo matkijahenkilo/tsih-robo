@@ -159,7 +159,9 @@ local function sendTwitterDirectVideoUrl(value, message, limit)
   if url:find("video.twimg") then
     local success, err = sendUrl(message, url);
     checkSuccess(success, err, message, value);
+    return true;
   end
+  return false;
 end
 
 local function sendDirectImageUrl(value, message, limit)
@@ -186,6 +188,14 @@ local function downloadSendAndDeleteImages(value, message, limit)
   end
 
   deleteDownloadedImage(file, id);
+end
+
+local function sendTwitterImages(value, message, limit, client)
+  if not message.embed then
+    if not client:waitFor("messageUpdate", 2500) then
+      downloadSendAndDeleteImages(value, message, limit);
+    end
+  end
 end
 
 local function createJsonFileWithChannelRule(newLimit, guildId, channelId)
@@ -263,7 +273,7 @@ local function setSauceLimitOnChannel(interaction, args)
   end
 end
 
-local function sendSauce(message)
+local function sendSauce(message, client)
   local content = message.content;
   if content then
     if content:find("https://") then
@@ -281,7 +291,9 @@ local function sendSauce(message)
             elseif verify(value, requireDownload) then
               downloadSendAndDeleteImages(value, message, limit);
             elseif value:find("https://twitter.com/") then
-              sendTwitterDirectVideoUrl(value, message, limit);
+              if not sendTwitterDirectVideoUrl(value, message, limit) then
+                sendTwitterImages(value, message, limit, client)
+              end
             end
           end)();
         end
@@ -331,7 +343,7 @@ return {
     interaction:reply("Alrighty nanora! One second...", true);
     sendAnySauce(message);
   end,
-  sendSauce = function(message)
-    sendSauce(message);
+  sendSauce = function(message, client)
+    sendSauce(message, client);
   end
 }

@@ -93,7 +93,7 @@ end)
 client:on("messageCreate", function(message)
   if message.author.bot then return end
   wrap(function() rollRandomReactionDice(message) end)();
-  handler["sauce"].sendSauce(message);
+  handler["sauce"].sendSauce(message, client);
 end)
 
 client:on("slashCommand", function(interaction, command, args)
