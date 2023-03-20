@@ -308,7 +308,7 @@ local function setSauceLimitOnServer(interaction, globalCommand)
     createJsonFileWithChannelRule(newLimit, guildId, "global");
   end
 
-  replyToSlash(interaction, newLimit, false);
+  replyToSlash(interaction, newLimit, true);
 end
 
 local function sendSauce(message, client)
