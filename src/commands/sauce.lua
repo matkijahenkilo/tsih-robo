@@ -267,6 +267,19 @@ local function isMemberOnGuild(interaction)
   return true;
 end
 
+local function saveConfig(rawJson, newLimit, guildId, globalOrChannelId)
+  if rawJson then
+    local jsonContent = json.decode(rawJson);
+    if verifyIfRuleExists(jsonContent, guildId, globalOrChannelId) then
+      replaceChannelRule(jsonContent, newLimit, guildId, globalOrChannelId);
+    else
+      addGuildAndChannelRule(jsonContent, newLimit, guildId, globalOrChannelId);
+    end
+  else
+    createJsonFileWithChannelRule(newLimit, guildId, globalOrChannelId);
+  end
+end
+
 local function setSauceLimitOnChannel(interaction, channelCommand)
   if not isMemberOnGuild(interaction) then return end
 
@@ -276,16 +289,8 @@ local function setSauceLimitOnChannel(interaction, channelCommand)
 
   local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
 
-  if rawJson then
-    local jsonContent = json.decode(rawJson);
-    if verifyIfRuleExists(jsonContent, guildId, channelId) then
-      replaceChannelRule(jsonContent, newLimit, guildId, channelId);
-    else
-      addGuildAndChannelRule(jsonContent, newLimit, guildId, channelId);
-    end
-  else
-    createJsonFileWithChannelRule(newLimit, guildId, channelId);
-  end
+  saveConfig(rawJson, newLimit, guildId, channelId);
+
   replyToSlash(interaction, newLimit, false);
 end
 
@@ -297,16 +302,7 @@ local function setSauceLimitOnServer(interaction, globalCommand)
 
   local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON);
 
-  if rawJson then
-    local jsonContent = json.decode(rawJson);
-    if verifyIfRuleExists(jsonContent, guildId, "global") then
-      replaceChannelRule(jsonContent, newLimit, guildId, "global");
-    else
-      addGuildAndChannelRule(jsonContent, newLimit, guildId, "global");
-    end
-  else
-    createJsonFileWithChannelRule(newLimit, guildId, "global");
-  end
+  saveConfig(rawJson, newLimit, guildId, "global");
 
   replyToSlash(interaction, newLimit, true);
 end
