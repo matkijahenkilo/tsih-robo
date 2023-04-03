@@ -114,7 +114,7 @@ return {
         :addOption(
           tools.subCommand("give", "I'll give you a personalized role nanora!")
           :addOption(
-            tools.string("name", "Your role's color nora!")
+            tools.string("name", "Your role's name nora!")
             :setRequired(true)
           )
           :addOption(
