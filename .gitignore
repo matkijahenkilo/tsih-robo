@@ -14,6 +14,7 @@ interaction.lua
 cookies.txt
 *.json
 *.log
+token.txt
 
 # images, gifs, videos and sounds that are chonky
 assets/sounds/*

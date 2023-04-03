@@ -1,8 +1,3 @@
-if not args[2] then
-  print("please especify a token!");
-  return;
-end
-
 local discordia   = require("discordia");
 local tools       = require("discordia-slash").util.tools();
 local client      = discordia.Client():useApplicationCommands();
@@ -11,15 +6,16 @@ local settings    = require("../data/settings");
 local statusTable = require("../misc/statusTable");
 local randomReact = require("../misc/randomReact");
 
-local fs      = require("fs");
-local wrap    = coroutine.wrap;
-local handler
+local fs = require("fs");
+local wrap = coroutine.wrap;
+local commandsHandler;
 local emoticonsServer = {};
 discordia.extensions.string();
 
-local function readCommands(handl)
+do
+  local botCommands = fs.readdirSync("src/commands");
   local commands = {};
-  for _, value in ipairs(handl) do
+  for _, value in ipairs(botCommands) do
     local commandName = value:sub(1, value:find(".lua") - 1);
     local commandTable = require(".." .. "/commands/" .. value);
     commands[commandName] = commandTable;
@@ -30,11 +26,37 @@ local function readCommands(handl)
       function M.execute(message)
         client:warning("Something went wrong.")
       end
-
       return M;
     end
   };
-  return setmetatable(commands, commandsMetaTable);
+  commandsHandler = setmetatable(commands, commandsMetaTable);
+end
+
+local function initializeCommands(commands)
+  client:info("Bot was opted to reset all global commands~");
+  local i = 1
+  for commandId in pairs(client:getGlobalApplicationCommands()) do
+    client:info("Deleting command #"..i);
+    client:deleteGlobalApplicationCommand(commandId);
+    i = i + 1;
+  end
+
+  client:info("Creating commands...");
+  i = 1
+
+  for _, command in pairs(commands) do
+    if command.getSlashCommand then
+      client:info("Creating slash command #"..i);
+      client:createGlobalApplicationCommand(command.getSlashCommand(tools));
+    end
+    if command.getMessageCommand then
+      client:info("Creating message command #"..i);
+      client:createGlobalApplicationCommand(command.getMessageCommand(tools));
+    end
+    i = i + 1;
+  end
+
+  client:info("Done!");
 end
 
 local function hasTsihMention(message)
@@ -48,33 +70,9 @@ local function rollRandomReactionDice(message)
   end
 end
 
-local function initializeCommands(commandsHandler, shouldResetCommands)
-  if shouldResetCommands then
-    client:info("Bot was opted to reset all global commands~");
-    for commandId in pairs(client:getGlobalApplicationCommands()) do
-      client:deleteGlobalApplicationCommand(commandId);
-    end
-
-    client:info("Starting commands...");
-
-    for _, command in pairs(commandsHandler) do
-      if command.getSlashCommand then
-        client:createGlobalApplicationCommand(command.getSlashCommand(tools));
-      end
-      if command.getMessageCommand then
-        client:createGlobalApplicationCommand(command.getMessageCommand(tools));
-      end
-    end
-
-    client:info("Done!");
-  end
-end
-
 
 
 client:on("ready", function()
-  handler = readCommands(fs.readdirSync("src/commands"));
-
   client:info("I'm currently serving in " .. #client.guilds .. " servers nanora!");
   for _, guild in pairs(client.guilds) do client:info(guild.id .. ' ' .. guild.name) end
 
@@ -85,23 +83,21 @@ client:on("ready", function()
     emoticonsServer[index] = client:getGuild(id);
   end
 
-  initializeCommands(handler, args[3]);
-
   client:info("💙Ready nanora!💜");
 end)
 
 client:on("messageCreate", function(message)
   if message.author.bot then return end
-  wrap(function() rollRandomReactionDice(message) end)();
-  handler["sauce"].sendSauce(message, client);
+  wrap(function () rollRandomReactionDice(message) end)();
+  commandsHandler["sauce"].sendSauce(message, client);
 end)
 
 client:on("slashCommand", function(interaction, command, args)
-  handler[command.name].executeSlashCommand(interaction, command, args, client);
+  commandsHandler[command.name].executeSlashCommand(interaction, command, args, client);
 end)
 
 client:on("messageCommand", function(interaction, command, message)
-  handler[command.name:gsub("Send ", '')].executeMessageCommand(interaction, command, message);
+  commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand(interaction, command, message);
 end)
 
 clock:on("min", function()
@@ -110,8 +106,15 @@ end)
 
 clock:on("hour", function(now)
   if now.hour == 18 then
-    handler["tsihoclock"].executeWithTimer(client);
+    commandsHandler["tsihoclock"].executeWithTimer(client);
   end
 end)
 
-client:run('Bot ' .. args[2])
+do
+  local file = io.open("src/data/token.txt", "r");
+  if not file then error("token.txt not found") end
+  local token = file:read("a");
+  file:close();
+  client:run('Bot ' .. token);
+  if settings.shouldResetCommands then initializeCommands(commandsHandler) end
+end
