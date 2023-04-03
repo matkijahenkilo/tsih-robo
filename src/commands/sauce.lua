@@ -68,6 +68,8 @@ local function checkSuccess(success, err, message, value)
     p("Couldn't get link: " .. value, "Reason: " .. err);
     message:addReaction("🇳");
     message:addReaction("🇴");
+    message:removeReaction("🇴");
+    message:removeReaction("🇳");
   end
 end
 
@@ -82,7 +84,7 @@ local function downloadImage(url, id, limit)
   });
 
   local file = table.concat(readProcess(child));
-  file = file:gsub("# ", '');
+  file = file:gsub("# ", ''):gsub("\r", '');
   file = file:split("\n");
   table.remove(file, #file);
 
