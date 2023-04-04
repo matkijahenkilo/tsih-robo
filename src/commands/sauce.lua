@@ -16,6 +16,7 @@ local doesNotRequireDownload = {
   "https://inkbunny.net/",
   "https://e-hentai.org/",
   "https://hentai2read.com/",
+  "https://misskey.io/",
 }
 
 local requireDownload = {
