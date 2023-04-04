@@ -24,7 +24,8 @@ local function isMemberOnVoiceChannel(voiceChannel, interaction)
 end
 
 local function deleteExistingFiles(interaction, id)
-  interaction:reply("**Song was opted to be re-downloaded**.\nDeleting existing files and re-downloading possible corrupted song nanora! Please wait~");
+  interaction:reply("**Song was opted to be re-downloaded**.\n"
+    .."Deleting existing files and re-downloading possible corrupted song nanora! Please wait~");
   fs.unlinkSync(MUSIC_FOLDER .. id .. ".mp3");
   fs.unlinkSync(MUSIC_FOLDER .. id .. ".webm");
 end
