@@ -11,12 +11,12 @@ local doesNotRequireDownload = {
   "https://pawoo.net/",
   "https://nijie.info/",
   "https://baraag.net/",
+  "https://misskey.io/",
   "https://nhentai.net/",
   "https://kemono.party/",
   "https://inkbunny.net/",
   "https://e-hentai.org/",
   "https://hentai2read.com/",
-  "https://misskey.io/",
 }
 
 local requireDownload = {
