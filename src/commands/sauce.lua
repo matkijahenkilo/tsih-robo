@@ -1,5 +1,5 @@
-local limitHandler = require("../classes/song/LimitHandler");
-local imageHandler = require("../classes/song/ImageSenderHandler");
+local limitHandler = require("../classes/sauce/LimitHandler");
+local imageHandler = require("../classes/sauce/ImageSenderHandler");
 require('discordia').extensions();
 
 local function sendSauce(message, client)
