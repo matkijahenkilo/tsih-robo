@@ -33,6 +33,10 @@ local function hasUrl(url)
   return url ~= '';
 end
 
+local function getFileSizeInMegaBytes(file)
+  return fs.statSync(file).size / (1024*1024)
+end
+
 local function getSpecificLinks(t, string)
   local specificLinks = {};
   for _, value in ipairs(t:split('\n')) do
@@ -64,7 +68,7 @@ end
 
 local function checkSuccess(success, err, message, value)
   if not success then
-    p("Couldn't get link: " .. value, "Reason: " .. err);
+    print("Couldn't get link: " .. value, "Reason: " .. err);
     message:addReaction("🇳");
     message:addReaction("🇴");
     message:removeReaction("🇴");
@@ -72,22 +76,35 @@ local function checkSuccess(success, err, message, value)
   end
 end
 
+local function filterBigFiles(filestbl)
+  for index, file in ipairs(filestbl) do
+    if file ~= '' and getFileSizeInMegaBytes(file) >= 8 then
+      print("deleting file "..file..", size: " .. getFileSizeInMegaBytes(file) .."mb");
+      filestbl[index] = '';
+      fs.unlinkSync(file);
+    end
+  end
+  return table.concat(filestbl, ' '):split(' '); -- because table.remove messes up with the for lmao
+end
+
 local function downloadImage(url, id, limit)
   local child = spawn("gallery-dl", {
     args = {
       "--cookies", "cookies.txt",
       "--range", "1-" .. limit, "--ugoira-conv",
-      "-D", "./temp/", --.. id .. "/",
+      --"-D", "./temp/"..id,
+      "-D", "./temp/",
       url
     }
   });
 
-  local file = table.concat(readProcess(child));
-  file = file:gsub("# ", ''):gsub("\r", '');
-  file = file:split("\n");
-  table.remove(file, #file); --removes an empty value
+  local filestbl = table.concat(readProcess(child));
+  filestbl = filestbl:gsub("# ", ''):gsub("\r", '');
+  filestbl = filestbl:split("\n");
+  filestbl = filterBigFiles(filestbl);
+  table.remove(filestbl, #filestbl); --removes an empty index
 
-  return file;
+  return filestbl;
 end
 
 local function sendDownloadedImage(message, images)
@@ -181,14 +198,14 @@ end
 
 function M.downloadSendAndDeleteImages(value, message, limit)
   local id = message.channel.id;
-  local file = downloadImage(value, id, limit);
+  local filestbl = downloadImage(value, id, limit);
 
-  if hasFile(file) then
-    local success, err = sendDownloadedImage(message, file);
+  if hasFile(filestbl) then
+    local success, err = sendDownloadedImage(message, filestbl);
     checkSuccess(success, err, message, value);
   end
 
-  --deleteDownloadedImage(file, id);
+  --deleteDownloadedImage(filestbl, id);
 end
 
 function M.sendTwitterImages(value, message, limit, client)
