@@ -1,4 +1,4 @@
-local omori = require("src/misc/omori");
+local omori = require("src/utils/omori");
 
 return {
   getSlashCommand = function (tools)

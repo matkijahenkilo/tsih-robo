@@ -2,9 +2,9 @@ local discordia   = require("discordia");
 local tools       = require("discordia-slash").util.tools();
 local client      = discordia.Client():useApplicationCommands();
 local clock       = discordia.Clock();
-local settings    = require("../data/settings");
-local statusTable = require("../misc/statusTable");
-local randomReact = require("../misc/randomReact");
+local settings    = require("src/data/settings");
+local statusTable = require("src/utils/statusTable");
+local randomReact = require("src/utils/randomReact");
 
 local fs = require("fs");
 local wrap = coroutine.wrap;
@@ -17,7 +17,7 @@ do
   local commands = {};
   for _, value in ipairs(botCommands) do
     local commandName = value:sub(1, value:find(".lua") - 1);
-    local commandTable = require(".." .. "/commands/" .. value);
+    local commandTable = require("./src/" .. "commands/" .. value);
     commands[commandName] = commandTable;
   end
   local commandsMetaTable = {

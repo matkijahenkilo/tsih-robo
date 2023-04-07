@@ -1,4 +1,4 @@
-local omori = require('src/misc/omori');
+local omori = require('src/utils/omori');
 
 local answer = {
   "The heck you doing to me?!",
