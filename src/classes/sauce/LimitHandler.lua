@@ -81,7 +81,7 @@ function M.getRoomImageLimit(message)
     local t = json.decode(rawJson);
     if t then
       if t[guildId] then
-        return t[guildId][channelId] or t[guildId]["global"] ;
+        return t[guildId][channelId] or t[guildId]["global"];
       end
     end
   end
