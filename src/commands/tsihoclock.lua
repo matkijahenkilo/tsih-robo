@@ -1,5 +1,5 @@
-local signHandler = require("../classes/tsihoclock/SignHandler")
-local imageHandler = require("../classes/tsihoclock/ImageSenderHandler")
+local signHandler = require("../modules/tsihoclock/SignHandler")
+local imageHandler = require("../modules/tsihoclock/ImageSenderHandler")
 
 local functions = {
   sign   = signHandler.sign,

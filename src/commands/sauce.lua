@@ -1,5 +1,5 @@
-local limitHandler = require("../classes/sauce/LimitHandler");
-local imageHandler = require("../classes/sauce/ImageSenderHandler");
+local limitHandler = require("../modules/sauce/LimitHandler");
+local imageHandler = require("../modules/sauce/ImageSenderHandler");
 require('discordia').extensions();
 
 local function findLinksToSend(message, link, limit, client)
