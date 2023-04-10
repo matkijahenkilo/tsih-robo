@@ -15,11 +15,16 @@ local function registrationExists(t)
   end
 end
 
-function M.sign(interaction)
+local function isInGuild(interaction)
   if not interaction.guild then
     interaction:reply("This function only works within servers nanora!", true);
-    return;
+    return false;
   end
+  return true;
+end
+
+function M.sign(interaction)
+  if not isInGuild(interaction) then return end
 
   local ids = fs.readFileSync(M.IdsPath);
   local id = interaction.channel.id;
@@ -42,24 +47,24 @@ function M.sign(interaction)
 end
 
 function M.remove(interaction)
-  if interaction.guild then
-    local ids = fs.readFileSync(M.IdsPath)
-    local id = interaction.channel.id;
-    if ids then
-      local t = json.decode(ids);
-      for key, value in pairs(t) do
-        if value.id == id then
-          table.remove(t, key);
-          fs.writeFileSync(M.IdsPath, json.encode(t));
-          interaction:reply("Done! How can you meanies see my cuteness daily now nanora!?");
-          return;
-        end
+  if not isInGuild(interaction) then return end
+
+  local id = interaction.channel.id;
+  local ids = fs.readFileSync(M.IdsPath);
+
+  if ids then
+    local t = json.decode(ids);
+    for key, value in pairs(t) do
+      if value.id == id then
+        table.remove(t, key);
+        fs.writeFileSync(M.IdsPath, json.encode(t));
+        interaction:reply("Ugeeeh! You won't be seeing my artworks here anymore nanora!");
+        return;
       end
     end
-    interaction:reply("B-but this room isn't even signed up nora!");
-  else
-    interaction:reply("This function only works withing servers nanora!", true);
   end
+
+  interaction:reply("B-but this room isn't even signed up nora!");
 end
 
 return M;
