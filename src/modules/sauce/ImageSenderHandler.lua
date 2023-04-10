@@ -92,8 +92,7 @@ local function downloadImage(url, id, limit)
     args = {
       "--cookies", "cookies.txt",
       "--range", "1-" .. limit, "--ugoira-conv",
-      --"-D", "./temp/"..id,
-      "-D", "./temp/",
+      "-D", "./temp/"..id,
       url
     }
   });
@@ -205,7 +204,7 @@ function M.downloadSendAndDeleteImages(value, message, limit)
     checkSuccess(success, err, message, value);
   end
 
-  --deleteDownloadedImage(filestbl, id);
+  deleteDownloadedImage(filestbl, id);
 end
 
 function M.sendTwitterImages(value, message, limit, client)
