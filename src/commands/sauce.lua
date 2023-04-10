@@ -2,26 +2,37 @@ local limitHandler = require("../modules/sauce/LimitHandler");
 local imageHandler = require("../modules/sauce/ImageSenderHandler");
 require('discordia').extensions();
 
+local function getLinksQuantity(t)
+  local count = 0;
+  for _, value in ipairs(t) do
+    if value:find("https://") then
+      count = count + 1;
+      if count >= 2 then return count end -- lol
+    end
+  end
+  return count;
+end
+
 local function warnFail(interaction, link, err)
   if err then
     interaction:reply("Could not deliver images from `"..link.."` nanora!\n`"..err.."`", true);
   end
 end
 
-local function findLinksToSend(message, link, limit, client)
+local function findLinksToSend(message, link, limit, client, hasMultipleLinks)
   coroutine.wrap(function()
     if imageHandler.verify(link, imageHandler.doesNotRequireDownload) then
 
-      imageHandler.sendDirectImageUrl(link, message, limit);
+      imageHandler.sendDirectImageUrl(link, message, limit, hasMultipleLinks);
 
     elseif imageHandler.verify(link, imageHandler.requireDownload) then
 
-      imageHandler.downloadSendAndDeleteImages(link, message, limit);
+      imageHandler.downloadSendAndDeleteImages(link, message, limit, hasMultipleLinks);
 
     elseif link:find("https://twitter.com/") then
 
-      if not imageHandler.sendTwitterDirectVideoUrl(link, message, limit) then
-        imageHandler.sendTwitterImages(link, message, limit, client);
+      if not imageHandler.sendTwitterDirectVideoUrl(link, message, limit, hasMultipleLinks) then
+        imageHandler.sendTwitterImages(link, message, limit, client, hasMultipleLinks);
       end
 
     end
@@ -34,12 +45,17 @@ local function sendSauce(message, client)
     content = content:gsub('\n', ' '):gsub('||', ' ');
     local t = content:split(' ');
     local limit = limitHandler.getRoomImageLimit(message) or 5;
+    local hasMultipleLinks = false;
+
+    if getLinksQuantity(t) > 1 then
+      hasMultipleLinks = true;
+    end
 
     if limit == 0 then return end
 
     for _, link in ipairs(t) do
       if link ~= '' then
-        findLinksToSend(message, link, limit, client);
+        findLinksToSend(message, link, limit, client, hasMultipleLinks);
       end
     end
 
@@ -52,13 +68,18 @@ local function sendAnySauce(message, interaction)
     content = content:gsub('\n', ' '):gsub('||', ' ');
     local t = content:split(' ');
     local limit = limitHandler.getRoomImageLimit(message) or 5;
+    local hasMultipleLinks = false;
+
+    if getLinksQuantity(t) > 1 then
+      hasMultipleLinks = true;
+    end
 
     if limit == 0 then return end
 
     for _, link in ipairs(t) do
       if link ~= '' and link:find("https://") then
         coroutine.wrap(function()
-          local err = imageHandler.downloadSendAndDeleteImages(link, message, limit);
+          local err = imageHandler.downloadSendAndDeleteImages(link, message, limit, hasMultipleLinks);
           warnFail(interaction, link, err);
         end)();
       end

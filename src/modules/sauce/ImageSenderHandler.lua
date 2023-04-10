@@ -71,7 +71,7 @@ local function checkSuccess(success, err, message, value)
     local t = {
       "🇳","🇴"
     }
-    print("Couldn't get link: " .. value, "Reason: " .. err);
+    print("Couldn't get link: " .. value, "Reason: " .. (err or "Only God knows why"));
     for _, emoji in ipairs(t) do
       message:addReaction(emoji);
     end
@@ -89,13 +89,13 @@ local function filterBigFiles(filestbl)
   return table.concat(filestbl, ' '):split(' '); -- because table.remove messes up with the for lmao
 end
 
-local function downloadImage(url, id, limit)
+local function downloadImage(link, id, limit)
   local child = spawn("gallery-dl", {
     args = {
       "--cookies", "cookies.txt",
       "--range", "1-" .. limit, "--ugoira-conv",
       "-D", "./temp/"..id,
-      url
+      link
     }
   });
 
@@ -105,17 +105,23 @@ local function downloadImage(url, id, limit)
   --filestbl = filterBigFiles(filestbl);
   table.remove(filestbl, #filestbl); --removes an empty index
 
-  return filestbl;
+    return filestbl;
 end
 
-local function sendDownloadedImage(message, images)
-  return message.channel:send {
+local function sendDownloadedImage(message, images, link)
+  local messageToSend = {
     files = images,
     reference = {
       message = message,
       mention = false,
     }
   };
+
+  if link then
+    messageToSend.content = "`" .. link .. "`";
+  end
+
+  return message.channel:send(messageToSend);
 end
 
 local function deleteDownloadedImage(file, id)
@@ -140,14 +146,21 @@ local function getUrl(url, limit)
   return table.concat(readProcess(child));
 end
 
-local function sendUrl(message, url)
-  return message.channel:send {
-    content = url,
+local function sendUrl(message, url, source)
+  local messageToSend = {
     reference = {
       message = message,
       mention = false,
     }
   };
+
+  if source then
+    messageToSend.content = "`" .. source .. "`\n" .. url;
+  else
+    messageToSend.content = url;
+  end
+
+  return message.channel:send(messageToSend);
 end
 
 local function shouldSendBaraagLinks(url)
@@ -173,49 +186,66 @@ function M.verify(string, list)
   return false;
 end
 
-function M.sendTwitterDirectVideoUrl(value, message, limit)
-  local url = getUrl(value, limit);
+function M.sendTwitterDirectVideoUrl(source, message, limit, hasMultipleLinks)
+  local url = getUrl(source, limit);
   if url:find("video.twimg") then
-    local success, err = sendUrl(message, url);
-    checkSuccess(success, err, message, value);
+    local success, err;
+    if hasMultipleLinks then
+      success, err = sendUrl(message, url, source);
+    else
+      success, err = sendUrl(message, url);
+    end
+    checkSuccess(success, err, message, source);
     return true;
   end
   return false;
 end
 
-function M.sendDirectImageUrl(value, message, limit)
-  if value:find("https://baraag.net/") then
-    value = value:gsub("web/", '');
+function M.sendDirectImageUrl(source, message, limit, hasMultipleLinks)
+  if source:find("https://baraag.net/") then
+    source = source:gsub("web/", '');
   end
 
-  local url = getUrl(value, limit);
+  local url = getUrl(source, limit);
+
   if hasUrl(url) then
     if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
-      local success, err = sendUrl(message, url);
-      checkSuccess(success, err, message, value);
+      local success, err;
+      if hasMultipleLinks then
+        sendUrl(message, url, source);
+      else
+        sendUrl(message, url);
+      end
+      checkSuccess(success, err, message, source);
     end
   end
 end
 
-function M.downloadSendAndDeleteImages(value, message, limit)
+function M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks)
   local id = message.channel.id;
-  local filestbl = downloadImage(value, id, limit);
+  local filestbl = downloadImage(source, id, limit);
   local response = nil;
 
   if hasFile(filestbl) then
-    local success, err = sendDownloadedImage(message, filestbl);
-    checkSuccess(success, err, message, value);
+    local success, err;
+    if hasMultipleLinks then
+      success, err = sendDownloadedImage(message, filestbl, source);
+    else
+      success, err = sendDownloadedImage(message, filestbl);
+    end
+    checkSuccess(success, err, message, source);
     response = err;
   end
 
   deleteDownloadedImage(filestbl, id);
+
   return response;
 end
 
-function M.sendTwitterImages(value, message, limit, client)
+function M.sendTwitterImages(source, message, limit, client, hasMultipleLinks)
   if not message.embed then
     if not client:waitFor("messageUpdate", 2500) then
-      M.downloadSendAndDeleteImages(value, message, limit);
+      M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks);
     end
   end
 end
