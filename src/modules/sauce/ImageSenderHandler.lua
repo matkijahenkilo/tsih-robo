@@ -68,18 +68,20 @@ end
 
 local function checkSuccess(success, err, message, value)
   if not success then
+    local t = {
+      "🇳","🇴"
+    }
     print("Couldn't get link: " .. value, "Reason: " .. err);
-    message:addReaction("🇳");
-    message:addReaction("🇴");
-    message:removeReaction("🇴");
-    message:removeReaction("🇳");
+    for _, emoji in ipairs(t) do
+      message:addReaction(emoji);
+    end
   end
 end
 
 local function filterBigFiles(filestbl)
   for index, file in ipairs(filestbl) do
     if file ~= '' and getFileSizeInMegaBytes(file) >= 8 then
-      print("deleting file "..file..", size: " .. getFileSizeInMegaBytes(file) .."mb");
+      print("deleting file "..file..", size: "..getFileSizeInMegaBytes(file).."mb");
       filestbl[index] = '';
       fs.unlinkSync(file);
     end
@@ -100,7 +102,7 @@ local function downloadImage(url, id, limit)
   local filestbl = table.concat(readProcess(child));
   filestbl = filestbl:gsub("# ", ''):gsub("\r", '');
   filestbl = filestbl:split("\n");
-  filestbl = filterBigFiles(filestbl);
+  --filestbl = filterBigFiles(filestbl);
   table.remove(filestbl, #filestbl); --removes an empty index
 
   return filestbl;
@@ -198,13 +200,16 @@ end
 function M.downloadSendAndDeleteImages(value, message, limit)
   local id = message.channel.id;
   local filestbl = downloadImage(value, id, limit);
+  local response = nil;
 
   if hasFile(filestbl) then
     local success, err = sendDownloadedImage(message, filestbl);
     checkSuccess(success, err, message, value);
+    response = err;
   end
 
   deleteDownloadedImage(filestbl, id);
+  return response;
 end
 
 function M.sendTwitterImages(value, message, limit, client)

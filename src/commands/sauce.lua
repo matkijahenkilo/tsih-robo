@@ -2,6 +2,12 @@ local limitHandler = require("../modules/sauce/LimitHandler");
 local imageHandler = require("../modules/sauce/ImageSenderHandler");
 require('discordia').extensions();
 
+local function warnFail(interaction, link, err)
+  if err then
+    interaction:reply("Could not deliver images for `"..link.."` nanora!\n`"..err.."`", true);
+  end
+end
+
 local function findLinksToSend(message, link, limit, client)
   coroutine.wrap(function()
     if imageHandler.verify(link, imageHandler.doesNotRequireDownload) then
@@ -40,7 +46,7 @@ local function sendSauce(message, client)
   end
 end
 
-local function sendAnySauce(message)
+local function sendAnySauce(message, interaction)
   local content = message.content;
   if content and content:find("https://") then
     content = content:gsub('\n', ' '):gsub('||', ' ');
@@ -52,7 +58,8 @@ local function sendAnySauce(message)
     for _, link in ipairs(t) do
       if link ~= '' and link:find("https://") then
         coroutine.wrap(function()
-          imageHandler.downloadSendAndDeleteImages(link, message, limit);
+          local err = imageHandler.downloadSendAndDeleteImages(link, message, limit);
+          warnFail(interaction, link, err);
         end)();
       end
     end
@@ -94,7 +101,7 @@ return {
   end,
   executeMessageCommand = function (interaction, _, message)
     coroutine.wrap(function () interaction:reply("Alrighty nanora! One second...", true) end)();
-    sendAnySauce(message);
+    sendAnySauce(message, interaction);
   end,
   sendSauce = function(message, client)
     sendSauce(message, client);
