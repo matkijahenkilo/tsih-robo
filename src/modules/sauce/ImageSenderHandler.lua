@@ -81,7 +81,7 @@ end
 local function filterLargeFiles(downloadedFiles)
   local filestbl = downloadedFiles:split("\n");
   for index, file in ipairs(filestbl) do
-    if file ~= '' and getFileSizeInMegaBytes(file) >= 8 then
+    if file ~= '' and getFileSizeInMegaBytes(file) >= 25 then
       fs.unlinkSync(file);
       filestbl[index] = "";
     end
