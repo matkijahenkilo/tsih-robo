@@ -78,15 +78,23 @@ local function checkSuccess(success, err, message, value)
   end
 end
 
-local function filterBigFiles(filestbl)
+local function filterLargeFiles(downloadedFiles)
+  local filestbl = downloadedFiles:split("\n");
   for index, file in ipairs(filestbl) do
     if file ~= '' and getFileSizeInMegaBytes(file) >= 8 then
-      print("deleting file "..file..", size: "..getFileSizeInMegaBytes(file).."mb");
-      filestbl[index] = '';
       fs.unlinkSync(file);
+      filestbl[index] = "";
     end
   end
-  return table.concat(filestbl, ' '):split(' '); -- because table.remove messes up with the for lmao
+
+  local filteredFilestbl = {};
+  for _, file in ipairs(filestbl) do
+    if file ~= '' then
+      table.insert(filteredFilestbl, file);
+    end
+  end
+
+  return filteredFilestbl;
 end
 
 local function downloadImage(link, id, limit)
@@ -99,13 +107,12 @@ local function downloadImage(link, id, limit)
     }
   });
 
-  local filestbl = table.concat(readProcess(child));
-  filestbl = filestbl:gsub("# ", ''):gsub("\r", '');
-  filestbl = filestbl:split("\n");
-  --filestbl = filterBigFiles(filestbl);
-  table.remove(filestbl, #filestbl); --removes an empty index
+  local downloadedFiles = table.concat(readProcess(child));
+  downloadedFiles = downloadedFiles:gsub("# ", ''):gsub("\r", '');
 
-    return filestbl;
+  local filestbl = filterLargeFiles(downloadedFiles);
+
+  return filestbl;
 end
 
 local function sendDownloadedImage(message, images, link)
