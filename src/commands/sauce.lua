@@ -4,7 +4,7 @@ require('discordia').extensions();
 
 local function warnFail(interaction, link, err)
   if err then
-    interaction:reply("Could not deliver images for `"..link.."` nanora!\n`"..err.."`", true);
+    interaction:reply("Could not deliver images from `"..link.."` nanora!\n`"..err.."`", true);
   end
 end
 
