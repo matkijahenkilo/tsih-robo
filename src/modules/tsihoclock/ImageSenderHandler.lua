@@ -1,5 +1,7 @@
 local ORIGIN = "assets/images/tsihoclock/";
 local fs = require("fs");
+local json = require("json");
+local SignHandler = require("./SignHandler");
 local discordia = require("discordia");
 
 local M = {}
@@ -91,7 +93,7 @@ local function tsihClock(interaction, fileType)
 end
 
 function M.sendAllTOC(client)
-  local ids = fs.readFileSync(IDS_PATH);
+  local ids = fs.readFileSync(SignHandler.IdsPath);
   if ids then
     local t = json.decode(ids);
     local total = 0;
