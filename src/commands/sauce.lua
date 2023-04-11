@@ -95,8 +95,8 @@ return {
           tools.subCommand("channel", "Sets a limit for this channel only nanora!")
           :addOption(
             tools.integer("limit", "Default is 5 nanora! Input 0 if you don't want me to send images again nora!")
-            :setMinlink(0)
-            :setMaxlink(10)
+            :setMinValue(0)
+            :setMaxValue(10)
             :setRequired(true)
           )
         )
@@ -104,8 +104,8 @@ return {
           tools.subCommand("global", "Sets a limit for this entire server nanora!")
             :addOption(
               tools.integer("limit", "Default is 5 nanora! Input 0 if you don't want me to send images again nora!")
-              :setMinlink(0)
-              :setMaxlink(10)
+              :setMinValue(0)
+              :setMaxValue(10)
               :setRequired(true)
             )
         )
