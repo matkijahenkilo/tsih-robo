@@ -34,6 +34,10 @@ Inside `src/data` folder, create a file named `token.txt` containing your discor
 
 run the bot on the termiinal with `./luvit main.lua [true]` where the true argument makes the bot load its commands into Discord's server, if nothing is passed then it will not load its commands.
 
+#### settings.lua
+
+You can change the bot's prefix within the file and insert as many server ids inside emoticonsServers table as you like in other for tsih-robo send a random custom reaction from a random server of the table.
+
 ### known issues
 
 `song.lua` does not work as intended because of discordia-interactions implementation, although there was few times where it worked out flawlessly. Further investigation is required.
