@@ -231,22 +231,21 @@ end
 function M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks)
   local id = message.channel.id;
   local filestbl = downloadImage(source, id, limit);
-  local response = nil;
+  local err = nil;
 
   if hasFile(filestbl) then
-    local success, err;
+    local success;
     if hasMultipleLinks then
       success, err = sendDownloadedImage(message, filestbl, source);
     else
       success, err = sendDownloadedImage(message, filestbl);
     end
     checkSuccess(success, err, message, source);
-    response = err;
   end
 
   deleteDownloadedImage(filestbl, id);
 
-  return response;
+  return err;
 end
 
 function M.sendTwitterImages(source, message, limit, client, hasMultipleLinks)
