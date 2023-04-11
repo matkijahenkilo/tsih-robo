@@ -219,9 +219,9 @@ function M.sendDirectImageUrl(source, message, limit, hasMultipleLinks)
     if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
       local success, err;
       if hasMultipleLinks then
-        sendUrl(message, url, source);
+        success, err = sendUrl(message, url, source);
       else
-        sendUrl(message, url);
+        success, err = sendUrl(message, url);
       end
       checkSuccess(success, err, message, source);
     end
