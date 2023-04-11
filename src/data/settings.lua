@@ -1,6 +1,5 @@
 return {
   prefix = "ts!",
-  shouldResetCommands = false,
   emoticonsServers = {
     "579432155546124306",
     "338828546468478977",

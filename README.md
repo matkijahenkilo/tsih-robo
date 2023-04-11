@@ -1,26 +1,28 @@
 # tsih-robo
 
-Tsih-Robo is a discord bot chosen to be written in Lua because the language shares the same color as her hair. Tsih-robo was made using [Discordia](https://github.com/SinisterRectus/discordia) API.
-
-It's just a fun project I always wanted to create but ended up wanting to maintain, and also my first programming project ever! 
-
-Inicially she was made for fun/entertainment porpuses, but after a long time studying and managing to program my primary objective into her, I decided to leave the cosmetics functions in her code~
+Tsih-robo is a discord bot chosen to be written in Lua because the language shares the same color as her hair. Tsih-robo was made using [Discordia](https://github.com/SinisterRectus/discordia) API.
 
 Tsih's **primary function** is to fill the gap of badly embeded links on discord for websites links like Pixiv, Pawoo, Baraag, Exhentai and etc using [gallery-dl](https://github.com/mikf/gallery-dl). Pretty much what [SaucyBot](https://github.com/Sn0wCrack/saucybot-discord) does, but with more websites that you can insert into a table as you see fit, but only websites that are compatible with [gallery-dl](https://github.com/mikf/gallery-dl).
 
-I wanted to make her act canonically as she would act in one of the games she's in, but I'm kinda bad at this. w
+It's just a fun project I always wanted to create but ended up wanting to maintain, and also my first programming project ever! 
 
 ## Commands
 
-tsih-robo supports slash and message commands, to load them pass a third argument "true" when loading main.lua, you would prefer to do this only once.
+tsih-robo supports slash and message commands. If you're cloning this repo and running the bot yourself you need to load the bot as `./luvit main.lua true` to load the commands.
+
+All of her commands are located in src/commands, where each file returns a table of functions.
 
 ## Installation
 
-**Be aware that simply installing tsih-robo may cause crashes during runtime because of the absence of the /assets folder.**
+Be aware that simply installing tsih-robo may cause crashes during runtime because of the absence of the /assets folder. Because of that I recommend you to change or delete pinch.lua, hug.lua, tsihoclock.lua and omori.lua if you don't want to have a headache with it!
 
 ### pre-requisites programs
 
-`ffmpeg yt-dlp gallery-dl`
+`gallery-dl` required for sauce.lua
+
+`yt-dlp` required for song.lua. I do not recommend youtube-dl.
+
+`ffmpeg` reguired by the two programs above.
 
 ### bot installation:
 
@@ -28,41 +30,13 @@ Follow [Discordia](https://github.com/SinisterRectus/discordia)'s installation g
 
 Git clone [discordia-interactions](https://github.com/Bilal2453/discordia-interactions) and [discordia-slash](https://github.com/GitSparTV/discordia-slash) inside `deps` folder
 
-Be aware that I modified discordia-slash's Client.lua file a bit: I've added the following methods into the file:
+Inside `src/data` folder, create a file named `token.txt` containing your discord application's token.
 
-```lua
-function Client:getGlobalApplicationCommands()
-	local data, err = self._api:getGlobalApplicationCommands(self:getApplicationInformation().id)
+run the bot on the termiinal with `./luvit main.lua [true]` where the true argument makes the bot load its commands into Discord's server, if nothing is passed then it will not load its commands.
 
-	if data then
-		return Cache(data, ApplicationCommand, self)
-	else
-		return nil, err
-	end
-end
+### known issues
 
-function Client:createGlobalApplicationCommand(id, payload)
-	local data, err = self._api:createGlobalApplicationCommand(self:getApplicationInformation().id, id)
-
-	if data then
-		return ApplicationCommand(data, self)
-	else
-		return nil, err
-	end
-end
-
-function Client:deleteGlobalApplicationCommand(id)
-	local data, err = self._api:deleteGlobalApplicationCommand(self:getApplicationInformation().id, id)
-
-	if data then
-		return data
-	else
-		return nil, err
-	end
-end
-```
-
-Without them, certain Client methods won't work in main.lua
+`song.lua` does not work as intended because of discordia-interactions implementation, although there was few times where it worked out flawlessly. Further investigation is required.
 
 ### gallery-dl configuration
 

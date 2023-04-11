@@ -10,6 +10,7 @@ local fs = require("fs");
 local wrap = coroutine.wrap;
 local commandsHandler;
 local emoticonsServer = {};
+local shouldResetCommands = args[2];
 discordia.extensions.string();
 
 do
@@ -116,5 +117,5 @@ do
   local token = file:read("a");
   file:close();
   client:run('Bot ' .. token);
-  if settings.shouldResetCommands then initializeCommands(commandsHandler) end
+  if shouldResetCommands then initializeCommands(commandsHandler) end
 end
