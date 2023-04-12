@@ -131,11 +131,20 @@ local function sendDownloadedImage(message, images, link)
   return message.channel:send(messageToSend);
 end
 
+local function removeDirectory(dirName)
+  local directory = "./temp/" .. dirName;
+  local exists, files = pcall(fs.readdirSync, directory);
+  if exists and not files[1] then -- to avoid error messages on terminal
+    fs.rmdir(directory);
+  end
+end
+
 local function deleteDownloadedImage(file, id)
   for _, value in ipairs(file) do
     fs.unlinkSync(value);
   end
-  fs.rmdir("./temp/" .. id);
+
+  removeDirectory(id);
 end
 
 local function getUrl(url, limit)
