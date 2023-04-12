@@ -13,9 +13,9 @@ local function getLinksQuantity(t)
   return count;
 end
 
-local function warnFail(interaction, link, err)
+local function warnFail(interaction, err)
   if err then
-    interaction:reply("Could not deliver images from `"..link.."` nanora!\n`"..err.."`", true);
+    interaction:reply(err, true);
   end
 end
 
@@ -80,7 +80,7 @@ local function sendAnySauce(message, interaction)
       if link ~= '' and link:find("https://") then
         coroutine.wrap(function()
           local err = imageHandler.downloadSendAndDeleteImages(link, message, limit, hasMultipleLinks);
-          warnFail(interaction, link, err);
+          warnFail(interaction, err);
         end)();
       end
     end

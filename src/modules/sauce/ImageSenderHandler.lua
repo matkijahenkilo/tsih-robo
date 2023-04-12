@@ -25,6 +25,11 @@ M.requireDownload = {
   "https://chan.sankakucomplex.com/",
 }
 
+---@return boolean|table
+function M.getDirectoryInfo(directory)
+  return pcall(fs.readdirSync, directory);
+end
+
 local function hasFile(file)
   return file or file[1];
 end
@@ -66,15 +71,33 @@ local function readProcess(child)
   return linksTable;
 end
 
+local function editErrorMessage(value, err)
+  local errmsg = "Could not deliver images from `" .. value .. "` nanora!\nReason: `"
+  if err and err ~= "" then
+    if err:find("empty message") then
+      errmsg = errmsg .. err .. "`. Maybe Nanako stole the images I was going to send nanora!";
+    else
+      errmsg = errmsg .. err .. "`, nanora.";
+    end
+  else
+    err = "Not even God knows why nanora...";
+    errmsg = errmsg .. err .. "`";
+  end
+
+  return errmsg;
+end
+
 local function checkSuccess(success, err, message, value)
   if not success then
     local t = {
       "🇳","🇴"
     }
-    print("Couldn't get link: " .. value, "Reason: " .. (err or "Only God knows why"));
     for _, emoji in ipairs(t) do
       message:addReaction(emoji);
     end
+
+    local errmsg = editErrorMessage(value, err);
+    return errmsg;
   end
 end
 
@@ -133,7 +156,7 @@ end
 
 local function removeDirectory(dirName)
   local directory = "./temp/" .. dirName;
-  local exists, files = pcall(fs.readdirSync, directory);
+  local exists, files = M.getDirectoryInfo(directory);
   if exists and not files[1] then -- to avoid error messages on terminal
     fs.rmdir(directory);
   end
@@ -249,7 +272,7 @@ function M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks)
     else
       success, err = sendDownloadedImage(message, filestbl);
     end
-    checkSuccess(success, err, message, source);
+    err = checkSuccess(success, err, message, source);
   end
 
   deleteDownloadedImage(filestbl, id);
