@@ -377,6 +377,7 @@ return {
     end
 
     functions[commandName](interaction, url, redownload or false);
-  end
+  end,
+  songsDirectory = MUSIC_FOLDER
 };
 
