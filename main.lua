@@ -77,7 +77,7 @@ client:on("ready", function()
   client:info("I'm currently serving in " .. #client.guilds .. " servers nanora!");
   for _, guild in pairs(client.guilds) do client:info(guild.id .. ' ' .. guild.name) end
 
-  clock:start();
+  clock:start(true);
   client:setActivity(statusTable[math.random(#statusTable)]);
 
   for index, id in ipairs(settings.emoticonsServers) do
@@ -106,7 +106,7 @@ clock:on("min", function()
 end)
 
 clock:on("hour", function(now)
-  if now.hour == 18 then
+  if now.hour == 21 then
     commandsHandler["tsihoclock"].executeWithTimer(client);
   end
 end)
