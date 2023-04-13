@@ -320,9 +320,7 @@ local functions = {
 
 return {
   getSlashCommand = function(tools)
-    return nil
-    --this is fucked again! and i don't know why this is happening!
-    --[[tools.slashCommand("song", "I'll play any song for you nanora!")
+    return tools.slashCommand("song", "I'll play any song for you nanora!")
         :addOption(
           tools.subCommand("play", "I'll play or add any song for you nanora!")
           :addOption(
@@ -350,7 +348,7 @@ return {
         )
         :addOption(
           tools.subCommand("nowplaying", "Shows you the current song playing nora!")
-        )]]
+        )
   end,
   executeSlashCommand = function(interaction, command, args)
     if not interaction.guild then
