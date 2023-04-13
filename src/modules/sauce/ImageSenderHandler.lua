@@ -9,7 +9,6 @@ M.doesNotRequireDownload = {
   "https://pawoo.net/",
   "https://nijie.info/",
   "https://baraag.net/",
-  "https://misskey.io/",
   "https://nhentai.net/",
   "https://kemono.party/",
   "https://inkbunny.net/",
@@ -19,6 +18,7 @@ M.doesNotRequireDownload = {
 
 M.requireDownload = {
   "https://hitomi.la/",
+  "https://misskey.io/",
   "https://sankaku.app/",
   "https://exhentai.org/",
   "https://www.pixiv.net/",
