@@ -8,15 +8,24 @@ discordia.extensions();
 
 
 
+local titleTable = {
+  "Let's sing this one together nanora!",
+  "Enjoy this banger nora!",
+  "This song is kinda meh but I guess I'll play it anyway nora~",
+  "Whoa! This one is a masterpiece nanora!",
+  "Toca o sample de guitarra nora!",
+}
+
 local function connectAndCacheNewConnection(interaction)
+  local connection, err = interaction.member.voiceChannel:join();
   cache[interaction.guild.id] = {
-    connection   = interaction.member.voiceChannel:join();
+    connection   = connection;
     playlist     = discordia.Deque();
     whoRequested = {};
     nowPlaying   = '';
     isPlaying    = false;
   }
-  return cache[interaction.guild.id];
+  return cache[interaction.guild.id], err;
 end
 
 local function isMemberOnVoiceChannel(voiceChannel, interaction)
@@ -113,7 +122,7 @@ end
 local function showCurrentMusic(interaction, song, user, count)
   interaction.channel:send {
     embed = {
-      title = "Enjoy this banger nora!",
+      title = titleTable[math.random(#titleTable)],
       color = 0x6f5ffc,
       fields = {
         {
@@ -204,9 +213,13 @@ local function startStreaming(interaction, voiceChannel)
 end
 
 local function play(interaction, args, shouldRedownload)
-  local voiceChannel = cache[interaction.guild.id];
+  local voiceChannel, err = cache[interaction.guild.id];
   if voiceChannel == nil then
-    voiceChannel = connectAndCacheNewConnection(interaction);
+    voiceChannel, err = connectAndCacheNewConnection(interaction);
+    if err then
+      interaction:reply("This voice channel is busted! Sorry nanora!");
+      return;
+    end
   end
 
   interaction:reply("Okie dokie~! Adding more songs into the playlist nora!")
