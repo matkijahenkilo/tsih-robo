@@ -109,8 +109,12 @@ clock:on("hour", function(now)
   if now.hour == 21 then
     commandsHandler["tsihoclock"].executeWithTimer(client);
   elseif now.hour == 6 then -- this might crash the bot in the certain time, I'm unsure
-    for _, value in ipairs(fs.readdirSync(commandsHandler["song"].songsDirectory)) do
-      fs.unlinkSync(value);
+    local songsDirectory = commandsHandler["song"].songsDirectory;
+    local songsFiles = fs.readdirSync(songsDirectory);
+    if songsFiles[1] then
+      for _, value in ipairs(songsFiles) do
+        fs.unlink(songsDirectory .. value);
+      end
     end
   end
 end)
