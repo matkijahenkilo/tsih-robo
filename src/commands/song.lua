@@ -7,6 +7,12 @@ local cache = {};
 discordia.extensions();
 
 
+local playlistIndicators = {
+  "?list=",
+  "&list=",
+  "/sets/",
+  "/album/",
+}
 
 local titleTable = {
   "Let's sing this one together nanora!",
@@ -93,7 +99,11 @@ local function getListOfVideosFromPlaylist(url)
   local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } });
   if child then
     child.waitExit();
-    return child.stdout.read():split('\n');
+    local urls = child.stdout.read();
+    if not urls then
+      return {};
+    end
+    return urls:split('\n');
   end
 end
 
@@ -107,12 +117,6 @@ local function addIndividualUrlsFromPlaylistIntoDeque(url, playlist, user, shoul
 end
 
 local function isPlaylist(url)
-  local playlistIndicators = {
-    "?list=",
-    "&list=",
-    "/sets/",
-    "/album/",
-  }
   for _, value in ipairs(playlistIndicators) do
     if url:find(value) then return true end
   end
@@ -213,8 +217,9 @@ local function startStreaming(interaction, voiceChannel)
 end
 
 local function play(interaction, args, shouldRedownload)
-  local voiceChannel, err = cache[interaction.guild.id];
+  local voiceChannel = cache[interaction.guild.id];
   if voiceChannel == nil then
+    local err;
     voiceChannel, err = connectAndCacheNewConnection(interaction);
     if err then
       interaction:reply("This voice channel is busted! Sorry nanora!");
