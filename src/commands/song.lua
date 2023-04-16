@@ -223,6 +223,7 @@ local function play(interaction, args, shouldRedownload)
     voiceChannel, err = connectAndCacheNewConnection(interaction);
     if err then
       interaction:reply("This voice channel is busted! Sorry nanora!");
+      cache[interaction.guild.id] = nil;
       return;
     end
   end
