@@ -22,6 +22,7 @@ M.requireDownload = {
   "https://sankaku.app/",
   "https://exhentai.org/",
   "https://www.pixiv.net/",
+  "https://www.deviantart.com/",
   "https://chan.sankakucomplex.com/",
 }
 
