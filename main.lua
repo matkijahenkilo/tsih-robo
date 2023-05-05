@@ -88,7 +88,7 @@ client:on("ready", function()
 end)
 
 client:on("messageCreate", function(message)
-  if not message or message.author.bot then return end
+  if message.author.bot then return end
   wrap(function () rollRandomReactionDice(message) end)();
   commandsHandler["sauce"].sendSauce(message, client);
 end)
