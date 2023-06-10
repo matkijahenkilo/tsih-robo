@@ -2,6 +2,7 @@ local ORIGIN = "assets/images/tsihoclock/";
 local fs = require("fs");
 local json = require("json");
 local SignHandler = require("./SignHandler");
+local counterHandler = require("./counterHandler.lua")
 local discordia = require("discordia");
 
 local M = {}
@@ -58,7 +59,8 @@ local function getTsihArtworkWithEmbedMessage(fileFormat)
   return {
     file = file,
     embed = {
-      title = randomTitle[math.random(#randomTitle)],
+      title = randomTitle[math.random(#randomTitle)]
+        .. "\nThis is the Tsih O'Clock #" .. counterHandler.getCurrentCounter() .. " nanora!",
       color = 0xff80fd,
       timestamp = discordia.Date():toISO('T', 'Z'),
       fields = {

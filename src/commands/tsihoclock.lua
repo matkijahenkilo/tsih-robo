@@ -1,5 +1,6 @@
 local signHandler = require("../modules/tsihoclock/SignHandler")
 local imageHandler = require("../modules/tsihoclock/ImageSenderHandler")
+local counterHandler = require("../modules/tsihoclock/counterHandler.lua")
 
 local functions = {
   sign   = signHandler.sign,
@@ -28,6 +29,7 @@ return {
           tools.subCommand("auto", "For the strongest, nanora.")
         )
   end,
+
   executeSlashCommand = function(interaction, command, args, client)
     local commandName = command.options[1].name;
     local format;
@@ -46,7 +48,9 @@ return {
       functions[commandName](interaction, format);
     end
   end,
+
   executeWithTimer = function(client)
     imageHandler.sendAllTOC(client);
+    counterHandler.incrementTsihOClockCounter();
   end,
 };

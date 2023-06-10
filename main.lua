@@ -6,6 +6,7 @@ local settings    = require("src/data/settings");
 local statusTable = require("src/utils/statusTable");
 local randomReact = require("src/utils/randomReact");
 
+local http = require("coro-http")
 local fs = require("fs");
 local wrap = coroutine.wrap;
 local commandsHandler;
@@ -31,6 +32,40 @@ do
     end
   };
   commandsHandler = setmetatable(commands, commandsMetaTable);
+end
+
+local function openAssistant(message)
+  if message.content:sub(1, #settings.prefix) ~= settings.prefix then return end
+
+  local json = require("json")
+
+  local header = {
+    ["Accept"] = 'application/json',
+    ["Content-Type"] = 'application/json',
+    ["X-API-Key"] = 're2r23r23r, re2r23r23r',
+    ["Authorization"] = "Bearer re2r23r23r",
+  }
+
+  local data = json.decode([[{
+    "type": "random",
+    "user": {
+      "id": "string",
+      "display_name": "string",
+      "auth_method": "discord"
+    },
+    "collective": false,
+    "lang": "string"
+  }]])
+
+  local err, res, body = pcall(http.request, "POST", "https://projects.laion.ai/api/v1/tasks/", header, data)
+
+  if err or res.code ~= 200 then
+    p(res, body)
+    --message.channel:send("aaaaa")
+  else
+    p(body)
+    --message.reply()
+  end
 end
 
 local function initializeCommands(commands)
@@ -89,7 +124,10 @@ end)
 
 client:on("messageCreate", function(message)
   if message.author.bot then return end
-  wrap(function () rollRandomReactionDice(message) end)();
+  wrap(function ()
+    rollRandomReactionDice(message)
+    --openAssistant(message)
+  end)()
   commandsHandler["sauce"].sendSauce(message, client);
 end)
 

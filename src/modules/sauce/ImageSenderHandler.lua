@@ -10,7 +10,6 @@ M.doesNotRequireDownload = {
   "https://nijie.info/",
   "https://baraag.net/",
   "https://nhentai.net/",
-  "https://kemono.party/",
   "https://inkbunny.net/",
   "https://e-hentai.org/",
   "https://hentai2read.com/",
@@ -21,6 +20,7 @@ M.requireDownload = {
   "https://misskey.io/",
   "https://sankaku.app/",
   "https://exhentai.org/",
+  "https://kemono.party/",
   "https://www.pixiv.net/",
   "https://www.deviantart.com/",
   "https://chan.sankakucomplex.com/",
@@ -283,7 +283,7 @@ end
 
 function M.sendTwitterImages(source, message, limit, client, hasMultipleLinks)
   if not message.embed then
-    if not client:waitFor("messageUpdate", 2500) then
+    if not client:waitFor("messageUpdate", 5000) then
       M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks);
     end
   end
