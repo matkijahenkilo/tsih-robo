@@ -50,7 +50,7 @@ return {
   end,
 
   executeWithTimer = function(client)
-    imageHandler.sendAllTOC(client);
     counterHandler.incrementTsihOClockCounter();
+    imageHandler.sendAllTOC(client);
   end,
 };
