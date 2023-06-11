@@ -152,7 +152,11 @@ local function sendDownloadedImage(message, images, link)
     messageToSend.content = "`" .. link .. "`";
   end
 
-  return message.channel:send(messageToSend);
+  if messageToSend.files[1] then
+    return message.channel:send(messageToSend);
+  else
+    return false, "Couldn't get images to send! Maybe I can't access the website nora..."
+  end
 end
 
 local function removeDirectory(dirName)

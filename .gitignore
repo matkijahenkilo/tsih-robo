@@ -15,6 +15,7 @@ cookies.txt
 *.json
 *.log
 token.txt
+gallery-dl.conf
 
 # images, gifs, videos and sounds that are chonky
 assets/sounds/*
