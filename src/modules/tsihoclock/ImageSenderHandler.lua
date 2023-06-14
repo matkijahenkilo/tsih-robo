@@ -55,13 +55,13 @@ local function getTsihArtworkWithEmbedMessage(fileFormat)
 
   local fileToSend = list[math.random(#list)]; -- filename must not have weird characters, spaces nor '()' and '+'
   local file = ORIGIN .. fileFormat .. '/' .. fileToSend;
+  local tsihClockCounter = counterHandler.getCurrentCounter();
 
-  return {
+  local embeddedMessage = {
     file = file,
     embed = {
       title = randomTitle[math.random(#randomTitle)]
-        .. "\nThis is the Tsih O'Clock #" .. counterHandler.getCurrentCounter() .. " nanora!",
-      color = 0xff80fd,
+        .. "\nThis is the Tsih O'Clock #" .. tsihClockCounter .. " nanora!",
       timestamp = discordia.Date():toISO('T', 'Z'),
       fields = {
         {
@@ -73,7 +73,15 @@ local function getTsihArtworkWithEmbedMessage(fileFormat)
         url = "attachment://" .. fileToSend,
       },
     },
-  };
+  }
+
+  if tsihClockCounter % 2 == 0 then
+    embeddedMessage.embed.color = 0x80fdff
+  else
+    embeddedMessage.embed.color = 0xff80fd
+  end
+
+  return embeddedMessage
 end
 
 local function sendCuteness(channel, fileType)
