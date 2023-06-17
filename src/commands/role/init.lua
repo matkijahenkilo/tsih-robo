@@ -126,6 +126,7 @@ return {
           tools.subCommand("delete", "I'll delete your personalized role nanora!")
         )
   end,
+
   executeSlashCommand = function(interaction, command, args, client)
     if not interaction.guild then
       interaction:reply("This isn't a server nanola,,,,,", true);

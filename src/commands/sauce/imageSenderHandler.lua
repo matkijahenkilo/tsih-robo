@@ -1,5 +1,5 @@
-local spawn = require("coro-spawn");
 local fs = require("fs");
+local gallerydl = require("./gallerydl")
 
 local M = {}
 
@@ -39,39 +39,6 @@ local function hasUrl(url)
   return url ~= '';
 end
 
-local function getFileSizeInMegaBytes(file)
-  return fs.statSync(file).size / (1024*1024)
-end
-
-local function getSpecificLinks(t, string)
-  local specificLinks = {};
-  for _, value in ipairs(t:split('\n')) do
-    if value:find(string) then
-      table.insert(specificLinks, value .. '\n');
-    end
-  end
-  return specificLinks;
-end
-
-local function readProcess(child)
-  local linksTable = {};
-  child:waitExit();
-  local link = child.stdout.read();
-
-  table.insert(linksTable, link);
-  if link then
-    if link:find("pbs.twimg") then
-      return getSpecificLinks(link, "video.twimg");
-    elseif link:find("media.baraag.net") then
-      local baraagLinks = getSpecificLinks(link, "media.baraag.net");
-      table.remove(baraagLinks, 1);
-      return baraagLinks;
-    end
-  end
-
-  return linksTable;
-end
-
 local function editErrorMessage(value, err)
   local errmsg = "Could not deliver images from `" .. value .. "` nanora!\nReason: `"
   if err and err ~= "" then
@@ -100,43 +67,6 @@ local function checkSuccess(success, err, message, value)
     local errmsg = editErrorMessage(value, err);
     return errmsg;
   end
-end
-
-local function filterLargeFiles(downloadedFiles)
-  local filestbl = downloadedFiles:split("\n");
-  for index, file in ipairs(filestbl) do
-    if file ~= '' and getFileSizeInMegaBytes(file) >= 25 then
-      fs.unlinkSync(file);
-      filestbl[index] = "";
-    end
-  end
-
-  local filteredFilestbl = {};
-  for _, file in ipairs(filestbl) do
-    if file ~= '' then
-      table.insert(filteredFilestbl, file);
-    end
-  end
-
-  return filteredFilestbl;
-end
-
-local function downloadImage(link, id, limit)
-  local child = spawn("gallery-dl", {
-    args = {
-      "--cookies", "cookies.txt",
-      "--range", "1-" .. limit, "--ugoira-conv",
-      "-D", "./temp/"..id,
-      link
-    }
-  });
-
-  local downloadedFiles = table.concat(readProcess(child));
-  downloadedFiles = downloadedFiles:gsub("# ", ''):gsub("\r", '');
-
-  local filestbl = filterLargeFiles(downloadedFiles);
-
-  return filestbl;
 end
 
 local function sendDownloadedImage(message, images, link)
@@ -173,21 +103,6 @@ local function deleteDownloadedImage(file, id)
   end
 
   removeDirectory(id);
-end
-
-local function getUrl(url, limit)
-  if limit > 5 then limit = 5 end
-
-  local child = spawn("gallery-dl", {
-    args = {
-      "--cookies", "cookies.txt",
-      "--range", "1-" .. limit,
-      "-g",
-      url
-    }
-  });
-
-  return table.concat(readProcess(child));
 end
 
 local function sendUrl(message, url, source)
@@ -231,7 +146,7 @@ function M.verify(string, list)
 end
 
 function M.sendTwitterDirectVideoUrl(source, message, limit, hasMultipleLinks)
-  local url = getUrl(source, limit);
+  local url = gallerydl.getUrl(source, limit);
   if url:find("video.twimg") then
     local success, err;
     if hasMultipleLinks then
@@ -250,7 +165,7 @@ function M.sendDirectImageUrl(source, message, limit, hasMultipleLinks)
     source = source:gsub("web/", '');
   end
 
-  local url = getUrl(source, limit);
+  local url = gallerydl.getUrl(source, limit);
 
   if hasUrl(url) then
     if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
@@ -267,7 +182,7 @@ end
 
 function M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks)
   local id = message.channel.id;
-  local filestbl = downloadImage(source, id, limit);
+  local filestbl = gallerydl.downloadImage(source, id, limit);
   local err = nil;
 
   if hasFile(filestbl) then

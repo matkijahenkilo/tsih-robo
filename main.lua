@@ -17,11 +17,10 @@ discordia.extensions.string();
 do
   local botCommands = fs.readdirSync("src/commands");
   local commands = {};
-  for _, value in ipairs(botCommands) do
-    local commandName = value:sub(1, value:find(".lua") - 1);
-    local commandTable = require("./src/" .. "commands/" .. value);
-    commands[commandName] = commandTable;
+  for _, commandName in ipairs(botCommands) do
+    commands[commandName] = require("./src/commands/" .. commandName .. "/" .. "init");;
   end
+
   local commandsMetaTable = {
     __index = function()
       local M = {};
@@ -31,6 +30,7 @@ do
       return M;
     end
   };
+
   commandsHandler = setmetatable(commands, commandsMetaTable);
 end
 

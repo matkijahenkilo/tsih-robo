@@ -1,5 +1,5 @@
-local limitHandler = require("../modules/sauce/LimitHandler");
-local imageHandler = require("../modules/sauce/ImageSenderHandler");
+local limitHandler = require("./limitHandler");
+local imageHandler = require("./imageSenderHandler");
 require('discordia').extensions();
 
 local function getLinksQuantity(t)
@@ -110,9 +110,11 @@ return {
             )
         )
   end,
+
   getMessageCommand = function(tools)
     return tools.messageCommand("Send sauce");
   end,
+
   executeSlashCommand = function(interaction, _, args)
     if args.global then
       limitHandler.setSauceLimitOnServer(interaction, args.global);
@@ -120,10 +122,12 @@ return {
       limitHandler.setSauceLimitOnChannel(interaction, args.channel);
     end
   end,
+
   executeMessageCommand = function (interaction, _, message)
     coroutine.wrap(function () interaction:reply("Alrighty nanora! One second...", true) end)();
     sendAnySauce(message, interaction);
   end,
+
   sendSauce = function(message, client)
     sendSauce(message, client);
   end

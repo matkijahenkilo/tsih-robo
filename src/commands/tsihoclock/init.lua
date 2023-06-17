@@ -1,6 +1,6 @@
-local signHandler = require("../modules/tsihoclock/SignHandler")
-local imageHandler = require("../modules/tsihoclock/ImageSenderHandler")
-local counterHandler = require("../modules/tsihoclock/counterHandler.lua")
+local signHandler = require("./signHandler")
+local imageHandler = require("./imageSenderHandler")
+local counterHandler = require("./counterHandler")
 
 local functions = {
   sign   = signHandler.sign,

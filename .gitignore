@@ -9,6 +9,7 @@ temp/
 discordia-ext.lua
 discordia.lua
 interaction.lua
+*.exe
 
 # sensitive info
 cookies.txt
@@ -22,7 +23,6 @@ assets/sounds/*
 assets/images/omori
 assets/images/tsihoclock/gif/*
 assets/images/tsihoclock/image/*
-
 # except two samples
 !assets/images/tsihoclock/gif/TsihFastPat.gif
 !assets/images/tsihoclock/image/learn_lua.png
