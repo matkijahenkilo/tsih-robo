@@ -72,40 +72,4 @@ function sqlite.InsertGenericValue(tableName, value)
   conn:close()
 end
 
-do
-  local conn = sql.open("NanakosStolenDataBase")
-  conn[[
-    CREATE TEMP TABLE t(
-      id INTEGER PRIMARY KEY,
-      id2 TEXT,
-      id3 TEXT,
-      id4 TEXT
-    )
-  ]]
-
-  local statement = conn:prepare("INSERT INTO t(id2, id3, id4) VALUES(?, ?, ?)")
-  for i = 1, 5, 1 do
-    statement:reset()
-    statement:bind(200*i, nil, "jesus")
-    statement:step()
-    p(conn:exec("SELECT * FROM t"))
-    print('\n')
-  end
-
-  local select = conn:exec("SELECT * FROM t")
-  for index, value in ipairs(select) do
-    p(index,value)
-  end
-
-  p(getColumnsNames(select))
-
-  conn:exec(format("INSERT INTO t(%s) VALUES ('nice','nice','nice')", getColumnsNames(select)))
-
-  for index, value in ipairs(conn:exec("SELECT * FROM t")) do
-    p(index,value)
-  end
-
-  conn:close()
-end
-
 return sqlite

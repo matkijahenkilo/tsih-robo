@@ -6,7 +6,6 @@ local settings    = require("src/data/settings");
 local statusTable = require("src/utils/statusTable");
 local randomReact = require("src/utils/randomReact");
 
-local http = require("coro-http")
 local fs = require("fs");
 local wrap = coroutine.wrap;
 local commandsHandler;
@@ -32,40 +31,6 @@ do
   };
 
   commandsHandler = setmetatable(commands, commandsMetaTable);
-end
-
-local function openAssistant(message)
-  if message.content:sub(1, #settings.prefix) ~= settings.prefix then return end
-
-  local json = require("json")
-
-  local header = {
-    ["Accept"] = 'application/json',
-    ["Content-Type"] = 'application/json',
-    ["X-API-Key"] = 're2r23r23r, re2r23r23r',
-    ["Authorization"] = "Bearer re2r23r23r",
-  }
-
-  local data = json.decode([[{
-    "type": "random",
-    "user": {
-      "id": "string",
-      "display_name": "string",
-      "auth_method": "discord"
-    },
-    "collective": false,
-    "lang": "string"
-  }]])
-
-  local err, res, body = pcall(http.request, "POST", "https://projects.laion.ai/api/v1/tasks/", header, data)
-
-  if err or res.code ~= 200 then
-    p(res, body)
-    --message.channel:send("aaaaa")
-  else
-    p(body)
-    --message.reply()
-  end
 end
 
 local function initializeCommands(commands)
@@ -108,6 +73,9 @@ end
 
 
 
+
+
+
 client:on("ready", function()
   client:info("I'm currently serving in " .. #client.guilds .. " servers nanora!");
   for _, guild in pairs(client.guilds) do client:info(guild.id .. ' ' .. guild.name) end
@@ -124,10 +92,7 @@ end)
 
 client:on("messageCreate", function(message)
   if message.author.bot then return end
-  wrap(function ()
-    rollRandomReactionDice(message)
-    --openAssistant(message)
-  end)()
+  wrap(function () rollRandomReactionDice(message) end)()
   commandsHandler["sauce"].sendSauce(message, client);
 end)
 
@@ -136,7 +101,11 @@ client:on("slashCommand", function(interaction, command, args)
 end)
 
 client:on("messageCommand", function(interaction, command, message)
-  commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand(interaction, command, message);
+  if message then
+    commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand(interaction, command, message);
+  else
+    interaction:reply("Failed to get command!\nMaybe I don't have access to the channel nora?")
+  end
 end)
 
 clock:on("min", function()
@@ -146,7 +115,7 @@ end)
 clock:on("hour", function(now)
   if now.hour == 21 then
     commandsHandler["tsihoclock"].executeWithTimer(client);
-  elseif now.hour == 6 then -- this might crash the bot in the certain time, I'm unsure
+  elseif now.hour == 6 then
     local songsDirectory = commandsHandler["song"].songsDirectory;
     local songsFiles = fs.readdirSync(songsDirectory);
     if songsFiles[1] then
@@ -159,7 +128,7 @@ end)
 
 do
   local file = io.open("src/data/token.txt", "r");
-  if not file then error("token.txt not found") end
+  if not file then error("token.txt not found in src/data") end
   local token = file:read("a");
   file:close();
   client:run('Bot ' .. token);
