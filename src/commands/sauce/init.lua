@@ -15,6 +15,7 @@ end
 
 local function warnFail(interaction, err)
   if err then
+    print(err)
     interaction:reply(err, true);
   end
 end

@@ -13,6 +13,15 @@ local function fileExists(file)
   return fs.statSync(file) ~= nil
 end
 
+local function printInfo(link, limit, files)
+  local mb = 0
+  for _, file in ipairs(files) do
+    mb = mb + getFileSizeInMegaBytes(file)
+  end
+  print(string.format("downloading %s with a limit of %s images", link, limit))
+  print(string.format("sending:\n%s\nwith a total of %smb\n", table.concat(files, '\n'), mb))
+end
+
 local function fillNewTable(t)
   local newTable = {};
   for _, value in ipairs(t) do
@@ -86,11 +95,14 @@ function gallerydl.downloadImage(link, id, limit)
     }
   });
   -- obviously not the best idea to concat table, transform to table, concat table and so on...
-  local downloadedFiles = table.concat(readProcess(child));
+  local filestbl = readProcess(child)
+  local downloadedFiles = table.concat(filestbl);
   downloadedFiles = downloadedFiles:gsub("# ", ''):gsub("\r", '');
 
   local existingFilestbl = filterNilFiles(downloadedFiles)
   local filesToSend = filterLargeFiles(existingFilestbl);
+
+  printInfo(link, limit, filesToSend)
 
   return filesToSend;
 end
