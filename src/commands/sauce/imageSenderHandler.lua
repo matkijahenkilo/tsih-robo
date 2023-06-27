@@ -82,7 +82,7 @@ local function sendDownloadedImage(message, images, link)
     messageToSend.content = "`" .. link .. "`";
   end
 
-  if messageToSend.files[1] then
+  if hasFile(messageToSend.files) then
     return message.channel:send(messageToSend);
   else
     return false, "Couldn't get images to send! Maybe I can't access the website nora..."
@@ -135,6 +135,42 @@ local function shouldSendBaraagLinks(url)
   return quantity > 1;
 end
 
+local function sendImages(message, separatedFilestbl, source, hasMultipleLinks)
+  local err = nil
+  if hasFile(separatedFilestbl) then
+    local success;
+    if hasMultipleLinks then
+      success, err = sendDownloadedImage(message, separatedFilestbl, source);
+    else
+      success, err = sendDownloadedImage(message, separatedFilestbl);
+    end
+    err = checkSuccess(success, err, message, source);
+  end
+  return err
+end
+
+local function sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
+  local partitionedFilestbl = {}
+  local errors = {}
+
+  for index, file in ipairs(wholeFilestbl)  do
+
+    table.insert(partitionedFilestbl, file)
+
+    if #partitionedFilestbl == 10 or index == #wholeFilestbl then
+
+      local err = sendImages(message, partitionedFilestbl, source, hasMultipleLinks)
+      table.insert(errors, err)
+
+      partitionedFilestbl = {}
+
+    end
+  end
+
+  return errors
+end
+
+
 function M.verify(string, list)
   for _, value in pairs(list) do
     if string:find(value) then
@@ -182,22 +218,19 @@ end
 
 function M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks)
   local id = message.channel.id;
-  local filestbl = gallerydl.downloadImage(source, id, limit);
-  local err = nil;
+  local wholeFilestbl = gallerydl.downloadImage(source, id, limit);
+  local errors = {};
 
-  if hasFile(filestbl) then
-    local success;
-    if hasMultipleLinks then
-      success, err = sendDownloadedImage(message, filestbl, source);
-    else
-      success, err = sendDownloadedImage(message, filestbl);
-    end
-    err = checkSuccess(success, err, message, source);
+  if #wholeFilestbl > 10 then
+    errors = sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
+  else
+    local err = sendImages(message, wholeFilestbl, source, hasMultipleLinks)
+    table.insert(errors, err)
   end
 
-  deleteDownloadedImage(filestbl, id);
+  deleteDownloadedImage(wholeFilestbl, id);
 
-  return err;
+  return table.concat(errors, '\n');
 end
 
 function M.sendTwitterImages(source, message, limit, client, hasMultipleLinks)

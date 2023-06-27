@@ -93,12 +93,12 @@ return {
     return tools.slashCommand("sauce", "Sets a limit for images I send nanora!")
         :addOption(
           tools.subCommand("channel", "Sets a limit for this channel only nanora!")
-          :addOption(
-            tools.integer("limit", "Default is 5 nanora! Input 0 if you don't want me to send images again nora!")
-            :setMinValue(0)
-            :setMaxValue(10)
-            :setRequired(true)
-          )
+            :addOption(
+              tools.integer("limit", "Default is 5 nanora! Input 0 if you don't want me to send images again nora!")
+              :setMinValue(0)
+              :setMaxValue(100)
+              :setRequired(true)
+            )
         )
         :addOption(
           tools.subCommand("global", "Sets a limit for this entire server nanora!")
