@@ -1,5 +1,7 @@
 local fs = require("fs");
 local spawn = require("coro-spawn");
+local logger = require("discordia").Logger(3, "%Y-%m-%d %X", "gallerydl.log")
+local stopwatch = require("discordia").Stopwatch(true)
 
 local MAX_UPLOAD_LIMIT = 25
 
@@ -18,8 +20,9 @@ local function printInfo(link, limit, files)
   for _, file in ipairs(files) do
     mb = mb + getFileSizeInMegaBytes(file)
   end
-  print(string.format("downloading %s with a limit of %s images", link, limit))
-  print(string.format("sending:\n%s\nwith a total of %smb\n", table.concat(files, '\n'), mb))
+  logger:log(3, string.format("Downloaded %s/%s images from %s - total of %.2fmb. Took %.2f seconds",
+    #files, limit, link, mb, stopwatch:getTime():toSeconds()
+  ))
 end
 
 local function fillNewTable(t)
@@ -86,6 +89,7 @@ local function filterNilFiles(downloadedFiles)
 end
 
 function gallerydl.downloadImage(link, id, limit)
+  stopwatch:start()
   local child = spawn("gallery-dl", {
     args = {
       "--cookies", "cookies.txt",
@@ -103,6 +107,8 @@ function gallerydl.downloadImage(link, id, limit)
   local filesToSend = filterLargeFiles(existingFilestbl);
 
   printInfo(link, limit, filesToSend)
+  stopwatch:stop()
+  stopwatch:reset()
 
   return filesToSend;
 end

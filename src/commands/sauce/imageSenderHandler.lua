@@ -230,7 +230,12 @@ function M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks)
 
   deleteDownloadedImage(wholeFilestbl, id);
 
-  return table.concat(errors, '\n');
+  local errorstr = table.concat(errors, '\n')
+  if errorstr ~= '' then
+    return errorstr
+  else
+    return nil
+  end
 end
 
 function M.sendTwitterImages(source, message, limit, client, hasMultipleLinks)
