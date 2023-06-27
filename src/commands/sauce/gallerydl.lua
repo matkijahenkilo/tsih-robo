@@ -21,6 +21,7 @@ end
 
 local function logInfo(link, limit, files)
   local mb = 0
+
   for _, file in ipairs(files) do
     mb = mb + getFileSizeInMegaBytes(file)
   end
