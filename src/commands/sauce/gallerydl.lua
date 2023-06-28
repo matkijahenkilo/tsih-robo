@@ -1,7 +1,7 @@
 local fs = require("fs");
 local spawn = require("coro-spawn");
-local logger = require("discordia").Logger(3, "%Y-%m-%d %X", "gallerydl.log")
-local stopwatch = require("discordia").Stopwatch(true)
+local discordia = require("discordia")
+local logger = discordia.Logger(3, "%Y-%m-%d %X", "gallerydl.log")
 
 local MAX_UPLOAD_LIMIT = 25
 
@@ -21,7 +21,6 @@ end
 
 local function logInfo(link, limit, files)
   local mb = 0
-
   for _, file in ipairs(files) do
     mb = mb + getFileSizeInMegaBytes(file)
   end
@@ -100,7 +99,7 @@ local function getCleanedTable(t)
 end
 
 function gallerydl.downloadImage(link, id, limit)
-  stopwatch:start()
+  local stopwatch = discordia.Stopwatch(true)
 
   local child = spawn("gallery-dl", {
     args = {
@@ -116,11 +115,11 @@ function gallerydl.downloadImage(link, id, limit)
   filestbl = filterNilFiles(filestbl)
   filestbl = filterLargeFiles(filestbl)
 
+  stopwatch:stop()
+
   if isEmpty(filestbl) then return end
 
   logInfo(link, limit, filestbl)
-
-  stopwatch:stop()
 
   return filestbl
 end
