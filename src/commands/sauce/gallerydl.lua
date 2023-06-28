@@ -1,7 +1,7 @@
 local fs = require("fs");
 local spawn = require("coro-spawn");
 local discordia = require("discordia")
-local logger = discordia.Logger(3, "%Y-%m-%d %X", "gallerydl.log")
+local logger = discordia.Logger(3, "%Y-%m-%d %X", "gallery-dl.log")
 
 local MAX_UPLOAD_LIMIT = 25
 
@@ -19,14 +19,22 @@ local function fileExists(file)
   return fs.statSync(file) ~= nil
 end
 
-local function logInfo(link, limit, files)
+local function logInfo(link, limit, files, stopwatch)
   local mb = 0
+  local time = stopwatch:getTime()
   for _, file in ipairs(files) do
     mb = mb + getFileSizeInMegaBytes(file)
   end
-  logger:log(3, string.format("Downloaded %s/%s images from %s - total of %.2fmb. Took %.2f seconds",
-    #files, limit, link, mb, stopwatch:getTime():toSeconds()
-  ))
+
+  if time:toSeconds() > 60 then
+    logger:log(3, string.format("Downloaded %s/%s images from %s - total of %.2fmb. Took %.2f minutes",
+      #files, limit, link, mb, time:toMinutes()
+    ))
+  else
+    logger:log(3, string.format("Downloaded %s/%s images from %s - total of %.2fmb. Took %.2f seconds",
+      #files, limit, link, mb, time:toSeconds()
+    ))
+  end
 end
 
 local function getSpecificLinksFromString(t, string)
@@ -119,7 +127,7 @@ function gallerydl.downloadImage(link, id, limit)
 
   if isEmpty(filestbl) then return end
 
-  logInfo(link, limit, filestbl)
+  logInfo(link, limit, filestbl, stopwatch)
 
   return filestbl
 end
