@@ -4,6 +4,11 @@ local discordia = require("discordia")
 local logger = discordia.Logger(3, "%Y-%m-%d %X", "gallery-dl.log")
 
 local MAX_UPLOAD_LIMIT = 25
+local FILE = "file"
+local URL = "url"
+local TWITTER_IMAGE = "pbs.twimg"
+local TWITTER_VIDEO = "video.twimg"
+local BARAAG_MEDIA = "media.baraag.net"
 
 local gallerydl = {}
 
@@ -48,24 +53,29 @@ local function getSpecificLinksFromString(t, string)
 end
 
 local function getBaraagLinks(link)
-  local baraagLinks = getSpecificLinksFromString(link, "media.baraag.net");
+  local baraagLinks = getSpecificLinksFromString(link, BARAAG_MEDIA);
   table.remove(baraagLinks, 1); --removes the first, already embedded image
   return baraagLinks;
 end
 
-local function readProcess(child)
+local function readProcess(child, type)
+  local result = {}
   child:waitExit();
   local link = child.stdout.read();
+  result[1] = link
 
-  if link then
-    if link:find("pbs.twimg") then
-      return getSpecificLinksFromString(link, "video.twimg");
-    elseif link:find("media.baraag.net") then
-      return getBaraagLinks(link)
+  if type == FILE then
+    return result
+  elseif type == URL then
+    if link then
+      if link:find(TWITTER_IMAGE) then
+        result = getSpecificLinksFromString(link, TWITTER_VIDEO);
+      elseif link:find(BARAAG_MEDIA) then
+        result = getBaraagLinks(link)
+      end
     end
   end
-
-  return { link }
+  return result
 end
 
 local function fillNewTable(t)
@@ -106,6 +116,11 @@ local function getCleanedTable(t)
   return table.concat(cleanedTable):split('\n')
 end
 
+
+
+
+
+
 function gallerydl.downloadImage(link, id, limit)
   local stopwatch = discordia.Stopwatch()
 
@@ -118,7 +133,7 @@ function gallerydl.downloadImage(link, id, limit)
     }
   });
 
-  local filestbl = readProcess(child)
+  local filestbl = readProcess(child, FILE)
   filestbl = getCleanedTable(filestbl)
   filestbl = filterNilFiles(filestbl)
   filestbl = filterLargeFiles(filestbl)
@@ -138,13 +153,13 @@ function gallerydl.getUrl(url, limit)
   local child = spawn("gallery-dl", {
     args = {
       "--cookies", "cookies.txt",
-      "--range", "1-" .. limit,
+      "--range", "1-"..limit,
       "-g",
       url
     }
   });
 
-  return table.concat(readProcess(child));
+  return table.concat(readProcess(child, URL));
 end
 
 return gallerydl
