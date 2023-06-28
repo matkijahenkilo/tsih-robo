@@ -4,12 +4,10 @@ local client      = discordia.Client():useApplicationCommands();
 local clock       = discordia.Clock();
 local settings    = require("src/data/settings");
 local statusTable = require("src/utils/statusTable");
-local randomReact = require("src/utils/randomReact");
 
 local fs = require("fs");
 local wrap = coroutine.wrap;
 local commandsHandler;
-local emoticonsServer = {};
 local shouldResetCommands = args[2];
 discordia.extensions.string();
 
@@ -65,12 +63,6 @@ local function hasTsihMention(message)
   return content:find("tsih") or content:find("nora");
 end
 
-local function rollRandomReactionDice(message)
-  if hasTsihMention(message) or math.random() <= 0.01 then
-    randomReact.sendRandomReaction(message, emoticonsServer);
-  end
-end
-
 
 
 
@@ -83,17 +75,17 @@ client:on("ready", function()
   clock:start(true);
   client:setActivity(statusTable[math.random(#statusTable)]);
 
-  for index, id in ipairs(settings.emoticonsServers) do
-    emoticonsServer[index] = client:getGuild(id);
-  end
-
   client:info("💙Ready nanora!💜");
 end)
 
 client:on("messageCreate", function(message)
   if message.author.bot then return end
-  wrap(function () rollRandomReactionDice(message) end)()
-  commandsHandler["sauce"].sendSauce(message, client);
+
+  if hasTsihMention(message) or math.random() <= 0.01 then
+    commandsHandler["emoji"].execute(message, client);
+  end
+
+  commandsHandler["sauce"].execute(message, client);
 end)
 
 client:on("slashCommand", function(interaction, command, args)

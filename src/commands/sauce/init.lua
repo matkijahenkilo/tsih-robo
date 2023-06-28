@@ -132,7 +132,7 @@ return {
     sendAnySauce(message, interaction);
   end,
 
-  sendSauce = function(message, client)
+  execute = function(message, client)
     sendSauce(message, client)
   end
 }
