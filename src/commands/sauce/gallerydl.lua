@@ -77,8 +77,7 @@ local function filterLargeFiles(existingFilestbl)
   return fillNewTable(existingFilestbl)
 end
 
-local function filterNilFiles(downloadedFiles)
-  local filestbl = downloadedFiles:split("\n");
+local function filterNilFiles(filestbl)
   for index, file in ipairs(filestbl) do
     if file ~= '' and not fileExists(file) then
       filestbl[index] = nil;
@@ -87,6 +86,8 @@ local function filterNilFiles(downloadedFiles)
 
   return fillNewTable(filestbl);
 end
+
+
 
 function gallerydl.downloadImage(link, id, limit)
   stopwatch:start()
@@ -98,17 +99,16 @@ function gallerydl.downloadImage(link, id, limit)
       link
     }
   });
-  -- obviously not the best idea to concat table, transform to table, concat table and so on...
+
   local filestbl = readProcess(child)
   local downloadedFiles = table.concat(filestbl);
-  downloadedFiles = downloadedFiles:gsub("# ", ''):gsub("\r", '');
+  downloadedFiles = downloadedFiles:gsub("# ", ''):gsub("\r", ''):split('\n');
 
   local existingFilestbl = filterNilFiles(downloadedFiles)
   local filesToSend = filterLargeFiles(existingFilestbl);
 
   printInfo(link, limit, filesToSend)
   stopwatch:stop()
-  stopwatch:reset()
 
   return filesToSend;
 end
