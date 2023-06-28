@@ -7,6 +7,10 @@ local MAX_UPLOAD_LIMIT = 25
 
 local gallerydl = {}
 
+local function isEmpty(t)
+  return t[1] == nil
+end
+
 local function getFileSizeInMegaBytes(file)
   return fs.statSync(file).size / (1024*1024)
 end
@@ -15,7 +19,7 @@ local function fileExists(file)
   return fs.statSync(file) ~= nil
 end
 
-local function printInfo(link, limit, files)
+local function logInfo(link, limit, files)
   local mb = 0
   for _, file in ipairs(files) do
     mb = mb + getFileSizeInMegaBytes(file)
@@ -23,16 +27,6 @@ local function printInfo(link, limit, files)
   logger:log(3, string.format("Downloaded %s/%s images from %s - total of %.2fmb. Took %.2f seconds",
     #files, limit, link, mb, stopwatch:getTime():toSeconds()
   ))
-end
-
-local function fillNewTable(t)
-  local newTable = {};
-  for _, value in ipairs(t) do
-    if value ~= '' then
-      table.insert(newTable, value);
-    end
-  end
-  return newTable
 end
 
 local function getSpecificLinksFromString(t, string)
@@ -66,63 +60,80 @@ local function readProcess(child)
   return { link }
 end
 
-local function filterLargeFiles(existingFilestbl)
-  for index, file in ipairs(existingFilestbl) do
-    if file ~= '' and getFileSizeInMegaBytes(file) >= MAX_UPLOAD_LIMIT then
+local function fillNewTable(t)
+  local newTable = {};
+  for _, value in ipairs(t) do
+    table.insert(newTable, value);
+  end
+  return newTable
+end
+
+local function filterLargeFiles(t)
+  for index, file in ipairs(t) do
+    if getFileSizeInMegaBytes(file) >= MAX_UPLOAD_LIMIT then
       fs.unlinkSync(file);
-      existingFilestbl[index] = nil;
+      t[index] = nil;
     end
   end
-
-  return fillNewTable(existingFilestbl)
+  return fillNewTable(t)
 end
 
-local function filterNilFiles(filestbl)
-  for index, file in ipairs(filestbl) do
-    if file ~= '' and not fileExists(file) then
-      filestbl[index] = nil;
+local function filterNilFiles(t)
+  for index, file in ipairs(t) do
+    if not fileExists(file) then
+      t[index] = nil;
     end
   end
-
-  return fillNewTable(filestbl);
+  return fillNewTable(t);
 end
 
-
+local function getCleanedTable(t)
+  local cleanedTable = {}
+  for _, v in ipairs(t) do
+    if v or v ~= '' then
+      local value = v:gsub("# ", ''):gsub("\r", '')
+      table.insert(cleanedTable, value)
+    end
+  end
+  return table.concat(cleanedTable):split('\n')
+end
 
 function gallerydl.downloadImage(link, id, limit)
   stopwatch:start()
+
   local child = spawn("gallery-dl", {
     args = {
       "--cookies", "cookies.txt",
-      "--range", "1-" .. limit, "--ugoira-conv",
+      "--range", "1-"..limit, "--ugoira-conv",
       "-D", "./temp/"..id,
       link
     }
   });
 
   local filestbl = readProcess(child)
-  local downloadedFiles = table.concat(filestbl);
-  downloadedFiles = downloadedFiles:gsub("# ", ''):gsub("\r", ''):split('\n');
+  filestbl = getCleanedTable(filestbl)
+  filestbl = filterNilFiles(filestbl)
+  filestbl = filterLargeFiles(filestbl)
 
-  local existingFilestbl = filterNilFiles(downloadedFiles)
-  local filesToSend = filterLargeFiles(existingFilestbl);
+  if isEmpty(filestbl) then return end
 
-  printInfo(link, limit, filesToSend)
+  logInfo(link, limit, filestbl)
+
   stopwatch:stop()
 
-  return filesToSend;
+  return filestbl
 end
 
 function gallerydl.getUrl(url, limit)
   if limit > 5 then limit = 5 end
 
   local child = spawn("gallery-dl", {
-      args = {
+    args = {
       "--cookies", "cookies.txt",
       "--range", "1-" .. limit,
       "-g",
       url
-      }
+    }
   });
 
   return table.concat(readProcess(child));

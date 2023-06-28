@@ -1,16 +1,19 @@
 local limitHandler = require("./limitHandler");
-local imageHandler = require("./imageSenderHandler");
+local imageSender = require("./imageSenderHandler");
 require('discordia').extensions();
 
-local function getLinksQuantity(t)
-  local count = 0;
-  for _, value in ipairs(t) do
-    if value:find("https://") then
-      count = count + 1;
-      if count >= 2 then return count end -- lol
+local function hasMultipleLinks(t)
+  local count = 0
+  for _, word in ipairs(t) do
+    if imageSender.verify(word, imageSender.doesNotRequireDownload)
+      or imageSender.verify(word, imageSender.requireDownload)
+      or word:find("https://twitter.com/")
+    then
+      count = count + 1
+      if count > 1 then return true end
     end
   end
-  return count;
+  return false
 end
 
 local function warnFail(interaction, err)
@@ -19,72 +22,73 @@ local function warnFail(interaction, err)
   end
 end
 
-local function findLinksToSend(message, link, limit, client, hasMultipleLinks)
-  coroutine.wrap(function()
-    if imageHandler.verify(link, imageHandler.doesNotRequireDownload) then
+local function findLinksToSend(message, info)
+  if imageSender.verify(info.link, imageSender.doesNotRequireDownload) then
 
-      imageHandler.sendDirectImageUrl(link, message, limit, hasMultipleLinks);
+    imageSender.sendDirectImageUrl(message, info);
 
-    elseif imageHandler.verify(link, imageHandler.requireDownload) then
+  elseif imageSender.verify(info.link, imageSender.requireDownload) then
 
-      imageHandler.downloadSendAndDeleteImages(link, message, limit, hasMultipleLinks);
+    imageSender.downloadSendAndDeleteImages(message, info);
 
-    elseif link:find("https://twitter.com/") then
+  elseif info.link:find("https://twitter.com/") then
 
-      if not imageHandler.sendTwitterDirectVideoUrl(link, message, limit, hasMultipleLinks) then
-        imageHandler.sendTwitterImages(link, message, limit, client, hasMultipleLinks);
-      end
-
+    if not imageSender.sendTwitterDirectVideoUrl(message, info) then
+      imageSender.sendTwitterImages(message, info);
     end
-  end)();
+
+  end
 end
 
 local function sendSauce(message, client)
   local content = message.content;
   if content and content:find("https://") then
+    local limit = limitHandler.getRoomImageLimit(message) or 5;
+    if limit == 0 then return end
+
     content = content:gsub('\n', ' '):gsub('||', ' ');
     local t = content:split(' ');
-    local limit = limitHandler.getRoomImageLimit(message) or 5;
-    local hasMultipleLinks = false;
-
-    if getLinksQuantity(t) > 1 then
-      hasMultipleLinks = true;
-    end
-
-    if limit == 0 then return end
+    local multipleLinks = hasMultipleLinks(t);
 
     for _, link in ipairs(t) do
       if link ~= '' then
-        findLinksToSend(message, link, limit, client, hasMultipleLinks);
+        coroutine.wrap(function()
+          local info = {
+            link = link,
+            limit = limit,
+            client = client,
+            multipleLinks = multipleLinks
+          }
+          findLinksToSend(message, info);
+        end)();
       end
     end
-
   end
 end
 
 local function sendAnySauce(message, interaction)
   local content = message.content;
   if content and content:find("https://") then
+    local limit = limitHandler.getRoomImageLimit(message) or 5;
+    if limit == 0 then return end
+
     content = content:gsub('\n', ' '):gsub('||', ' ');
     local t = content:split(' ');
-    local limit = limitHandler.getRoomImageLimit(message) or 5;
-    local hasMultipleLinks = false;
-
-    if getLinksQuantity(t) > 1 then
-      hasMultipleLinks = true;
-    end
-
-    if limit == 0 then return end
+    local multipleLinks = hasMultipleLinks(t);
 
     for _, link in ipairs(t) do
       if link ~= '' and link:find("https://") then
         coroutine.wrap(function()
-          local err = imageHandler.downloadSendAndDeleteImages(link, message, limit, hasMultipleLinks);
-          warnFail(interaction, err);
+          local info = {
+            link = link,
+            limit = limit,
+            multipleLinks = multipleLinks
+          }
+          local err = imageSender.downloadSendAndDeleteImages(message, info)
+          warnFail(interaction, err)
         end)();
       end
     end
-
   end
 end
 
@@ -129,6 +133,6 @@ return {
   end,
 
   sendSauce = function(message, client)
-    sendSauce(message, client);
+    sendSauce(message, client)
   end
 }

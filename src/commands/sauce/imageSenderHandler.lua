@@ -181,11 +181,13 @@ function M.verify(string, list)
   return false;
 end
 
-function M.sendTwitterDirectVideoUrl(source, message, limit, hasMultipleLinks)
-  local url = gallerydl.getUrl(source, limit);
+function M.sendTwitterDirectVideoUrl(message, info)
+  local source = info.link
+  local multipleLinks = info.multipleLinks
+  local url = gallerydl.getUrl(source, info.limit);
   if url:find("video.twimg") then
     local success, err;
-    if hasMultipleLinks then
+    if multipleLinks then
       success, err = sendUrl(message, url, source);
     else
       success, err = sendUrl(message, url);
@@ -196,7 +198,10 @@ function M.sendTwitterDirectVideoUrl(source, message, limit, hasMultipleLinks)
   return false;
 end
 
-function M.sendDirectImageUrl(source, message, limit, hasMultipleLinks)
+function M.sendDirectImageUrl(message, info)
+  local source = info.link
+  local limit = info.limit
+  local multipleLinks = info.multipleLinks
   if source:find("https://baraag.net/") then
     source = source:gsub("web/", '');
   end
@@ -206,7 +211,7 @@ function M.sendDirectImageUrl(source, message, limit, hasMultipleLinks)
   if hasUrl(url) then
     if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
       local success, err;
-      if hasMultipleLinks then
+      if multipleLinks then
         success, err = sendUrl(message, url, source);
       else
         success, err = sendUrl(message, url);
@@ -216,15 +221,20 @@ function M.sendDirectImageUrl(source, message, limit, hasMultipleLinks)
   end
 end
 
-function M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks)
+function M.downloadSendAndDeleteImages(message, info)
   local id = message.channel.id;
-  local wholeFilestbl = gallerydl.downloadImage(source, id, limit);
-  local errors = {};
+  local source = info.link
+  local limit = info.limit
+  local multipleLinks = info.multipleLinks
+  local wholeFilestbl = gallerydl.downloadImage(source, id, limit)
+  local errors = {}
+
+  if not wholeFilestbl then return end
 
   if #wholeFilestbl > 10 then
-    errors = sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
+    errors = sendPartitionedImages(message, wholeFilestbl, source, multipleLinks)
   else
-    local err = sendImages(message, wholeFilestbl, source, hasMultipleLinks)
+    local err = sendImages(message, wholeFilestbl, source, multipleLinks)
     table.insert(errors, err)
   end
 
@@ -238,10 +248,11 @@ function M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks)
   end
 end
 
-function M.sendTwitterImages(source, message, limit, client, hasMultipleLinks)
+function M.sendTwitterImages(message, info)
+  local client = info.client
   if not message.embed then
     if not client:waitFor("messageUpdate", 5000) then
-      M.downloadSendAndDeleteImages(source, message, limit, hasMultipleLinks);
+      M.downloadSendAndDeleteImages(message, info);
     end
   end
 end

@@ -77,7 +77,7 @@ end
 
 
 client:on("ready", function()
-  client:info("I'm currently serving in " .. #client.guilds .. " servers nanora!");
+  client:info("I'm currently in " .. #client.guilds .. " servers nanora!");
   for _, guild in pairs(client.guilds) do client:info(guild.id .. ' ' .. guild.name) end
 
   clock:start(true);
