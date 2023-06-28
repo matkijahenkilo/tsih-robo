@@ -2,11 +2,9 @@ local discordia   = require("discordia");
 local tools       = require("discordia-slash").util.tools();
 local client      = discordia.Client():useApplicationCommands();
 local clock       = discordia.Clock();
-local settings    = require("src/data/settings");
 local statusTable = require("src/utils/statusTable");
 
 local fs = require("fs");
-local wrap = coroutine.wrap;
 local commandsHandler;
 local shouldResetCommands = args[2];
 discordia.extensions.string();

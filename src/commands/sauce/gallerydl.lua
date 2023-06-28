@@ -99,7 +99,7 @@ local function getCleanedTable(t)
 end
 
 function gallerydl.downloadImage(link, id, limit)
-  local stopwatch = discordia.Stopwatch(true)
+  local stopwatch = discordia.Stopwatch()
 
   local child = spawn("gallery-dl", {
     args = {

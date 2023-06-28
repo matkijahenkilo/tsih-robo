@@ -7,7 +7,7 @@ end
 
 return {
   getSlashCommand = function(tools)
-    return tools.slashCommand("emoji", "Add or remove this server from my random reaction list nora!")
+    return tools.slashCommand("emojiserver", "Add or remove this server from my random reaction list nora!")
         :addOption(
           tools.boolean("add", "If you set true, I'll be able to randomly use your server's emoji nora! Otherwise I'll not!")
           :setRequired(true)
