@@ -20,8 +20,10 @@ M.requireDownload = {
   "https://misskey.io/",
   "https://sankaku.app/",
   "https://exhentai.org/",
+  "https://e-hentai.org/",
   "https://kemono.party/",
   "https://www.pixiv.net/",
+  "https://www.tsumino.com/",
   "https://www.deviantart.com/",
   "https://chan.sankakucomplex.com/",
 }
