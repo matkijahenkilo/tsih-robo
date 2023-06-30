@@ -1,3 +1,4 @@
+---@type discordia
 local discordia   = require("discordia")
 local tools       = require("discordia-slash").util.tools()
 local client      = discordia.Client():useApplicationCommands()

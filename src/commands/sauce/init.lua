@@ -15,12 +15,6 @@ local function hasHttps(str)
   return str and str:find("https://")
 end
 
-local function warnFail(interaction, err)
-  if err then
-    interaction:reply(err, true)
-  end
-end
-
 local function findLinksToSend(message, info)
   if analyser.linkDoesNotRequireDownload(info.link) then
 
@@ -46,11 +40,12 @@ local function sendSauce(message, client, interaction)
 
   local action
   local condition
-  local wasCommand = false
+  local wasCommand
 
   if not interaction then
     action = findLinksToSend
     condition = specificLinkCondition
+    wasCommand = false
   else
     action = imageSender.downloadSendAndDeleteImages
     condition = anyLinkCondition
@@ -62,7 +57,7 @@ local function sendSauce(message, client, interaction)
       coroutine.wrap(function()
         info.link = link
         local err = action(message, info)
-        if wasCommand then warnFail(interaction, err) end
+        if wasCommand and err then interaction:reply(err, true) end
       end)()
     end
   end
