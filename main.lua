@@ -19,7 +19,7 @@ do
   local commandsMetaTable = {
     __index = function()
       local M = {}
-      function M.execute(message)
+      function M.execute()
         client:warning("Something went wrong.")
       end
       return M
@@ -94,7 +94,7 @@ client:on("messageCommand", function(interaction, command, message)
   if message then
     commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand(interaction, command, message)
   else
-    interaction:reply("Failed to get command!\nMaybe I don't have access to the channel nora?")
+    interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
   end
 end)
 
