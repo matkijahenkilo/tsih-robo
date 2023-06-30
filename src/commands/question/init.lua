@@ -24,9 +24,11 @@ return {
           tools.string("question", "The!!! question"):setRequired(true)
         )
   end,
+
   executeSlashCommand = function(interaction, _, args)
     local person = interaction.member or interaction.user;
-    interaction:reply(person.name .. " asked: " .. args.question .. "\n"
-      .. answer[math.random(#answer)]);
+    interaction:reply(string.format("%s asked: \"%s\"\n%s",
+      person.name, args.question, answer[math.random(#answer)]
+    ))
   end
 }
