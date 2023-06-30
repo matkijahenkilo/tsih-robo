@@ -3,31 +3,6 @@ local gallerydl = require("./gallerydl")
 
 local M = {}
 
-M.doesNotRequireDownload = {
-  "https://e621.net/",
-  "https://booru.io/",
-  "https://pawoo.net/",
-  "https://nijie.info/",
-  "https://baraag.net/",
-  "https://nhentai.net/",
-  "https://inkbunny.net/",
-  "https://e-hentai.org/",
-  "https://hentai2read.com/",
-}
-
-M.requireDownload = {
-  "https://hitomi.la/",
-  "https://misskey.io/",
-  "https://sankaku.app/",
-  "https://exhentai.org/",
-  "https://e-hentai.org/",
-  "https://kemono.party/",
-  "https://www.pixiv.net/",
-  "https://www.tsumino.com/",
-  "https://www.deviantart.com/",
-  "https://chan.sankakucomplex.com/",
-}
-
 ---@return boolean|table
 function M.getDirectoryInfo(directory)
   return pcall(fs.readdirSync, directory);
@@ -172,17 +147,6 @@ local function sendPartitionedImages(message, wholeFilestbl, source, hasMultiple
   return errors
 end
 
-
-function M.verify(string, list)
-  for _, value in pairs(list) do
-    if string:find(value) then
-      return true;
-    end
-  end
-
-  return false;
-end
-
 function M.sendTwitterDirectVideoUrl(message, info)
   local source = info.link
   local multipleLinks = info.multipleLinks
@@ -200,7 +164,7 @@ function M.sendTwitterDirectVideoUrl(message, info)
   return false;
 end
 
-function M.sendDirectImageUrl(message, info)
+function M.sendImageUrl(message, info)
   local source = info.link
   local limit = info.limit
   local multipleLinks = info.multipleLinks
