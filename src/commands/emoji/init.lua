@@ -42,6 +42,7 @@ return {
 
     local emoji = server.emojis:random()
     if not emoji then return end
+
     message:addReaction(emoji)
   end
 }
