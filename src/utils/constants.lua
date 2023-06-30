@@ -5,5 +5,5 @@ return {
   TWITTER_VIDEO = "video.twimg",
   BARAAG_MEDIA = "media.baraag.net",
 
-  WARNING_NO_FILE = "I could not download any images to send! Maybe I can't access the website nora...",
+  WARNING_NO_FILE = "I could not download any images from the link nanora!",
 }

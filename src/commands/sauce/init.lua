@@ -26,7 +26,7 @@ local function findLinksToSend(message, info)
 
   elseif info.link:find("https://twitter.com/") then
 
-    if not imageSender.sendTwitterDirectVideoUrl(message, info) then
+    if not imageSender.sendTwitterVideoUrl(message, info) then
       imageSender.sendTwitterImages(message, info)
     end
 
