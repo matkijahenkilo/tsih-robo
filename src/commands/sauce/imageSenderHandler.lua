@@ -1,7 +1,6 @@
 local fs = require("fs")
 local gallerydl = require("./gallerydl")
-
-local NO_FILE = "I could not download any images to send! Maybe I can't access the website nora..."
+local constant = require("src.utils.constants")
 
 local failEmojis = {
   "🇳","🇴"
@@ -68,7 +67,7 @@ local function sendDownloadedImage(message, images, link)
   if hasFile(messageToSend.files) then
     return message.channel:send(messageToSend)
   else
-    return false, NO_FILE
+    return false, constant.WARNING_NO_FILE
   end
 end
 
@@ -174,14 +173,14 @@ function M.sendImageUrl(message, info)
   local source = info.link
   local limit = info.limit
   local multipleLinks = info.multipleLinks
-  if source:find("https://baraag.net/") then
+  if source:find(constant.BARAAG_LINK) then
     source = source:gsub("web/", '')
   end
 
   local url = gallerydl.getUrl(source, limit)
 
   if hasUrl(url) then
-    if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
+    if shouldSendBaraagLinks(url) or not url:find(constant.BARAAG_LINK) then
       local success, err
       if multipleLinks then
         success, err = sendUrl(message, url, source)
@@ -203,7 +202,7 @@ function M.downloadSendAndDeleteImages(message, info)
 
   if not wholeFilestbl then
     react(message)
-    return NO_FILE
+    return constant.WARNING_NO_FILE
   end
 
   if #wholeFilestbl > 10 then

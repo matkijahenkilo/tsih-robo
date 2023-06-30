@@ -2,15 +2,7 @@ local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%Y-%m-%d %X", "gallery-dl.log")
-
-local MAX_UPLOAD_LIMIT = 25
-local FILE = "file"
-local URL = "url"
-local TWITTER_IMAGE = "pbs.twimg"
-local TWITTER_VIDEO = "video.twimg"
-local BARAAG_MEDIA = "media.baraag.net"
-
-local gallerydl = {}
+local constant = require("src.utils.constants")
 
 local function isEmpty(t)
   return t[1] == nil
@@ -53,7 +45,7 @@ local function getSpecificLinksFromString(t, string)
 end
 
 local function getBaraagLinks(link)
-  local baraagLinks = getSpecificLinksFromString(link, BARAAG_MEDIA)
+  local baraagLinks = getSpecificLinksFromString(link, constant.BARAAG_MEDIA)
   table.remove(baraagLinks, 1) --removes the first, already embedded image
   return baraagLinks
 end
@@ -64,13 +56,13 @@ local function readProcess(child, type)
   local link = child.stdout.read()
   result[1] = link
 
-  if type == FILE then
+  if type == "file" then
     return result
-  elseif type == URL then
+  elseif type == "url" then
     if link then
-      if link:find(TWITTER_IMAGE) then
-        result = getSpecificLinksFromString(link, TWITTER_VIDEO)
-      elseif link:find(BARAAG_MEDIA) then
+      if link:find(constant.TWITTER_IMAGE) then
+        result = getSpecificLinksFromString(link, constant.TWITTER_VIDEO)
+      elseif link:find(constant.BARAAG_MEDIA) then
         result = getBaraagLinks(link)
       end
     end
@@ -88,7 +80,7 @@ end
 
 local function filterLargeFiles(t)
   for index, file in ipairs(t) do
-    if getFileSizeInMegaBytes(file) >= MAX_UPLOAD_LIMIT then
+    if getFileSizeInMegaBytes(file) >= constant.MAX_UPLOAD_LIMIT then
       fs.unlinkSync(file)
       t[index] = nil
     end
@@ -119,7 +111,7 @@ end
 
 
 
-
+local gallerydl = {}
 
 function gallerydl.downloadImage(link, id, limit)
   local stopwatch = discordia.Stopwatch()
@@ -133,7 +125,7 @@ function gallerydl.downloadImage(link, id, limit)
     }
   })
 
-  local filestbl = readProcess(child, FILE)
+  local filestbl = readProcess(child, "file")
   filestbl = getCleanedTable(filestbl)
   filestbl = filterNilFiles(filestbl)
   filestbl = filterLargeFiles(filestbl)
@@ -159,7 +151,7 @@ function gallerydl.getUrl(url, limit)
     }
   })
 
-  return table.concat(readProcess(child, URL))
+  return table.concat(readProcess(child, "url"))
 end
 
 return gallerydl
