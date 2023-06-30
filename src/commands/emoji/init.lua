@@ -44,4 +44,4 @@ return {
     if not emoji then return end
     message:addReaction(emoji)
   end
-};
+}

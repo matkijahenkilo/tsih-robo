@@ -29,10 +29,10 @@ local requireDownload = {
 local function verify(string, list)
   for _, value in pairs(list) do
     if string:find(value) then
-      return true;
+      return true
     end
   end
-  return false;
+  return false
 end
 
 local M = {}

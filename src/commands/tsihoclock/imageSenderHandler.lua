@@ -1,9 +1,9 @@
-local ORIGIN = "assets/images/tsihoclock/";
-local fs = require("fs");
-local json = require("json");
-local signHandler = require("./signHandler");
+local ORIGIN = "assets/images/tsihoclock/"
+local fs = require("fs")
+local json = require("json")
+local signHandler = require("./signHandler")
 local counterHandler = require("./counterHandler.lua")
-local discordia = require("discordia");
+local discordia = require("discordia")
 
 local M = {}
 
@@ -51,11 +51,11 @@ local fileTables = {
 }
 
 local function getTsihArtworkWithEmbedMessage(fileFormat)
-  local list = fileTables[fileFormat];
+  local list = fileTables[fileFormat]
 
-  local fileToSend = list[math.random(#list)]; -- filename must not have weird characters, spaces nor '()' and '+'
-  local file = ORIGIN .. fileFormat .. '/' .. fileToSend;
-  local tsihClockCounter = counterHandler.getCurrentCounter();
+  local fileToSend = list[math.random(#list)] -- filename must not have weird characters, spaces nor '()' and '+'
+  local file = ORIGIN .. fileFormat .. '/' .. fileToSend
+  local tsihClockCounter = counterHandler.getCurrentCounter()
 
   local embeddedMessage = {
     file = file,
@@ -86,36 +86,36 @@ end
 
 local function sendCuteness(channel, fileType)
   if not channel then return end
-  local fanart = getTsihArtworkWithEmbedMessage(fileType);
-  channel:send(fanart);
+  local fanart = getTsihArtworkWithEmbedMessage(fileType)
+  channel:send(fanart)
 end
 
 local function tsihClock(interaction, fileType)
   if fileType == "gif" or fileType == "image" then
-    sendCuteness(interaction, fileType);
+    sendCuteness(interaction, fileType)
   else
     if math.random() <= 0.1 then
-      sendCuteness(interaction, "gif");
+      sendCuteness(interaction, "gif")
     else
-      sendCuteness(interaction, "image");
+      sendCuteness(interaction, "image")
     end
   end
 end
 
 function M.sendAllTOC(client)
-  local ids = fs.readFileSync(signHandler.IdsPath);
+  local ids = fs.readFileSync(signHandler.IdsPath)
   if ids then
-    local t = json.decode(ids);
-    local total = 0;
+    local t = json.decode(ids)
+    local total = 0
 
     for _, value in pairs(t) do
-      total = total + 1;
+      total = total + 1
       coroutine.wrap(function()
-        tsihClock(client:getChannel(value.id));
-        print("Sending artwork to " .. value.guildName);
-      end)();
+        tsihClock(client:getChannel(value.id))
+        print("Sending artwork to " .. value.guildName)
+      end)()
     end
-    print("Sending " .. total .. " Tsih's fan arts nanora!");
+    print("Sending " .. total .. " Tsih's fan arts nanora!")
   end
 end
 

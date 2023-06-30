@@ -1,10 +1,10 @@
-local MUSIC_FOLDER = "assets/sounds/yt-dlp/";
+local MUSIC_FOLDER = "assets/sounds/yt-dlp/"
 
-local discordia = require("discordia");
-local spawn = require('coro-spawn');
-local fs = require("fs");
-local cache = {};
-discordia.extensions();
+local discordia = require("discordia")
+local spawn = require('coro-spawn')
+local fs = require("fs")
+local cache = {}
+discordia.extensions()
 
 
 local playlistIndicators = {
@@ -23,44 +23,44 @@ local titleTable = {
 }
 
 local function connectAndCacheNewConnection(interaction)
-  local connection, err = interaction.member.voiceChannel:join();
+  local connection, err = interaction.member.voiceChannel:join()
   cache[interaction.guild.id] = {
-    connection   = connection;
-    playlist     = discordia.Deque();
-    whoRequested = {};
-    nowPlaying   = '';
-    isPlaying    = false;
+    connection   = connection,
+    playlist     = discordia.Deque(),
+    whoRequested = {},
+    nowPlaying   = '',
+    isPlaying    = false
   }
-  return cache[interaction.guild.id], err;
+  return cache[interaction.guild.id], err
 end
 
 local function isMemberOnVoiceChannel(voiceChannel, interaction)
-  return voiceChannel.connection.channel.id == interaction.member.voiceChannel.id;
+  return voiceChannel.connection.channel.id == interaction.member.voiceChannel.id
 end
 
 local function deleteExistingFiles(interaction, id)
   interaction:reply("**Song was opted to be re-downloaded**.\n"
-    .."Deleting existing files and re-downloading possible corrupted song nanora! Please wait~");
-  fs.unlinkSync(MUSIC_FOLDER .. id .. ".mp3");
-  fs.unlinkSync(MUSIC_FOLDER .. id .. ".webm");
+    .."Deleting existing files and re-downloading possible corrupted song nanora! Please wait~")
+  fs.unlinkSync(MUSIC_FOLDER .. id .. ".mp3")
+  fs.unlinkSync(MUSIC_FOLDER .. id .. ".webm")
 end
 
 local function findAndDeleteExistingFile(interaction, url)
-  local child = spawn("yt-dlp", {args = {"--print", "id", url}});
+  local child = spawn("yt-dlp", {args = {"--print", "id", url}})
   if child then
-    child.waitExit();
-    local info = child.stdout.read();
+    child.waitExit()
+    local info = child.stdout.read()
     if info then
-      deleteExistingFiles(interaction, info:gsub("%c", ''));
+      deleteExistingFiles(interaction, info:gsub("%c", ''))
     end
   end
 end
 
 local function downloadSong(currentSongInfo, interaction)
-  local url = currentSongInfo["url"];
+  local url = currentSongInfo["url"]
 
   if currentSongInfo["shouldRedownload"] and url then
-    findAndDeleteExistingFile(interaction, url);
+    findAndDeleteExistingFile(interaction, url)
   end
 
   local child = spawn("yt-dlp", {
@@ -73,45 +73,45 @@ local function downloadSong(currentSongInfo, interaction)
       "--output", "%(id)s.mp3",
       url,
     }
-  });
+  })
 
-  local t = {};
+  local t = {}
 
   if child then
-    child.waitExit();
-    local info = child.stdout.read();
+    child.waitExit()
+    local info = child.stdout.read()
     if not info then return end
-    t = info:split('\n');
+    t = info:split('\n')
   end
 
   return {
     title = t[1],
     id    = t[2],
-  };
+  }
 end
 
 local function setInformationToCache(voiceChannel, song, whoRequested)
-  voiceChannel.nowPlaying = song.title;
-  voiceChannel.whoRequested = whoRequested;
+  voiceChannel.nowPlaying = song.title
+  voiceChannel.whoRequested = whoRequested
 end
 
 local function getListOfVideosFromPlaylist(url)
-  local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } });
+  local child = spawn("yt-dlp", { args = { "--flat-playlist", "-g", url } })
   if child then
-    child.waitExit();
-    local urls = child.stdout.read();
+    child.waitExit()
+    local urls = child.stdout.read()
     if not urls then
-      return {};
+      return {}
     end
-    return urls:split('\n');
+    return urls:split('\n')
   end
 end
 
 local function addIndividualUrlsFromPlaylistIntoDeque(url, playlist, user, shouldRedownload)
-  local list = getListOfVideosFromPlaylist(url);
+  local list = getListOfVideosFromPlaylist(url)
   for _, link in ipairs(list) do
     if link ~= '' then
-      playlist:pushRight({["url"]=link, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload});
+      playlist:pushRight({["url"]=link, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload})
     end
   end
 end
@@ -120,7 +120,7 @@ local function isPlaylist(url)
   for _, value in ipairs(playlistIndicators) do
     if url:find(value) then return true end
   end
-  return false;
+  return false
 end
 
 local function showCurrentMusic(interaction, song, user, count)
@@ -136,36 +136,36 @@ local function showCurrentMusic(interaction, song, user, count)
       },
       footer = {
         text = "Requested by " .. user.name .. " nora.",
-        icon_url = user.avatarURL;
+        icon_url = user.avatarURL
       }
     }
-  };
+  }
 end
 
 local function notifySongAdded(interaction, playlistSize)
-  local playlistAddResponse = "Song added into the playlist";
+  local playlistAddResponse = "Song added into the playlist"
   if playlistSize > 5 then
     playlistAddResponse = playlistAddResponse .. "~\nThere's now " .. playlistSize .. " tracks to play nora!"
   else
-    playlistAddResponse = playlistAddResponse .. " nora!";
+    playlistAddResponse = playlistAddResponse .. " nora!"
   end
 
-  interaction.channel:send(playlistAddResponse);
+  interaction.channel:send(playlistAddResponse)
 end
 
 local function getQueuedSongInfo(currentSongInfo, interaction)
   if not currentSongInfo then return end
-  local song = downloadSong(currentSongInfo, interaction);
-  local whoRequested = currentSongInfo["whoRequested"];
-  return song, whoRequested;
+  local song = downloadSong(currentSongInfo, interaction)
+  local whoRequested = currentSongInfo["whoRequested"]
+  return song, whoRequested
 end
 
 local function addSongIntoUrlsForDownloadDeque(url, playlist, user, shouldRedownload)
 
   if isPlaylist(url) then
-    addIndividualUrlsFromPlaylistIntoDeque(url, playlist, user, shouldRedownload);
+    addIndividualUrlsFromPlaylistIntoDeque(url, playlist, user, shouldRedownload)
   else
-    playlist:pushRight({["url"]=url, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload});
+    playlist:pushRight({["url"]=url, ["whoRequested"]=user, ["shouldRedownload"]=shouldRedownload})
   end
 
 end
@@ -173,7 +173,7 @@ end
 local function addSongsIntoDeque(playlist, user, args, shouldRedownload)
   for _, link in ipairs(args) do
     if link and link ~= '' then
-      addSongIntoUrlsForDownloadDeque(link, playlist, user, shouldRedownload);
+      addSongIntoUrlsForDownloadDeque(link, playlist, user, shouldRedownload)
     end
   end
 end
@@ -182,56 +182,56 @@ local function startStreaming(interaction, voiceChannel)
   coroutine.wrap(function ()
     while true do
 
-      local room = voiceChannel.connection;
+      local room = voiceChannel.connection
 
-      voiceChannel.isPlaying = true;
+      voiceChannel.isPlaying = true
 
-      local song, whoRequested;
-      local currentSongInfo = voiceChannel.playlist:popLeft();
+      local song, whoRequested
+      local currentSongInfo = voiceChannel.playlist:popLeft()
       if currentSongInfo then
-        local notification = interaction.channel:send("Fetching song, please wait nanora!");
-        song, whoRequested = getQueuedSongInfo(currentSongInfo, interaction);
+        local notification = interaction.channel:send("Fetching song, please wait nanora!")
+        song, whoRequested = getQueuedSongInfo(currentSongInfo, interaction)
         coroutine.wrap(function() notification:delete() end)()
       end
 
       if song then
 
-        showCurrentMusic(interaction, song, whoRequested, voiceChannel.playlist:getCount());
-        setInformationToCache(voiceChannel, song, whoRequested);
-        room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3");
+        showCurrentMusic(interaction, song, whoRequested, voiceChannel.playlist:getCount())
+        setInformationToCache(voiceChannel, song, whoRequested)
+        room:playFFmpeg(MUSIC_FOLDER .. song.id .. ".mp3")
 
       else
 
         if voiceChannel.playlist:peekLeft() then
-          interaction.channel:send("I couldn't fetch the song! Attempting to fetch the next song from the list~");
+          interaction.channel:send("I couldn't fetch the song! Attempting to fetch the next song from the list~")
         else
-          interaction.channel:send("Queue is empty nora! Stopping~");
-          room:close();
-          cache[interaction.guild.id] = nil;
-          return;
+          interaction.channel:send("Queue is empty nora! Stopping~")
+          room:close()
+          cache[interaction.guild.id] = nil
+          return
         end
 
       end
     end
-  end)();
+  end)()
 end
 
 local function play(interaction, args, shouldRedownload)
-  local voiceChannel = cache[interaction.guild.id];
+  local voiceChannel = cache[interaction.guild.id]
   if voiceChannel == nil then
-    local err;
-    voiceChannel, err = connectAndCacheNewConnection(interaction);
+    local err
+    voiceChannel, err = connectAndCacheNewConnection(interaction)
     if err then
-      interaction:reply("This voice channel is busted! Sorry nanora!");
-      cache[interaction.guild.id] = nil;
-      return;
+      interaction:reply("This voice channel is busted! Sorry nanora!")
+      cache[interaction.guild.id] = nil
+      return
     end
   end
 
   interaction:reply("Okie dokie~! Adding more songs into the playlist nora!")
-  addSongsIntoDeque(voiceChannel.playlist, interaction.member.user, args, shouldRedownload);
+  addSongsIntoDeque(voiceChannel.playlist, interaction.member.user, args, shouldRedownload)
 
-  notifySongAdded(interaction, voiceChannel.playlist:getCount());
+  notifySongAdded(interaction, voiceChannel.playlist:getCount())
 
   if not voiceChannel.isPlaying then
     startStreaming(interaction, voiceChannel)
@@ -240,10 +240,10 @@ local function play(interaction, args, shouldRedownload)
 end
 
 local function showWhatIsPlayingCurrently(interaction)
-  local voiceChannel = cache[interaction.guild.id];
+  local voiceChannel = cache[interaction.guild.id]
   if voiceChannel == nil then return end
-  local nowPlaying = voiceChannel.nowPlaying;
-  local user = voiceChannel.whoRequested;
+  local nowPlaying = voiceChannel.nowPlaying
+  local user = voiceChannel.whoRequested
 
   if user or user[1] or nowPlaying then
     interaction:reply {
@@ -258,73 +258,73 @@ local function showWhatIsPlayingCurrently(interaction)
       }
     }
   else
-    interaction:reply("For some reason, I can't say what is playing now nora...");
+    interaction:reply("For some reason, I can't say what is playing now nora...")
   end
 end
 
 local function pause(interaction)
-  local voiceChannel = cache[interaction.guild.id];
+  local voiceChannel = cache[interaction.guild.id]
   if not voiceChannel then return end
-  interaction:reply("Pausing... nanora!");
-  voiceChannel.connection:pauseStream();
+  interaction:reply("Pausing... nanora!")
+  voiceChannel.connection:pauseStream()
 end
 
 local function resume(interaction)
-  local voiceChannel = cache[interaction.guild.id];
+  local voiceChannel = cache[interaction.guild.id]
   if not voiceChannel then return end
-  interaction:reply("Resuming... nanora!");
-  voiceChannel.connection:resumeStream();
+  interaction:reply("Resuming... nanora!")
+  voiceChannel.connection:resumeStream()
 end
 
 local function skip(interaction)
-  local voiceChannel = cache[interaction.guild.id];
+  local voiceChannel = cache[interaction.guild.id]
   if not voiceChannel then return end
-  interaction:reply("Skipping... nanora!");
-  voiceChannel.connection:stopStream();
+  interaction:reply("Skipping... nanora!")
+  voiceChannel.connection:stopStream()
 end
 
 local function stop(interaction)
-  local voiceChannel = cache[interaction.guild.id];
+  local voiceChannel = cache[interaction.guild.id]
   if not voiceChannel then return end
-  interaction:reply("Stopping... nanora!");
+  interaction:reply("Stopping... nanora!")
   while voiceChannel.playlist:peekLeft() do
-    voiceChannel.playlist:popLeft();
+    voiceChannel.playlist:popLeft()
   end
-  voiceChannel.connection:close();
-  cache[interaction.guild.id] = nil;
+  voiceChannel.connection:close()
+  cache[interaction.guild.id] = nil
 end
 
 local function populateTableWithDequePlaylist(t, voiceChannel)
-  local dequeCount = voiceChannel.playlist:getCount();
+  local dequeCount = voiceChannel.playlist:getCount()
   for i = 1, dequeCount do
-    t[i] = voiceChannel.playlist:popLeft();
+    t[i] = voiceChannel.playlist:popLeft()
   end
-  return t;
+  return t
 end
 
 local function shuffleTable(t)
   for i = #t, 2, -1 do
-    local j = math.random(i);
-    t[i], t[j] = t[j], t[i];
+    local j = math.random(i)
+    t[i], t[j] = t[j], t[i]
   end
-  return t;
+  return t
 end
 
 local function populateDequeWithShuffledPlaylist(t, voiceChannel)
   for i = 1, #t do
-    voiceChannel.playlist:pushRight(t[i]);
+    voiceChannel.playlist:pushRight(t[i])
   end
 end
 
 local function shuffle(interaction)
-  local voiceChannel = cache[interaction.guild.id];
+  local voiceChannel = cache[interaction.guild.id]
 
-  local t = {};
-  t = populateTableWithDequePlaylist(t, voiceChannel);
-  t = shuffleTable(t);
-  populateDequeWithShuffledPlaylist(t, voiceChannel);
+  local t = {}
+  t = populateTableWithDequePlaylist(t, voiceChannel)
+  t = shuffleTable(t)
+  populateDequeWithShuffledPlaylist(t, voiceChannel)
 
-  interaction:reply("Playlist has now " .. voiceChannel.playlist:getCount() .. " shuffled tracks nanora!");
+  interaction:reply("Playlist has now " .. voiceChannel.playlist:getCount() .. " shuffled tracks nanora!")
 end
 
 local functions = {
@@ -371,32 +371,32 @@ return {
   end,
   executeSlashCommand = function(interaction, command, args)
     if not interaction.guild then
-      interaction:reply("You're not even in a server nora!", true);
-      return;
+      interaction:reply("You're not even in a server nora!", true)
+      return
     end
 
     if not interaction.member.voiceChannel then
-      interaction:reply("You're not even in a voice chat nora!", true);
-      return;
+      interaction:reply("You're not even in a voice chat nora!", true)
+      return
     end
 
-    local voiceChannel = cache[interaction.guild.id];
+    local voiceChannel = cache[interaction.guild.id]
     if voiceChannel then
       if not isMemberOnVoiceChannel(voiceChannel, interaction) then
-        interaction:reply("Get into the voice channel with the boys first nanora!");
-        return;
+        interaction:reply("Get into the voice channel with the boys first nanora!")
+        return
       end
     end
 
-    local url, redownload;
-    local commandName = command.options[1].name;
+    local url, redownload
+    local commandName = command.options[1].name
     if commandName == "play" then
-      url         = args.play.urls:split(' ');
-      redownload  = args.play.redownload;
+      url         = args.play.urls:split(' ')
+      redownload  = args.play.redownload
     end
 
-    functions[commandName](interaction, url, redownload or false);
+    functions[commandName](interaction, url, redownload or false)
   end,
   songsDirectory = MUSIC_FOLDER
-};
+}
 

@@ -1,4 +1,4 @@
-local omori = require('src/utils/omori');
+local omori = require('src/utils/omori')
 
 local answer = {
   "The heck you doing to me?!",
@@ -15,7 +15,7 @@ return {
   executeSlashCommand = function(interaction)
     interaction:reply {
       content = answer[math.random(1, #answer)],
-      file = omori.getOmoriReactionGif(2, math.random(0, 2));
+      file = omori.getOmoriReactionGif(2, math.random(0, 2))
     }
   end
-};
+}

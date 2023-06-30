@@ -7,13 +7,13 @@ return {
   end,
 
   executeSlashCommand = function(interaction, _, args)
-    local avatarLink;
+    local avatarLink
     if not args then
-      avatarLink = interaction.member or interaction.user;
-      avatarLink = avatarLink:getAvatarURL(1024);
+      avatarLink = interaction.member or interaction.user
+      avatarLink = avatarLink:getAvatarURL(1024)
     else
-      avatarLink = args.member or args.user;
-      avatarLink = avatarLink:getAvatarURL(1024);
+      avatarLink = args.member or args.user
+      avatarLink = avatarLink:getAvatarURL(1024)
     end
 
     interaction:reply {
@@ -25,6 +25,6 @@ return {
         image = { url = avatarLink },
         color = 0xff80fd,
       },
-    };
+    }
   end
-};
+}

@@ -1,4 +1,4 @@
-local omori = require("src/utils/omori");
+local omori = require("src/utils/omori")
 
 return {
   getSlashCommand = function (tools)
@@ -7,7 +7,7 @@ return {
   executeSlashCommand = function(interaction)
     interaction:reply {
       content = "Ooow my cheek nanora!",
-      file = omori.getOmoriReactionGif(3, 0);
+      file = omori.getOmoriReactionGif(3, 0)
     }
   end
 }

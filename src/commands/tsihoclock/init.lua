@@ -31,26 +31,26 @@ return {
   end,
 
   executeSlashCommand = function(interaction, command, args, client)
-    local commandName = command.options[1].name;
-    local format;
+    local commandName = command.options[1].name
+    local format
     if args.manual then
       format = args.manual.format
     end
 
     if commandName == "auto" then
       if client.owner.id == interaction.user.id then
-        interaction:reply("Oki nanora!", true);
-        imageHandler.sendAllTOC(client);
+        interaction:reply("Oki nanora!", true)
+        imageHandler.sendAllTOC(client)
       else
-        interaction:reply("👁️〰️👁️", true);
+        interaction:reply("👁️〰️👁️", true)
       end
     else
-      functions[commandName](interaction, format);
+      functions[commandName](interaction, format)
     end
   end,
 
   executeWithTimer = function(client)
-    counterHandler.incrementTsihOClockCounter();
-    imageHandler.sendAllTOC(client);
+    counterHandler.incrementTsihOClockCounter()
+    imageHandler.sendAllTOC(client)
   end,
-};
+}

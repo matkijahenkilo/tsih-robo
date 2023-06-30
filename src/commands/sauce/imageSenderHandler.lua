@@ -1,4 +1,4 @@
-local fs = require("fs");
+local fs = require("fs")
 local gallerydl = require("./gallerydl")
 
 local NO_FILE = "I could not download any images to send! Maybe I can't access the website nora..."
@@ -11,20 +11,20 @@ local M = {}
 
 ---@return boolean|table
 function M.getDirectoryInfo(directory)
-  return pcall(fs.readdirSync, directory);
+  return pcall(fs.readdirSync, directory)
 end
 
 local function hasFile(file)
-  return file or file[1];
+  return file or file[1]
 end
 
 local function hasUrl(url)
-  return url ~= '';
+  return url ~= ''
 end
 
 local function react(message)
   for _, emoji in ipairs(failEmojis) do
-    message:addReaction(emoji);
+    message:addReaction(emoji)
   end
 end
 
@@ -32,23 +32,23 @@ local function editErrorMessage(value, err)
   local errmsg = "Could not deliver images from `" .. value .. "` nanora!\nReason: `"
   if err and err ~= "" then
     if err:find("empty message") then
-      errmsg = errmsg .. err .. "`. Maybe Nanako stole the images I was going to send nanora!";
+      errmsg = errmsg .. err .. "`. Maybe Nanako stole the images I was going to send nanora!"
     else
-      errmsg = errmsg .. err .. "`, nanora.";
+      errmsg = errmsg .. err .. "`, nanora."
     end
   else
-    err = "Not even God knows why nanora...";
-    errmsg = errmsg .. err .. "`";
+    err = "Not even God knows why nanora..."
+    errmsg = errmsg .. err .. "`"
   end
 
-  return errmsg;
+  return errmsg
 end
 
 local function checkSuccess(success, err, message, value)
   if not success then
     react(message)
-    local errmsg = editErrorMessage(value, err);
-    return errmsg;
+    local errmsg = editErrorMessage(value, err)
+    return errmsg
   end
 end
 
@@ -59,33 +59,33 @@ local function sendDownloadedImage(message, images, link)
       message = message,
       mention = false,
     }
-  };
+  }
 
   if link then
-    messageToSend.content = "`" .. link .. "`";
+    messageToSend.content = "`" .. link .. "`"
   end
 
   if hasFile(messageToSend.files) then
-    return message.channel:send(messageToSend);
+    return message.channel:send(messageToSend)
   else
     return false, NO_FILE
   end
 end
 
 local function removeDirectory(dirName)
-  local directory = "./temp/" .. dirName;
-  local exists, files = M.getDirectoryInfo(directory);
+  local directory = "./temp/" .. dirName
+  local exists, files = M.getDirectoryInfo(directory)
   if exists and not files[1] then -- to avoid error messages on terminal
-    fs.rmdir(directory);
+    fs.rmdir(directory)
   end
 end
 
 local function deleteDownloadedImage(file, id)
   for _, value in ipairs(file) do
-    fs.unlinkSync(value);
+    fs.unlinkSync(value)
   end
 
-  removeDirectory(id);
+  removeDirectory(id)
 end
 
 local function sendUrl(message, url, source)
@@ -94,40 +94,40 @@ local function sendUrl(message, url, source)
       message = message,
       mention = false,
     }
-  };
+  }
 
   if source then
-    messageToSend.content = "`" .. source .. "`\n" .. url;
+    messageToSend.content = "`" .. source .. "`\n" .. url
   else
-    messageToSend.content = url;
+    messageToSend.content = url
   end
 
-  return message.channel:send(messageToSend);
+  return message.channel:send(messageToSend)
 end
 
 local function shouldSendBaraagLinks(url)
-  local quantity = 0;
+  local quantity = 0
   for _, value in ipairs(url:split('\n')) do
     if value:find("baraag.net") and value:find(".mp4") then
-      return true;
+      return true
     elseif value:find("baraag.net") then
-      quantity = quantity + 1;
+      quantity = quantity + 1
     end
   end
 
-  return quantity > 1;
+  return quantity > 1
 end
 
 local function sendImages(message, separatedFilestbl, source, hasMultipleLinks)
   local err = nil
   if hasFile(separatedFilestbl) then
-    local success;
+    local success
     if hasMultipleLinks then
-      success, err = sendDownloadedImage(message, separatedFilestbl, source);
+      success, err = sendDownloadedImage(message, separatedFilestbl, source)
     else
-      success, err = sendDownloadedImage(message, separatedFilestbl);
+      success, err = sendDownloadedImage(message, separatedFilestbl)
     end
-    err = checkSuccess(success, err, message, source);
+    err = checkSuccess(success, err, message, source)
   end
   return err
 end
@@ -156,18 +156,18 @@ end
 function M.sendTwitterDirectVideoUrl(message, info)
   local source = info.link
   local multipleLinks = info.multipleLinks
-  local url = gallerydl.getUrl(source, info.limit);
+  local url = gallerydl.getUrl(source, info.limit)
   if url:find("video.twimg") then
-    local success, err;
+    local success, err
     if multipleLinks then
-      success, err = sendUrl(message, url, source);
+      success, err = sendUrl(message, url, source)
     else
-      success, err = sendUrl(message, url);
+      success, err = sendUrl(message, url)
     end
-    checkSuccess(success, err, message, source);
-    return true;
+    checkSuccess(success, err, message, source)
+    return true
   end
-  return false;
+  return false
 end
 
 function M.sendImageUrl(message, info)
@@ -175,26 +175,26 @@ function M.sendImageUrl(message, info)
   local limit = info.limit
   local multipleLinks = info.multipleLinks
   if source:find("https://baraag.net/") then
-    source = source:gsub("web/", '');
+    source = source:gsub("web/", '')
   end
 
-  local url = gallerydl.getUrl(source, limit);
+  local url = gallerydl.getUrl(source, limit)
 
   if hasUrl(url) then
     if shouldSendBaraagLinks(url) or not url:find("https://baraag.net/") then
-      local success, err;
+      local success, err
       if multipleLinks then
-        success, err = sendUrl(message, url, source);
+        success, err = sendUrl(message, url, source)
       else
-        success, err = sendUrl(message, url);
+        success, err = sendUrl(message, url)
       end
-      checkSuccess(success, err, message, source);
+      checkSuccess(success, err, message, source)
     end
   end
 end
 
 function M.downloadSendAndDeleteImages(message, info)
-  local id = message.channel.id;
+  local id = message.channel.id
   local source = info.link
   local limit = info.limit
   local multipleLinks = info.multipleLinks
@@ -213,7 +213,7 @@ function M.downloadSendAndDeleteImages(message, info)
     table.insert(errors, err)
   end
 
-  deleteDownloadedImage(wholeFilestbl, id);
+  deleteDownloadedImage(wholeFilestbl, id)
 
   local errorstr = table.concat(errors, '\n')
   if errorstr ~= '' then
@@ -227,9 +227,9 @@ function M.sendTwitterImages(message, info)
   local client = info.client
   if not message.embed then
     if not client:waitFor("messageUpdate", 5000) then
-      M.downloadSendAndDeleteImages(message, info);
+      M.downloadSendAndDeleteImages(message, info)
     end
   end
 end
 
-return M;
+return M

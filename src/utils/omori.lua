@@ -1,5 +1,5 @@
 local M = {}
-local ORIGIN = "assets/images/omori/";
+local ORIGIN = "assets/images/omori/"
 
 ---Returns a gif file of Tsih's drawn on omori's panels style
 ---
@@ -16,7 +16,7 @@ local ORIGIN = "assets/images/omori/";
 ---@param intensity integer
 ---@return string
 function M.getOmoriReactionGif(type, intensity)
-  return ORIGIN .. type .. "_" .. intensity .. ".gif";
+  return ORIGIN .. type .. "_" .. intensity .. ".gif"
 end
 
-return M;
+return M

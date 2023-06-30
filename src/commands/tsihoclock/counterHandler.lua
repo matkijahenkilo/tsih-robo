@@ -33,4 +33,4 @@ function M.incrementTsihOClockCounter()
   setNewTotal(total)
 end
 
-return M;
+return M

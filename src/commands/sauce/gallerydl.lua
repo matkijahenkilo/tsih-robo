@@ -1,5 +1,5 @@
-local fs = require("fs");
-local spawn = require("coro-spawn");
+local fs = require("fs")
+local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%Y-%m-%d %X", "gallery-dl.log")
 
@@ -43,25 +43,25 @@ local function logInfo(link, limit, files, stopwatch)
 end
 
 local function getSpecificLinksFromString(t, string)
-  local specificLinks = {};
+  local specificLinks = {}
   for _, value in ipairs(t:split('\n')) do
     if value:find(string) then
-      table.insert(specificLinks, value .. '\n');
+      table.insert(specificLinks, value .. '\n')
     end
   end
-  return specificLinks;
+  return specificLinks
 end
 
 local function getBaraagLinks(link)
-  local baraagLinks = getSpecificLinksFromString(link, BARAAG_MEDIA);
-  table.remove(baraagLinks, 1); --removes the first, already embedded image
-  return baraagLinks;
+  local baraagLinks = getSpecificLinksFromString(link, BARAAG_MEDIA)
+  table.remove(baraagLinks, 1) --removes the first, already embedded image
+  return baraagLinks
 end
 
 local function readProcess(child, type)
   local result = {}
-  child:waitExit();
-  local link = child.stdout.read();
+  child:waitExit()
+  local link = child.stdout.read()
   result[1] = link
 
   if type == FILE then
@@ -69,7 +69,7 @@ local function readProcess(child, type)
   elseif type == URL then
     if link then
       if link:find(TWITTER_IMAGE) then
-        result = getSpecificLinksFromString(link, TWITTER_VIDEO);
+        result = getSpecificLinksFromString(link, TWITTER_VIDEO)
       elseif link:find(BARAAG_MEDIA) then
         result = getBaraagLinks(link)
       end
@@ -79,9 +79,9 @@ local function readProcess(child, type)
 end
 
 local function fillNewTable(t)
-  local newTable = {};
+  local newTable = {}
   for _, value in ipairs(t) do
-    table.insert(newTable, value);
+    table.insert(newTable, value)
   end
   return newTable
 end
@@ -89,8 +89,8 @@ end
 local function filterLargeFiles(t)
   for index, file in ipairs(t) do
     if getFileSizeInMegaBytes(file) >= MAX_UPLOAD_LIMIT then
-      fs.unlinkSync(file);
-      t[index] = nil;
+      fs.unlinkSync(file)
+      t[index] = nil
     end
   end
   return fillNewTable(t)
@@ -99,10 +99,10 @@ end
 local function filterNilFiles(t)
   for index, file in ipairs(t) do
     if not fileExists(file) then
-      t[index] = nil;
+      t[index] = nil
     end
   end
-  return fillNewTable(t);
+  return fillNewTable(t)
 end
 
 local function getCleanedTable(t)
@@ -131,7 +131,7 @@ function gallerydl.downloadImage(link, id, limit)
       "-D", "./temp/"..id,
       link
     }
-  });
+  })
 
   local filestbl = readProcess(child, FILE)
   filestbl = getCleanedTable(filestbl)
@@ -157,9 +157,9 @@ function gallerydl.getUrl(url, limit)
       "-g",
       url
     }
-  });
+  })
 
-  return table.concat(readProcess(child, URL));
+  return table.concat(readProcess(child, URL))
 end
 
 return gallerydl
