@@ -1,6 +1,12 @@
 local fs = require("fs");
 local gallerydl = require("./gallerydl")
 
+local NO_FILE = "I could not download any images to send! Maybe I can't access the website nora..."
+
+local failEmojis = {
+  "🇳","🇴"
+}
+
 local M = {}
 
 ---@return boolean|table
@@ -14,6 +20,12 @@ end
 
 local function hasUrl(url)
   return url ~= '';
+end
+
+local function react(message)
+  for _, emoji in ipairs(failEmojis) do
+    message:addReaction(emoji);
+  end
 end
 
 local function editErrorMessage(value, err)
@@ -34,13 +46,7 @@ end
 
 local function checkSuccess(success, err, message, value)
   if not success then
-    local t = {
-      "🇳","🇴"
-    }
-    for _, emoji in ipairs(t) do
-      message:addReaction(emoji);
-    end
-
+    react(message)
     local errmsg = editErrorMessage(value, err);
     return errmsg;
   end
@@ -62,7 +68,7 @@ local function sendDownloadedImage(message, images, link)
   if hasFile(messageToSend.files) then
     return message.channel:send(messageToSend);
   else
-    return false, "Couldn't get images to send! Maybe I can't access the website nora..."
+    return false, NO_FILE
   end
 end
 
@@ -195,7 +201,10 @@ function M.downloadSendAndDeleteImages(message, info)
   local wholeFilestbl = gallerydl.downloadImage(source, id, limit)
   local errors = {}
 
-  if not wholeFilestbl then return end
+  if not wholeFilestbl then
+    react(message)
+    return NO_FILE
+  end
 
   if #wholeFilestbl > 10 then
     errors = sendPartitionedImages(message, wholeFilestbl, source, multipleLinks)
