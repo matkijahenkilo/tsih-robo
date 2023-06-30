@@ -7,7 +7,7 @@ end
 
 return {
   getSlashCommand = function(tools)
-    return tools.slashCommand("emojiserver", "Do you allow me to use this server's emojis to random react messages nora? ")
+    return tools.slashCommand("randomemoji", "Do you allow me to use this server's emojis to random react messages nora? ")
         :addOption(
           tools.boolean("allow", "If you set true, I'll be able to randomly use your server's emoji nora! Otherwise I'll not!")
           :setRequired(true)
@@ -30,7 +30,7 @@ return {
     end
   end,
 
-  execute = function (message, client)
+  execute = function(message, client)
     local server = nil
     local limit = 0
 
