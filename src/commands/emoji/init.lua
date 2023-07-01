@@ -2,6 +2,7 @@ local emojiHandler = require("./emojiServerHandler")
 
 local function getRandomServer(client)
   local idList = emojiHandler.getIds()
+  if not idList then return nil end
   return client:getGuild(idList[math.random(#idList)])
 end
 
@@ -33,15 +34,16 @@ return {
   execute = function(message, client)
     local server = nil
     local limit = 0
+    local emoji
 
     repeat
-      server = getRandomServer(client)
-      if limit >= 100 then return end
-      limit = limit + 1
-    until server and server.emojis
-
-    local emoji = server.emojis:random()
-    if not emoji then return end
+      repeat
+        server = getRandomServer(client)
+        if limit >= 100 then return end
+        limit = limit + 1
+      until server and server.emojis
+      emoji = server.emojis:random()
+    until emoji
 
     message:addReaction(emoji)
   end
