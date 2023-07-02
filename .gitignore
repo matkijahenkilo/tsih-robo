@@ -28,3 +28,6 @@ assets/images/tsihoclock/image/*
 # except two samples
 !assets/images/tsihoclock/gif/TsihFastPat.gif
 !assets/images/tsihoclock/image/learn_lua.png
+
+# customizable links for gallery-dl
+src/commands/sauce/links/*

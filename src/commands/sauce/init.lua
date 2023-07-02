@@ -1,3 +1,21 @@
+--[[
+-- Please create your own customized nonDownloables.lua and
+-- downloables.lua files in 'src/commands/sauce/links/'.
+-- They both should return a table of strings, where the strings
+-- should be URLs of any website compatible with gallery-dl
+-- that you also wish Tsih bot to automatically send its 
+-- contents when a link is sent to a text channel.
+--
+-- URLs inserted in nonDownloables.lua will make Tsih send only the images' direct URL,
+-- while URLs inserted in downloables.lua will make Tsih download and send the image(s)
+-- to the text channel, and delete them from the computer.
+--
+-- Both files should contain the following structure example:
+--   return {'https://www.pixiv.net', ...etc}
+--
+-- See https://github.com/mikf/gallery-dl/blob/master/docs/supportedsites.md
+-- for more information on which sites gallery-dl supports.
+--]]
 local limitHandler = require("./limitHandler")
 local imageSender = require("./imageSenderHandler")
 local analyser = require("./linkAnalyser")

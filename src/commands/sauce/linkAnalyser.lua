@@ -1,30 +1,11 @@
 local limitHandler = require("./limitHandler")
 require('discordia').extensions()
 
-local doesNotRequireDownload = {
-  "https://e621.net/",
-  "https://booru.io/",
-  "https://pawoo.net/",
-  "https://nijie.info/",
-  "https://baraag.net/",
-  "https://nhentai.net/",
-  "https://inkbunny.net/",
-  "https://e-hentai.org/",
-  "https://hentai2read.com/",
-}
+local doesNotRequireDownload = require("./links/nonDownloables.lua")
+local requireDownload = require("./links/downloables.lua")
 
-local requireDownload = {
-  "https://hitomi.la/",
-  "https://misskey.io/",
-  "https://sankaku.app/",
-  "https://exhentai.org/",
-  "https://e-hentai.org/",
-  "https://kemono.party/",
-  "https://www.pixiv.net/",
-  "https://www.tsumino.com/",
-  "https://www.deviantart.com/",
-  "https://chan.sankakucomplex.com/",
-}
+if not doesNotRequireDownload[1] then error("./links/nonDownloables.lua does not return any string for gallery-dl to read nora. Read sauce/init.lua for more information nanora!") end
+if not requireDownload[1] then error("./links/downloables.lua does not return any string for gallery-dl to read nora. Read sauce/init.lua for more information nanora!") end
 
 local function verify(string, list)
   for _, value in pairs(list) do
