@@ -1,11 +1,17 @@
 local limitHandler = require("./limitHandler")
 require('discordia').extensions()
 
+-- please check sauce/init.lua to get around this problem, sorry
 local doesNotRequireDownload = require("./links/nonDownloables.lua")
 local requireDownload = require("./links/downloables.lua")
 
-if not doesNotRequireDownload[1] then error("./links/nonDownloables.lua does not return any string for gallery-dl to read nora. Read sauce/init.lua for more information nanora!") end
-if not requireDownload[1] then error("./links/downloables.lua does not return any string for gallery-dl to read nora. Read sauce/init.lua for more information nanora!") end
+if not doesNotRequireDownload or not doesNotRequireDownload[1] then
+  error("./links/nonDownloables.lua does not return any string for gallery-dl to read nora. Read sauce/init.lua for more information nanora!")
+end
+
+if not requireDownload or not requireDownload[1] then
+  error("./links/downloables.lua does not return any string for gallery-dl to read nora. Read sauce/init.lua for more information nanora!")
+end
 
 local function verify(string, list)
   for _, value in pairs(list) do
