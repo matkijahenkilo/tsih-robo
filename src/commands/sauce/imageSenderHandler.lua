@@ -1,6 +1,7 @@
 local fs = require("fs")
 local gallerydl = require("./gallerydl")
 local constant = require("src.utils.constants")
+local clock = require("discordia").Clock()
 
 local failEmojis = {
   "🇳","🇴"
@@ -115,8 +116,7 @@ local function sendPartitionedImages(message, wholeFilestbl, source, hasMultiple
   return errors
 end
 
-function M.sendTwitterVideoUrl(message, info)
-  local source = info.link
+function M.sendTwitterVideoUrl(message, info, source)
   local hasMultipleLinks = info.multipleLinks
   local url = gallerydl.getUrl(source, info.limit)
   if url:find(constant.TWITTER_VIDEO) then
@@ -127,8 +127,7 @@ function M.sendTwitterVideoUrl(message, info)
   return false
 end
 
-function M.sendImageUrl(message, info)
-  local source = info.link
+function M.sendImageUrl(message, info, source)
   local limit = info.limit
   local hasMultipleLinks = info.multipleLinks
 
@@ -146,9 +145,8 @@ function M.sendImageUrl(message, info)
   end
 end
 
-function M.downloadSendAndDeleteImages(message, info)
+function M.downloadSendAndDeleteImages(message, info, source)
   local id = message.channel.id
-  local source = info.link
   local limit = info.limit
   local hasMultipleLinks = info.multipleLinks
   local wholeFilestbl = gallerydl.downloadImage(source, id, limit)
@@ -174,11 +172,10 @@ function M.downloadSendAndDeleteImages(message, info)
   end
 end
 
-function M.sendTwitterImages(message, info)
-  local client = info.client
+function M.sendTwitterImages(message, info, source)
   if not message.embed then
-    if not client:waitFor("messageUpdate", 5000) then
-      M.downloadSendAndDeleteImages(message, info)
+    if not clock:waitFor("messageUpdate", 5000) then
+      M.downloadSendAndDeleteImages(message, info, source)
     end
   end
 end

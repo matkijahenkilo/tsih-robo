@@ -19,6 +19,7 @@
 local limitHandler = require("./limitHandler")
 local imageSender = require("./imageSenderHandler")
 local analyser = require("./linkAnalyser")
+local constants = require("src.utils.constants")
 require('discordia').extensions()
 
 local function specificLinkCondition(str)
@@ -33,26 +34,26 @@ local function hasHttps(str)
   return str and str:find("https://")
 end
 
-local function findLinksToSend(message, info)
-  if analyser.linkDoesNotRequireDownload(info.link) then
+local function findLinksToSend(message, info, source)
+  if analyser.linkDoesNotRequireDownload(source) then
 
-    imageSender.sendImageUrl(message, info)
+    imageSender.sendImageUrl(message, info, source)
 
-  elseif analyser.linkRequireDownload(info.link) then
+  elseif analyser.linkRequireDownload(source) then
 
-    imageSender.downloadSendAndDeleteImages(message, info)
+    imageSender.downloadSendAndDeleteImages(message, info, source)
 
-  elseif info.link:find("https://twitter.com/") then
+  elseif source:find(constants.TWITTER_LINK) then
 
-    if not imageSender.sendTwitterVideoUrl(message, info) then
-      imageSender.sendTwitterImages(message, info)
+    if not imageSender.sendTwitterVideoUrl(message, info, source) then
+      imageSender.sendTwitterImages(message, info, source)
     end
 
   end
 end
 
-local function sendSauce(message, client, interaction)
-  local info = analyser.getinfo(message, client)
+local function sendSauce(message, interaction)
+  local info = analyser.getinfo(message)
 
   if not info then return end
 
@@ -73,8 +74,7 @@ local function sendSauce(message, client, interaction)
   for _, link in ipairs(info.words) do
     if condition(link) then
       coroutine.wrap(function()
-        info.link = link
-        local err = action(message, info)
+        local err = action(message, info, link)
         if wasCommand and err then interaction:reply(err, true) end
       end)()
     end
@@ -119,13 +119,13 @@ return {
   executeMessageCommand = function (interaction, _, message)
     coroutine.wrap(function () interaction:reply("Alrighty nanora! One second...", true) end)()
     if hasHttps(message.content) then
-      sendSauce(message, nil, interaction)
+      sendSauce(message, interaction)
     end
   end,
 
-  execute = function(message, client)
+  execute = function(message)
     if hasHttps(message.content) then
-      sendSauce(message, client, nil)
+      sendSauce(message, nil)
     end
   end
 }

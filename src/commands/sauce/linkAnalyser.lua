@@ -1,4 +1,5 @@
 local limitHandler = require("./limitHandler")
+local constants = require("src.utils.constants")
 require('discordia').extensions()
 
 -- please check sauce/init.lua to get around this problem, sorry
@@ -37,7 +38,7 @@ local function hasMultipleLinks(t)
   for _, word in ipairs(t) do
     if M.linkRequireDownload(word)
       or M.linkDoesNotRequireDownload(word)
-      or word:find("https://twitter.com/")
+      or word:find(constants.TWITTER_LINK)
     then
       count = count + 1
       if count > 1 then return true end
@@ -46,7 +47,7 @@ local function hasMultipleLinks(t)
   return false
 end
 
-function M.getinfo(message, client)
+function M.getinfo(message)
   local limit = limitHandler.getRoomImageLimit(message) or 5
 
   if limit == 0 then return nil end
@@ -60,8 +61,6 @@ function M.getinfo(message, client)
   return {
     words = words,
     limit = limit,
-    link = nil,
-    client = client,
     multipleLinks = multipleLinks
   }
 end
