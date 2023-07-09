@@ -81,7 +81,7 @@ client:on("messageCreate", function(message)
   if message.author.bot then return end
 
   if hasTsihMention(message) or math.random() <= 0.01 then
-    commandsHandler["emoji"].execute(message, client)
+    commandsHandler["randomemoji"].execute(message, client)
   end
 
   commandsHandler["sauce"].execute(message, client)
