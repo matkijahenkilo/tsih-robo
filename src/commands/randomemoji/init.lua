@@ -54,7 +54,12 @@ return {
 
     if ok then
       logger:log(3, "Sending emoji '%s' to %s in '%s', '%s' (took %s tries)",
-        emoji.name, message.author.name, message.guild.name, message.channel.name, limit)
+        emoji.name,
+        message.author.name,
+        essage.guild.name,
+        message.channel.name,
+        limit
+      )
     else
       logger:log(1, "Failed to send emoji '%s'", emoji.name)
     end
