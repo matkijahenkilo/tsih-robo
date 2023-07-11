@@ -56,7 +56,7 @@ return {
       logger:log(3, "emoji : '%s' to %s in '%s', '%s' (took %s tries)",
         emoji.name,
         message.author.name,
-        essage.guild.name,
+        message.guild.name,
         message.channel.name,
         limit
       )

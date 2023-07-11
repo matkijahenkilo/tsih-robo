@@ -22,16 +22,8 @@ local function logInfo(link, limit, files, stopwatch)
   for _, file in ipairs(files) do
     mb = mb + getFileSizeInMegaBytes(file)
   end
-
-  if time:toSeconds() > 60 then
-    logger:log(3, string.format("Downloaded %s/%s images from %s - total of %.2fmb. Took %.2f minutes",
-      #files, limit, link, mb, time:toMinutes()
-    ))
-  else
-    logger:log(3, string.format("Downloaded %s/%s images from %s - total of %.2fmb. Took %.2f seconds",
-      #files, limit, link, mb, time:toSeconds()
-    ))
-  end
+  local  msg = "gallery-dl : %s files from %s = %.2fmb. Took %.2f seconds"
+  logger:log(3, msg, #files, link, mb, time:toSeconds())
 end
 
 local function getSpecificLinksFromString(t, string)
