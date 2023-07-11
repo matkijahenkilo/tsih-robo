@@ -1,5 +1,5 @@
 local emojiHandler = require("./emojiServerHandler")
-local logger = require("discordia").Logger(3, "%Y-%m-%d %X", "randomemoji.log")
+local logger = require("discordia").Logger(3, "%F %T", "randomemoji.log")
 
 local function getRandomServer(client)
   local idList = emojiHandler.getIds()
@@ -53,7 +53,7 @@ return {
     local ok = message:addReaction(emoji)
 
     if ok then
-      logger:log(3, "Sending emoji '%s' to %s in '%s', '%s' (took %s tries)",
+      logger:log(3, "emoji : '%s' to %s in '%s', '%s' (took %s tries)",
         emoji.name,
         message.author.name,
         essage.guild.name,
@@ -61,7 +61,7 @@ return {
         limit
       )
     else
-      logger:log(1, "Failed to send emoji '%s'", emoji.name)
+      logger:log(1, "emoji : Failed to send emoji '%s'", emoji.name)
     end
   end
 }

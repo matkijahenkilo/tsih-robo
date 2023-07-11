@@ -4,7 +4,7 @@ local tools       = require("discordia-slash").util.tools()
 local client      = discordia.Client():useApplicationCommands()
 local clock       = discordia.Clock()
 local statusTable = require("src/utils/statusTable")
-local logger = discordia.Logger(3)
+local logger = discordia.Logger(3, "%F %T")
 
 local fs = require("fs")
 local commandsHandler

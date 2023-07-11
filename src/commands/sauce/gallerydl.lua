@@ -1,7 +1,7 @@
 local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
-local logger = discordia.Logger(3, "%Y-%m-%d %X", "gallery-dl.log")
+local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
 local constant = require("src.utils.constants")
 
 local function isEmpty(t)
