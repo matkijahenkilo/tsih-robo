@@ -80,10 +80,11 @@ end)
 
 client:on("messageCreate", function(message)
   if message.author.bot then return end
-  logger:log(3, "message create begin")
 
   coroutine.wrap(function ()
+    logger:log(3, "sending message")
     client:getChannel('990188076473147404'):send('a')
+    logger:log(3, "message sent")
   end)()
 
   if hasTsihMention(message) or math.random() <= 0.01 then
@@ -91,23 +92,18 @@ client:on("messageCreate", function(message)
   end
 
   commandsHandler["sauce"].execute(message, client)
-  logger:log(3, "message create end")
 end)
 
 client:on("slashCommand", function(interaction, command, args)
-  logger:log(3, "slash command begin")
   commandsHandler[command.name].executeSlashCommand(interaction, command, args, client)
-  logger:log(3, "slash command end")
 end)
 
 client:on("messageCommand", function(interaction, command, message)
-  logger:log(3, "message command begin")
   if message then
     commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand(interaction, command, message)
   else
     interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
   end
-  logger:log(3, "message command end")
 end)
 
 clock:on("min", function()
@@ -115,7 +111,6 @@ clock:on("min", function()
 end)
 
 clock:on("hour", function(now)
-  logger:log(3, "clock hourly tick")
   if now.hour == 21 then
     commandsHandler["tsihoclock"].executeWithTimer(client)
   elseif now.hour == 6 then

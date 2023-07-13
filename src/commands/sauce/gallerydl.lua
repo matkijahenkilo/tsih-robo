@@ -3,6 +3,7 @@ local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
 local constant = require("src.utils.constants")
+local logLevel = discordia.enums.logLevel
 
 local function isEmpty(t)
   return t[1] == nil
@@ -16,7 +17,7 @@ local function fileExists(file)
   return fs.statSync(file) ~= nil
 end
 
-local function logInfo(link, limit, files, stopwatch)
+local function logInfo(link, files, stopwatch)
   local mb = 0
   local time = stopwatch:getTime()
   for _, file in ipairs(files) do
@@ -105,6 +106,11 @@ end
 
 local gallerydl = {}
 
+---Downloads files from a link, receiving the channel's id and the limit of images
+---@param link string
+---@param id string
+---@param limit integer
+---@return table | nil files, string gallerydlOutput
 function gallerydl.downloadImage(link, id, limit)
   local stopwatch = discordia.Stopwatch()
 
@@ -117,18 +123,27 @@ function gallerydl.downloadImage(link, id, limit)
     }
   })
 
-  local filestbl = readProcess(child, "file")
-  filestbl = getCleanedTable(filestbl)
+  local output = readProcess(child, "file")
+  p(output)
+  local filestbl = getCleanedTable(output)
   filestbl = filterNilFiles(filestbl)
   filestbl = filterLargeFiles(filestbl)
 
   stopwatch:stop()
 
-  if isEmpty(filestbl) then return end
+  local outputstr = table.concat(output, '\n')
+  p(outputstr)
+  if isEmpty(filestbl) then
+    logger:log(logLevel.error, "gallery-dl : Could not download from '%s' - '%s'",
+      link,
+      outputstr
+    )
+    return nil, outputstr
+  end
 
-  logInfo(link, limit, filestbl, stopwatch)
+  logInfo(link, filestbl, stopwatch)
 
-  return filestbl
+  return filestbl, outputstr
 end
 
 function gallerydl.getUrl(url, limit)

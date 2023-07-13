@@ -145,16 +145,22 @@ function M.sendImageUrl(message, info, source)
   end
 end
 
+---Downloads files, send them into a channel and deletes them after finished.
+---@param message Message
+---@param info table
+---@param source string
+---@return string | nil discordError, string gallerydlOutput
 function M.downloadSendAndDeleteImages(message, info, source)
   local id = message.channel.id
   local limit = info.limit
   local hasMultipleLinks = info.multipleLinks
-  local wholeFilestbl = gallerydl.downloadImage(source, id, limit)
+  local wholeFilestbl, output = gallerydl.downloadImage(source, id, limit)
+  p(output)
   local errors = {}
 
   if not wholeFilestbl then
     react(message)
-    return constant.WARNING_NO_FILE
+    return nil, output
   end
 
   if #wholeFilestbl > 10 then
@@ -167,9 +173,7 @@ function M.downloadSendAndDeleteImages(message, info, source)
   deleteDownloadedImage(wholeFilestbl, id)
 
   local errorstr = table.concat(errors, '\n')
-  if errorstr ~= '' then
-    return errorstr
-  end
+  return errorstr, output
 end
 
 function M.sendTwitterImages(message, info, source)
