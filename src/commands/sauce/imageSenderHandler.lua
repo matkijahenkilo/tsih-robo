@@ -14,8 +14,8 @@ local function getDirectoryInfo(directory)
   return pcall(fs.readdirSync, directory)
 end
 
-local function hasFile(file)
-  return file or file[1]
+local function hasFile(filetbl)
+  return filetbl or filetbl[1]
 end
 
 local function hasString(str)
