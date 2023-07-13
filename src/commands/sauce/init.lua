@@ -74,8 +74,8 @@ local function sendSauce(message, interaction)
   for _, link in ipairs(info.words) do
     if condition(link) then
       coroutine.wrap(function()
-        local err = action(message, info, link)
-        if wasCommand and err then interaction:reply(err, true) end
+        local ok, err = action(message, info, link)
+        if wasCommand and not ok then interaction:reply(err, true) end
       end)()
     end
   end

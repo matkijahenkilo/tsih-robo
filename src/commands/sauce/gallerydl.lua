@@ -6,7 +6,7 @@ local constant = require("src.utils.constants")
 local logLevel = discordia.enums.logLevel
 
 local function isEmpty(t)
-  return t[1] == nil
+  return not t or t[1] == nil
 end
 
 local function getFileSizeInMegaBytes(file)
@@ -17,7 +17,7 @@ local function fileExists(file)
   return fs.statSync(file) ~= nil
 end
 
-local function logInfo(link, files, stopwatch)
+local function logDownloadedInfo(link, files, stopwatch)
   local mb = 0
   local time = stopwatch:getTime()
   for _, file in ipairs(files) do
@@ -106,7 +106,6 @@ end
 
 local gallerydl = {}
 
----Downloads files from a link, receiving the channel's id and the limit of images
 ---@param link string
 ---@param id string
 ---@param limit integer
@@ -124,15 +123,14 @@ function gallerydl.downloadImage(link, id, limit)
   })
 
   local output = readProcess(child, "file")
-  p(output)
   local filestbl = getCleanedTable(output)
   filestbl = filterNilFiles(filestbl)
   filestbl = filterLargeFiles(filestbl)
 
+  local outputstr = table.concat(output, '\n')
+
   stopwatch:stop()
 
-  local outputstr = table.concat(output, '\n')
-  p(outputstr)
   if isEmpty(filestbl) then
     logger:log(logLevel.error, "gallery-dl : Could not download from '%s' - '%s'",
       link,
@@ -141,12 +139,17 @@ function gallerydl.downloadImage(link, id, limit)
     return nil, outputstr
   end
 
-  logInfo(link, filestbl, stopwatch)
+  logDownloadedInfo(link, filestbl, stopwatch)
 
   return filestbl, outputstr
 end
 
-function gallerydl.getUrl(url, limit)
+---@param link string
+---@param limit integer
+---@return string links
+---@return string gallerydlOutput
+function gallerydl.getUrl(link, limit)
+  local stopwatch = discordia.Stopwatch()
   if limit > 5 then limit = 5 end
 
   local child = spawn("gallery-dl", {
@@ -154,11 +157,29 @@ function gallerydl.getUrl(url, limit)
       "--cookies", "cookies.txt",
       "--range", "1-"..limit,
       "-g",
-      url
+      link
     }
   })
 
-  return table.concat(readProcess(child, "url"))
+  local output = readProcess(child, "url")
+  local outputstr = table.concat(output, '\n')
+
+  stopwatch:stop()
+
+  if isEmpty(output) then
+    logger:log(logLevel.error, "gallery-dl : Could not get links from '%s' - '%s'",
+      link,
+      outputstr
+    )
+    return "", outputstr
+  else
+    logger:log(logLevel.info, "gallery-dl : Got links from '%s', took %.2f seconds",
+      link,
+      stopwatch:getTime():toSeconds()
+    )
+  end
+
+  return table.concat(output), outputstr
 end
 
 return gallerydl

@@ -18,8 +18,8 @@ local function hasFile(file)
   return file or file[1]
 end
 
-local function hasUrl(url)
-  return url ~= ''
+local function hasString(str)
+  return str ~= ''
 end
 
 local function react(message)
@@ -28,7 +28,7 @@ local function react(message)
   end
 end
 
-local function sendDownloadedImage(message, images, link)
+local function sendDownloadedImage(message, images, source)
   local messageToSend = {
     files = images,
     reference = {
@@ -37,30 +37,11 @@ local function sendDownloadedImage(message, images, link)
     }
   }
 
-  if link then
-    messageToSend.content = string.format("`%s`", link)
+  if source then
+    messageToSend.content = string.format("`%s`", source)
   end
 
-  if hasFile(messageToSend.files) then
-    return message.channel:send(messageToSend)
-  else
-    return false, constant.WARNING_NO_FILE
-  end
-end
-
-local function removeDirectory(dirName)
-  local directory = string.format("./temp/%s", dirName)
-  local exists, files = getDirectoryInfo(directory)
-  if exists and not files[1] then
-    fs.rmdir(directory)
-  end
-end
-
-local function deleteDownloadedImage(file, id)
-  for _, value in ipairs(file) do
-    fs.unlinkSync(value)
-  end
-  removeDirectory(id)
+  return message.channel:send(messageToSend)
 end
 
 local function sendUrl(message, url, source)
@@ -80,6 +61,21 @@ local function sendUrl(message, url, source)
   return message.channel:send(messageToSend)
 end
 
+local function removeDirectory(dirName)
+  local directory = string.format("./temp/%s", dirName)
+  local exists, files = getDirectoryInfo(directory)
+  if exists and not files[1] then
+    fs.rmdir(directory)
+  end
+end
+
+local function deleteDownloadedImage(file, id)
+  for _, value in ipairs(file) do
+    fs.unlinkSync(value)
+  end
+  removeDirectory(id)
+end
+
 local function shouldSendBaraagLinks(url)
   local quantity = 0
   for _, value in ipairs(url:split('\n')) do
@@ -93,27 +89,23 @@ local function shouldSendBaraagLinks(url)
 end
 
 local function sendImages(message, separatedFilestbl, source, hasMultipleLinks)
-  local err = nil
-  if hasFile(separatedFilestbl) then
-    local ok
-    ok, err = sendDownloadedImage(message, separatedFilestbl, hasMultipleLinks and source)
-    if not ok then react(message) end
-  end
-  return err
+  local ok, err = sendDownloadedImage(message, separatedFilestbl, hasMultipleLinks and source)
+  if not ok then react(message) end
+  return ok, err
 end
 
 local function sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
   local partitionedFilestbl = {}
-  local errors = {}
+  local results = {}
   for index, file in ipairs(wholeFilestbl)  do
     table.insert(partitionedFilestbl, file)
     if #partitionedFilestbl == 10 or index == #wholeFilestbl then
-      local err = sendImages(message, partitionedFilestbl, source, hasMultipleLinks)
-      table.insert(errors, err)
+      local ok, err = sendImages(message, partitionedFilestbl, source, hasMultipleLinks)
+      table.insert(results, {ok=ok, error=err})
       partitionedFilestbl = {}
     end
   end
-  return errors
+  return results
 end
 
 function M.sendTwitterVideoUrl(message, info, source)
@@ -137,7 +129,7 @@ function M.sendImageUrl(message, info, source)
 
   local url = gallerydl.getUrl(source, limit)
 
-  if hasUrl(url) then
+  if hasString(url) then
     if shouldSendBaraagLinks(url) or not url:find(constant.BARAAG_LINK) then
       local ok = sendUrl(message, url, hasMultipleLinks and source)
       if not ok then react(message) end
@@ -149,31 +141,42 @@ end
 ---@param message Message
 ---@param info table
 ---@param source string
----@return string | nil discordError, string gallerydlOutput
+---@return boolean success
+---@return string | nil discordError
+---@return string gallerydlOutput
 function M.downloadSendAndDeleteImages(message, info, source)
   local id = message.channel.id
   local limit = info.limit
   local hasMultipleLinks = info.multipleLinks
-  local wholeFilestbl, output = gallerydl.downloadImage(source, id, limit)
-  p(output)
+  local wholeFilestbl, gallerydlOutput = gallerydl.downloadImage(source, id, limit)
+  local ok, err = nil, nil
   local errors = {}
 
-  if not wholeFilestbl then
+  if not wholeFilestbl or not hasFile(wholeFilestbl) then
     react(message)
-    return nil, output
+    return false, string.format(constant.WARNING_NO_FILE, source), gallerydlOutput
   end
 
   if #wholeFilestbl > 10 then
-    errors = sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
+    local results = sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
+    for _, result in ipairs(results) do
+      if not result.ok then
+        table.insert(errors, result.error)
+      end
+    end
   else
-    local err = sendImages(message, wholeFilestbl, source, hasMultipleLinks)
+    ok, err = sendImages(message, wholeFilestbl, source, hasMultipleLinks)
     table.insert(errors, err)
   end
 
   deleteDownloadedImage(wholeFilestbl, id)
 
   local errorstr = table.concat(errors, '\n')
-  return errorstr, output
+  if not hasString(errorstr) then
+    return false, string.format(constant.WARNING_NO_FILE, source), gallerydlOutput
+  end
+
+  return ok, errorstr, gallerydlOutput
 end
 
 function M.sendTwitterImages(message, info, source)

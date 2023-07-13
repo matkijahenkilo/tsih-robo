@@ -6,5 +6,5 @@ return {
   TWITTER_LINK = "https://twitter.com/",
   BARAAG_MEDIA = "media.baraag.net",
 
-  WARNING_NO_FILE = "I could not download any images from the link nanora!",
+  WARNING_NO_FILE = "I got an error while downloading files from %s nanora!",
 }
