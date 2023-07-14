@@ -6,7 +6,7 @@ local constant = require("src.utils.constants")
 local logLevel = discordia.enums.logLevel
 
 local function isEmpty(t)
-  return not t or t[1] == nil
+  return type(t) == "table" and (not t or t[1] == nil) or t == ''
 end
 
 local function getFileSizeInMegaBytes(file)
@@ -43,24 +43,22 @@ local function getBaraagLinks(link)
   return baraagLinks
 end
 
-local function readProcess(child, type)
+local function filterLinks(link)
   local result = {}
-  child:waitExit()
-  local link = child.stdout.read()
-  result[1] = link
-
-  if type == "file" then
-    return result
-  elseif type == "url" then
-    if link then
-      if link:find(constant.TWITTER_IMAGE) then
-        result = getSpecificLinksFromString(link, constant.TWITTER_VIDEO)
-      elseif link:find(constant.BARAAG_MEDIA) then
-        result = getBaraagLinks(link)
-      end
+  if link then
+    if link:find(constant.TWITTER_IMAGE) then
+      result = getSpecificLinksFromString(link, constant.TWITTER_VIDEO)
+    elseif link:find(constant.BARAAG_MEDIA) then
+      result = getBaraagLinks(link)
     end
   end
-  return result
+  return result[1] and result or link
+end
+
+---@return string stdout
+local function readProcess(child)
+  child:waitExit()
+  return child.stdout.read()
 end
 
 local function fillNewTable(t)
@@ -90,15 +88,9 @@ local function filterNilFiles(t)
   return fillNewTable(t)
 end
 
+---@return table | nil
 local function getCleanedTable(t)
-  local cleanedTable = {}
-  for _, v in ipairs(t) do
-    if v or v ~= '' then
-      local value = v:gsub("# ", ''):gsub("\r", '')
-      table.insert(cleanedTable, value)
-    end
-  end
-  return table.concat(cleanedTable):split('\n')
+  return t:gsub("# ", ''):gsub("\r", ''):split('\n')
 end
 
 ---Converts a table of files into a new format.
@@ -144,13 +136,15 @@ function gallerydl.downloadImage(link, id, limit)
     }
   })
 
-  local output = readProcess(child, "file")
-  local filestbl = getCleanedTable(output)
+  local outputstr = readProcess(child)
+  if not outputstr or outputstr == '' then
+    logger:log(logLevel.error, "gallery-dl : No output. Maybe authorization is missing?")
+    return nil, outputstr
+  end
+  local filestbl = getCleanedTable(outputstr)
   filestbl = filterNilFiles(filestbl)
   filestbl = filterLargeFiles(filestbl)
   --filestbl = convertFiles(filestbl, ".mp4", ".gif")
-
-  local outputstr = table.concat(output, '\n')
 
   stopwatch:stop()
 
@@ -184,25 +178,30 @@ function gallerydl.getUrl(link, limit)
     }
   })
 
-  local output = readProcess(child, "url")
-  local outputstr = table.concat(output, '\n')
+  local outputstr = readProcess(child)
+  local links = filterLinks(outputstr)
 
   stopwatch:stop()
 
-  if isEmpty(output) then
-    logger:log(logLevel.error, "gallery-dl : Could not get links from '%s' - '%s'",
-      link,
-      outputstr
-    )
+  if isEmpty(links) then
+    if not link:find("https://twitter.com/") then
+      logger:log(logLevel.error, "gallery-dl : Could not get links from '%s' - '%s'",
+        link,
+        outputstr
+      )
+    end
     return "", outputstr
-  else
-    logger:log(logLevel.info, "gallery-dl : Got links from '%s', took %.2f seconds",
-      link,
-      stopwatch:getTime():toSeconds()
-    )
   end
 
-  return table.concat(output), outputstr
+  logger:log(logLevel.info, "gallery-dl : Got links from '%s', took %.2f seconds",
+    link,
+    stopwatch:getTime():toSeconds()
+  )
+
+  if type(links) == "table" then
+    return table.concat(links), outputstr
+  end
+  return links, outputstr
 end
 
 return gallerydl
