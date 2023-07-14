@@ -21,14 +21,16 @@ return {
   getSlashCommand = function(tools)
     return tools.slashCommand("question", "I answer a question with yes or no nanora!")
         :addOption(
-          tools.string("question", "The!!! question"):setRequired(true)
+          tools.string("question", "The!!!!!!!! question."):setRequired(true)
         )
   end,
 
   executeSlashCommand = function(interaction, _, args)
     local person = interaction.member or interaction.user
-    interaction:reply(string.format("%s asked: \"%s\"\n%s",
-      person.name, args.question, answer[math.random(#answer)]
+    interaction:reply(string.format('%s asked:\n> %s\n%s',
+      person.name,
+      args.question,
+      answer[math.random(#answer)]
     ))
   end
 }
