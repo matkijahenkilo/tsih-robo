@@ -3,8 +3,9 @@ local discordia   = require("discordia")
 local tools       = require("discordia-slash").util.tools()
 local client      = discordia.Client():useApplicationCommands()
 local clock       = discordia.Clock()
+local logLevel    = discordia.enums.logLevel
+local logger = discordia.Logger(logLevel.info, "%F %T")
 local statusTable = require("src/utils/statusTable")
-local logger = discordia.Logger(3, "%F %T")
 
 local fs = require("fs")
 local commandsHandler
@@ -65,9 +66,6 @@ end
 
 
 
-
-
-
 client:on("ready", function()
   client:info("I'm currently in " .. #client.guilds .. " servers nanora!")
   for _, guild in pairs(client.guilds) do client:info(guild.id .. ' ' .. guild.name) end
@@ -82,9 +80,9 @@ client:on("messageCreate", function(message)
   if message.author.bot then return end
 
   coroutine.wrap(function ()
-    logger:log(3, "sending message")
+    logger:log(logLevel.info, "sending message")
     client:getChannel('990188076473147404'):send('a')
-    logger:log(3, "message sent")
+    logger:log(logLevel.info, "message sent")
   end)()
 
   if hasTsihMention(message) or math.random() <= 0.01 then
@@ -95,6 +93,7 @@ client:on("messageCreate", function(message)
 end)
 
 client:on("slashCommand", function(interaction, command, args)
+  logger:log(logLevel.info, "Running slash command")
   commandsHandler[command.name].executeSlashCommand(interaction, command, args, client)
 end)
 
@@ -112,6 +111,7 @@ end)
 
 clock:on("hour", function(now)
   if now.hour == 21 then
+    logger:log(logLevel.info, "Tsih O'Clock")
     commandsHandler["tsihoclock"].executeWithTimer(client)
   elseif now.hour == 6 then
     local songsDirectory = commandsHandler["song"].songsDirectory
