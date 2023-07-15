@@ -27,11 +27,11 @@ local function logDownloadedInfo(link, files, stopwatch)
   logger:log(3, msg, #files, link, mb, time:toSeconds())
 end
 
-local function getSpecificLinksFromString(t, string)
+local function getSpecificLinksFromString(str, val)
   local specificLinks = {}
-  for _, value in ipairs(t:split('\n')) do
-    if value:find(string) then
-      table.insert(specificLinks, value .. '\n')
+  for _, value in ipairs(str:split('\n')) do
+    if value:find(val) then
+      table.insert(specificLinks, value..'\n')
     end
   end
   return specificLinks
@@ -43,16 +43,17 @@ local function getBaraagLinks(link)
   return baraagLinks
 end
 
-local function filterLinks(link)
-  local result = {}
-  if link then
-    if link:find(constant.TWITTER_IMAGE) then
-      result = getSpecificLinksFromString(link, constant.TWITTER_VIDEO)
-    elseif link:find(constant.BARAAG_MEDIA) then
-      result = getBaraagLinks(link)
+local function filterLinks(links)
+  local filteredLinks = {}
+  if links then
+    if links:find(constant.TWITTER_IMAGE) then
+      filteredLinks = getSpecificLinksFromString(links, constant.TWITTER_VIDEO)
+      return filteredLinks[1] and filteredLinks or ""
+    elseif links:find(constant.BARAAG_MEDIA) then
+      filteredLinks = getBaraagLinks(links)
     end
   end
-  return result[1] and result or link
+  return filteredLinks[1] and filteredLinks or links
 end
 
 ---@return string stdout
