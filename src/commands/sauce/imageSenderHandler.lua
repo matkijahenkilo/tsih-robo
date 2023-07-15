@@ -28,6 +28,15 @@ local function react(message)
   end
 end
 
+---Returns true if a message couldn't be sent
+local function checkErrors(t)
+  for _, v in ipairs(t) do
+    if not v then return true end
+  end
+  return false
+end
+
+---@return Message
 local function sendDownloadedImage(message, images, source)
   local messageToSend = {
     files = images,
@@ -89,31 +98,31 @@ local function shouldSendBaraagLinks(url)
 end
 
 local function sendImages(message, separatedFilestbl, source, hasMultipleLinks)
-  local ok, err = sendDownloadedImage(message, separatedFilestbl, hasMultipleLinks and source)
-  if not ok then react(message) end
-  return ok, err
+  local msg = sendDownloadedImage(message, separatedFilestbl, hasMultipleLinks and source)
+  if not msg then react(message) end
+  return msg
 end
 
 local function sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
+  local msgs = {}
   local partitionedFilestbl = {}
-  local results = {}
   for index, file in ipairs(wholeFilestbl)  do
     table.insert(partitionedFilestbl, file)
     if #partitionedFilestbl == 10 or index == #wholeFilestbl then
-      local ok, err = sendImages(message, partitionedFilestbl, source, hasMultipleLinks)
-      table.insert(results, {ok=ok, error=err})
+      local msg = sendImages(message, partitionedFilestbl, source, hasMultipleLinks)
+      table.insert(msgs, msg)
       partitionedFilestbl = {}
     end
   end
-  return results
+  return msgs
 end
 
 function M.sendTwitterVideoUrl(message, info, source)
   local hasMultipleLinks = info.multipleLinks
   local url = gallerydl.getUrl(source, info.limit)
   if url:find(constant.TWITTER_VIDEO) then
-    local ok = sendUrl(message, url, hasMultipleLinks and source)
-    if not ok then react(message) end
+    local msg = sendUrl(message, url, hasMultipleLinks and source)
+    if not msg then react(message) end
     return true
   end
   return false
@@ -149,8 +158,8 @@ function M.downloadSendAndDeleteImages(message, info, source)
   local limit = info.limit
   local hasMultipleLinks = info.multipleLinks
   local wholeFilestbl, gallerydlOutput = gallerydl.downloadImage(source, id, limit)
-  local ok, err = nil, nil
-  local errors = {}
+  local okMsgs = {}
+  local msg = {}
 
   if not wholeFilestbl or not hasFile(wholeFilestbl) then
     react(message)
@@ -158,25 +167,22 @@ function M.downloadSendAndDeleteImages(message, info, source)
   end
 
   if #wholeFilestbl > 10 then
-    local results = sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
-    for _, result in ipairs(results) do
-      if not result.ok then
-        table.insert(errors, result.error)
-      end
+    local msgs = sendPartitionedImages(message, wholeFilestbl, source, hasMultipleLinks)
+    for _, returnedMsg in ipairs(msgs) do
+      table.insert(okMsgs, returnedMsg)
     end
   else
-    ok, err = sendImages(message, wholeFilestbl, source, hasMultipleLinks)
-    table.insert(errors, err)
+    msg = sendImages(message, wholeFilestbl, source, hasMultipleLinks)
+    table.insert(okMsgs, msg)
   end
 
   deleteDownloadedImage(wholeFilestbl, id)
 
-  local errorstr = table.concat(errors, '\n')
-  if not hasString(errorstr) then
+  if checkErrors(okMsgs) then
     return false, string.format(constant.WARNING_NO_FILE, source), gallerydlOutput
   end
 
-  return ok, errorstr, gallerydlOutput
+  return true, nil, gallerydlOutput
 end
 
 function M.sendTwitterImages(message, info, source)
