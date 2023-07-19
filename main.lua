@@ -80,9 +80,7 @@ client:on("messageCreate", function(message)
   if message.author.bot then return end
 
   coroutine.wrap(function ()
-    logger:log(logLevel.info, "sending message")
     client:getChannel('990188076473147404'):send('a')
-    logger:log(logLevel.info, "message sent")
   end)()
 
   if hasTsihMention(message) or math.random() <= 0.01 then
@@ -93,7 +91,6 @@ client:on("messageCreate", function(message)
 end)
 
 client:on("slashCommand", function(interaction, command, args)
-  logger:log(logLevel.info, "Running slash command")
   commandsHandler[command.name].executeSlashCommand(interaction, command, args, client)
 end)
 

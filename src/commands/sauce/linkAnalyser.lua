@@ -47,10 +47,19 @@ local function hasMultipleLinks(t)
   return false
 end
 
-function M.getinfo(message)
+---@param message Message
+---@param isCommand boolean
+---@return table | nil
+function M.getinfo(message, isCommand)
   local limit = limitHandler.getRoomImageLimit(message) or 5
 
-  if limit == 0 then return nil end
+  if limit == 0 then
+    if isCommand then
+      limit = 5
+    else
+      return nil
+    end
+  end
 
   local content = message.content
 

@@ -20,6 +20,7 @@ local limitHandler = require("./limitHandler")
 local imageSender = require("./imageSenderHandler")
 local analyser = require("./linkAnalyser")
 local constants = require("src.utils.constants")
+local format = string.format
 require('discordia').extensions()
 
 local function specificLinkCondition(str)
@@ -53,19 +54,15 @@ local function findLinksToSend(message, info, source)
 end
 
 local function sendSauce(message, interaction)
-  local info = analyser.getinfo(message)
+  local info = analyser.getinfo(message, interaction and true or false)
 
   if not info then return end
 
-  local action
-  local condition
-  local wasCommand
+  local action = findLinksToSend
+  local condition = specificLinkCondition
+  local wasCommand = false
 
-  if not interaction then
-    action = findLinksToSend
-    condition = specificLinkCondition
-    wasCommand = false
-  else
+  if interaction then
     action = imageSender.downloadSendAndDeleteImages
     condition = anyLinkCondition
     wasCommand = true
@@ -117,9 +114,13 @@ return {
   end,
 
   executeMessageCommand = function (interaction, _, message)
-    coroutine.wrap(function () interaction:reply("Alrighty nanora! One second...", true) end)()
     if hasHttps(message.content) then
+      coroutine.wrap(function ()
+        interaction:reply(format("%s wants me to send images from a link nanora!", message.author.name))
+      end)()
       sendSauce(message, interaction)
+    else
+      interaction:reply("This message has no links nanora!", true)
     end
   end,
 
