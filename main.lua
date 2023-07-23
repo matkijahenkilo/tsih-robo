@@ -34,7 +34,7 @@ end
 
 local function initializeCommands(commands)
   client:info("Bot was opted to reset all global commands~")
-  local i = 1
+  local i, j = 1, 1
   for commandId in pairs(client:getGlobalApplicationCommands()) do
     client:info("Deleting command #"..i)
     client:deleteGlobalApplicationCommand(commandId)
@@ -42,18 +42,19 @@ local function initializeCommands(commands)
   end
 
   client:info("Creating commands...")
-  i = 1
 
+  i = 1
   for _, command in pairs(commands) do
     if command.getSlashCommand then
       client:info("Creating slash command #"..i)
       client:createGlobalApplicationCommand(command.getSlashCommand(tools))
+      i = i + 1
     end
     if command.getMessageCommand then
-      client:info("Creating message command #"..i)
+      client:info("Creating message command #"..j)
       client:createGlobalApplicationCommand(command.getMessageCommand(tools))
+      j = j + 1
     end
-    i = i + 1
   end
 
   client:info("Done!")

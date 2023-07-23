@@ -99,6 +99,15 @@ return {
               :setRequired(true)
             )
         )
+        :addOption(
+          tools.subCommand("fix_previous_links", "I'll fix the messages before this interaction nora!")
+            :addOption(
+              tools.integer("limit", "I will get n number of previous messages before this command nora.")
+              :setMinValue(1)
+              :setMaxValue(20)
+              :setRequired(true)
+            )
+        )
   end,
 
   getMessageCommand = function(tools)
@@ -106,6 +115,29 @@ return {
   end,
 
   executeSlashCommand = function(interaction, _, args)
+    if args.fix_previous_links then
+
+      local channel = interaction.channel
+      local id = interaction.id
+      local limit = args.fix_previous_links.limit
+      local notFixed = true
+
+      interaction:reply(string.format("Fixing the %s previous links nanora!", limit))
+
+      channel:getMessagesBefore(id, limit):forEach(function (previousMessage)
+        if hasHttps(previousMessage.content) then
+          sendSauce(previousMessage, nil)
+          notFixed = false
+        end
+      end)
+
+      if notFixed then
+        interaction:reply("I couldn't get any messages to fix nora!", true)
+      end
+
+      return
+    end
+
     if args.global then
       limitHandler.setSauceLimitOnServer(interaction, args.global)
     else
