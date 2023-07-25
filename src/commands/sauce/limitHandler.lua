@@ -71,6 +71,7 @@ local function saveConfig(rawJson, newLimit, guildId, globalOrChannelId)
   end
 end
 
+---@return number | nil
 function M.getRoomImageLimit(message)
   if not message.guild then return end
   local guildId = message.guild.id

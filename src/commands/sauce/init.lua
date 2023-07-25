@@ -81,9 +81,12 @@ end
 local function fixPreviousLinks(interaction, args, isInteraction)
   local lastChannelMsg = interaction.channel:getLastMessage()
   local notFixed = true
-  local msgs = {}
   local count = 1
   local limit = 1
+  -- Bilal died multiple times by looking at this
+  local oldMsgs = interaction.channel:getMessagesBefore(lastChannelMsg.id, 100):toArray("id")
+  oldMsgs = table.reversed(oldMsgs)
+  local msgsToFix = {}
   if type(args) == "table" then
     limit = args.fix_previous_links.limit
   else
@@ -97,15 +100,16 @@ local function fixPreviousLinks(interaction, args, isInteraction)
 
   interaction:reply(string.format("Fixing the %s previous links nanora!", limit))
 
-  interaction.channel:getMessagesBefore(lastChannelMsg.id, 100):forEach(function (previousMsg)
-    if hasHttps(previousMsg.content) and count <= limit and not previousMsg.author.bot then
-      table.insert(msgs, previousMsg)
+  for _, msg in ipairs(oldMsgs) do
+    if count > limit then break end
+    if hasHttps(msg.content) and not msg.author.bot then
+      table.insert(msgsToFix, msg)
       notFixed = false
       count = count + 1
     end
-  end)
+  end
 
-  for _, msg in ipairs(msgs) do
+  for _, msg in ipairs(msgsToFix) do
     sendSauce(msg, isInteraction and interaction or nil)
   end
 
