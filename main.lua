@@ -88,7 +88,11 @@ client:on("messageCreate", function(message)
     commandsHandler["randomemoji"].execute(message, client)
   end
 
-  commandsHandler["sauce"].execute(message, client)
+  if message.content:find("tsih pls") then
+    commandsHandler["sauce"].executeAsFavor(message)
+  else
+    commandsHandler["sauce"].execute(message, client)
+  end
 end)
 
 client:on("slashCommand", function(interaction, command, args)

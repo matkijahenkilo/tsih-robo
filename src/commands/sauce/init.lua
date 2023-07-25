@@ -78,6 +78,42 @@ local function sendSauce(message, interaction)
   end
 end
 
+local function fixPreviousLinks(interaction, args, isInteraction)
+  local lastChannelMsg = interaction.channel:getLastMessage()
+  local notFixed = true
+  local msgs = {}
+  local count = 1
+  local limit = 1
+  if type(args) == "table" then
+    limit = args.fix_previous_links.limit
+  else
+    if args then
+      limit = tonumber(args) or 1
+      if limit < 0 or limit > 20 then
+        limit = 1
+      end
+    end
+  end
+
+  interaction:reply(string.format("Fixing the %s previous links nanora!", limit))
+
+  interaction.channel:getMessagesBefore(lastChannelMsg.id, 100):forEach(function (previousMsg)
+    if hasHttps(previousMsg.content) and count <= limit and not previousMsg.author.bot then
+      table.insert(msgs, previousMsg)
+      notFixed = false
+      count = count + 1
+    end
+  end)
+
+  for _, msg in ipairs(msgs) do
+    sendSauce(msg, isInteraction and interaction or nil)
+  end
+
+  if notFixed then
+    interaction:reply("I couldn't get any messages to fix nora!", true)
+  end
+end
+
 return {
   getSlashCommand = function(tools)
     return tools.slashCommand("sauce", "Sets a limit for images I send nanora!")
@@ -99,7 +135,7 @@ return {
               :setRequired(true)
             )
         )
-        :addOption(
+        --[[:addOption(
           tools.subCommand("fix_previous_links", "I'll fix the messages before this interaction nora!")
             :addOption(
               tools.integer("limit", "I will get n number of previous messages before this command nora.")
@@ -107,7 +143,7 @@ return {
               :setMaxValue(20)
               :setRequired(true)
             )
-        )
+        )]]-- this is unreliable
   end,
 
   getMessageCommand = function(tools)
@@ -116,25 +152,7 @@ return {
 
   executeSlashCommand = function(interaction, _, args)
     if args.fix_previous_links then
-
-      local channel = interaction.channel
-      local id = interaction.id
-      local limit = args.fix_previous_links.limit
-      local notFixed = true
-
-      interaction:reply(string.format("Fixing the %s previous links nanora!", limit))
-
-      channel:getMessagesBefore(id, limit):forEach(function (previousMessage)
-        if hasHttps(previousMessage.content) then
-          sendSauce(previousMessage, nil)
-          notFixed = false
-        end
-      end)
-
-      if notFixed then
-        interaction:reply("I couldn't get any messages to fix nora!", true)
-      end
-
+      fixPreviousLinks(interaction, args, true)
       return
     end
 
@@ -160,5 +178,10 @@ return {
     if hasHttps(message.content) then
       sendSauce(message, nil)
     end
+  end,
+
+  executeAsFavor = function (message)
+    local args = message.content:split(" ")
+    fixPreviousLinks(message, args[3], false)
   end
 }

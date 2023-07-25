@@ -140,7 +140,7 @@ function gallerydl.downloadImage(link, id, limit)
 
   local outputstr = readProcess(child)
   if not outputstr or outputstr == '' then
-    logger:log(logLevel.error, "gallery-dl : No output. Maybe authorization is missing?")
+    logger:log(logLevel.error, "gallery-dl : No output from '%s'. Maybe authorization is missing?", link)
     return nil, outputstr
   end
   local filestbl = getCleanedTable(outputstr)
