@@ -166,7 +166,7 @@ end
 ---@param link string
 ---@param limit integer
 ---@return string links
----@return string gallerydlOutput
+---@return string | nil gallerydlOutput
 function gallerydl.getUrl(link, limit)
   local stopwatch = discordia.Stopwatch()
   if limit > 5 then limit = 5 end
@@ -181,6 +181,9 @@ function gallerydl.getUrl(link, limit)
   })
 
   local outputstr = readProcess(child)
+  if not outputstr then
+    return ""
+  end
   local links = filterLinks(outputstr)
 
   stopwatch:stop()
