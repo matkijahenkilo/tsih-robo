@@ -51,6 +51,7 @@ local function filterLinks(links)
       return filteredLinks[1] and filteredLinks or ""
     elseif links:find(constant.BARAAG_MEDIA) then
       filteredLinks = getBaraagLinks(links)
+      return filteredLinks[1] and filteredLinks or ""
     end
   end
   return filteredLinks[1] and filteredLinks or links
@@ -185,7 +186,10 @@ function gallerydl.getUrl(link, limit)
   stopwatch:stop()
 
   if isEmpty(links) then
-    if not link:find("https://twitter.com/") then
+    if
+      not link:find("https://twitter.com/") and
+      not link:find("https://baraag.net/")
+    then
       logger:log(logLevel.error, "gallery-dl : Could not get links from '%s' - '%s'",
         link,
         outputstr
