@@ -95,7 +95,7 @@ local function fixPreviousLinks(interaction, args, isInteraction)
     end
   end
 
-  interaction:reply(string.format("Fixing the %s previous links nanora!", limit))
+  interaction:reply(string.format("Fixing the %s previous message's links nanora!", limit))
 
   for i = #oldMsgs, 1, -1 do
     if count > limit then break end
