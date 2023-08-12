@@ -53,26 +53,29 @@ local function findLinksToSend(message, info, source)
   end
 end
 
+---@param message Message
+---@param interaction Interaction | nil
 local function sendSauce(message, interaction)
-  local info = analyser.getinfo(message, interaction and true or false)
+  local wasCommand = interaction and true or false
+  local info = analyser.getinfo(message, wasCommand)
 
   if not info then return end
 
   local action = findLinksToSend
   local condition = specificLinkCondition
-  local wasCommand = false
 
-  if interaction then
+  if wasCommand then
     action = imageSender.downloadSendAndDeleteImages
     condition = anyLinkCondition
-    wasCommand = true
   end
 
   for _, link in ipairs(info.words) do
     if condition(link) then
       coroutine.wrap(function()
         local ok, err = action(message, info, link)
-        if wasCommand and not ok then interaction:reply(err, true) end
+        if wasCommand and type(interaction) == "table" and not ok then
+          interaction:reply(err, true)
+        end
       end)()
     end
   end
@@ -180,6 +183,6 @@ return {
 
   executeAsFavor = function (message)
     local args = message.content:split(" ")
-    fixPreviousLinks(message, args[3], false)
+    fixPreviousLinks(message, args[3], true)
   end
 }
