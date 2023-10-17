@@ -50,6 +50,7 @@ local function sendDownloadedImage(message, images, source)
     messageToSend.content = string.format("`%s`", source)
   end
 
+  p(message.content, source, messageToSend.content)
   return message.channel:send(messageToSend)
 end
 

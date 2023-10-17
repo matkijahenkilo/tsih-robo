@@ -84,7 +84,7 @@ client:on("messageCreate", function(message)
     client:getChannel('990188076473147404'):send('a')
   end)()
 
-  if hasTsihMention(message) or math.random() <= 0.01 then
+  if hasTsihMention(message) or math.random() <= 0.001 then
     commandsHandler["randomemoji"].execute(message, client)
   end
 

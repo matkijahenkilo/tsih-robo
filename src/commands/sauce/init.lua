@@ -35,6 +35,10 @@ local function hasHttps(str)
   return str and str:find("https://")
 end
 
+local function isInkbunnyImage(str)
+  return str:find("https://inkbunny.net/files/screen")
+end
+
 local function findLinksToSend(message, info, source)
   if analyser.linkDoesNotRequireDownload(source) then
 
@@ -72,6 +76,7 @@ local function sendSauce(message, interaction)
   for _, link in ipairs(info.words) do
     if condition(link) then
       coroutine.wrap(function()
+        if isInkbunnyImage(link) then return end --ignore direct image link
         local ok, err = action(message, info, link)
         if wasCommand and type(interaction) == "table" and not ok then
           interaction:reply(err, true)
