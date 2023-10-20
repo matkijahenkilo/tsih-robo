@@ -2,7 +2,7 @@ local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
-local constant = require("src.utils.constants")
+local constants = require("src.utils.constants")
 local logLevel = discordia.enums.logLevel
 
 local function isEmpty(t)
@@ -38,7 +38,7 @@ local function getSpecificLinksFromString(str, val)
 end
 
 local function getBaraagLinks(link)
-  local baraagLinks = getSpecificLinksFromString(link, constant.BARAAG_MEDIA)
+  local baraagLinks = getSpecificLinksFromString(link, constants.BARAAG_MEDIA)
   table.remove(baraagLinks, 1) --removes the first, already embedded image
   return baraagLinks
 end
@@ -46,10 +46,10 @@ end
 local function filterLinks(links)
   local filteredLinks = {}
   if links then
-    if links:find(constant.TWITTER_IMAGE) then
-      filteredLinks = getSpecificLinksFromString(links, constant.TWITTER_VIDEO)
+    if links:find(constants.TWITTER_IMAGE) then
+      filteredLinks = getSpecificLinksFromString(links, constants.TWITTER_VIDEO)
       return filteredLinks[1] and filteredLinks or ""
-    elseif links:find(constant.BARAAG_MEDIA) then
+    elseif links:find(constants.BARAAG_MEDIA) then
       filteredLinks = getBaraagLinks(links)
       return filteredLinks[1] and filteredLinks or ""
     end
@@ -73,7 +73,7 @@ end
 
 local function filterLargeFiles(t)
   for index, file in ipairs(t) do
-    if getFileSizeInMegaBytes(file) >= constant.MAX_UPLOAD_LIMIT then
+    if getFileSizeInMegaBytes(file) >= constants.MAX_UPLOAD_LIMIT then
       fs.unlinkSync(file)
       t[index] = nil
     end
@@ -190,7 +190,8 @@ function gallerydl.getUrl(link, limit)
 
   if isEmpty(links) then
     if
-      not link:find("https://twitter.com/") and
+      not link:find(constants.TWITTER_LINK) and
+      not link:find(constants.TWITTER_LINK2) and
       not link:find("https://baraag.net/")
     then
       logger:log(logLevel.error, "gallery-dl : Could not get links from '%s' - '%s'",

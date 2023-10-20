@@ -48,7 +48,7 @@ local function findLinksToSend(message, info, source)
 
     imageSender.downloadSendAndDeleteImages(message, info, source)
 
-  elseif source:find(constants.TWITTER_LINK) then
+  elseif source:find(constants.TWITTER_LINK) or source:find(constants.TWITTER_LINK2) then
 
     if not imageSender.sendTwitterVideoUrl(message, info, source) then
       imageSender.sendTwitterImages(message, info, source)
