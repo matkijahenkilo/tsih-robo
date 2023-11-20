@@ -33,14 +33,16 @@ local function hasString(str)
   return str ~= ''
 end
 
+local function removeReact(message)
+  message:clearReactions()
+end
+
+---just a little "notification"
 local function react(message)
   for _, emoji in ipairs(failEmojis) do
     message:addReaction(emoji)
   end
-end
-
-local function removeReact(message)
-  message:clearReactions()
+  removeReact(message)
 end
 
 ---Returns true if a message couldn't be sent
@@ -69,7 +71,7 @@ local function sendDownloadedImage(message, images, link)
   return message.channel:send(messageToSend)
 end
 
-local function sendLink(message, link, link)
+local function sendLink(message, link, hasMultipleLinks)
   local messageToSend = {
     reference = {
       message = message,
@@ -77,7 +79,7 @@ local function sendLink(message, link, link)
     }
   }
 
-  if link then
+  if hasMultipleLinks then
     messageToSend.content = string.format("`%s`\n%s", link, link)
   else
     messageToSend.content = link
@@ -115,10 +117,7 @@ end
 
 local function sendImages(message, separatedFilestbl, link, hasMultipleLinks)
   local msg = sendDownloadedImage(message, separatedFilestbl, hasMultipleLinks and link)
-  if not msg then
-    react(message)
-    removeReact(message)
-  end
+  if not msg then react(message) end
   return msg
 end
 
@@ -141,14 +140,10 @@ end
 function SauceSender:sendTwitterVideoLink()
   local message, info, link = self._message, self._info, self._link
   local hasMultipleLinks = info.multipleLinks
-  local gallerydl = Gallerydl(link, nil, info.limit)
-  local videoLink = gallerydl:getLink(link, info.limit)
+  local videoLink = Gallerydl(link, nil, info.limit):getLink()
   if videoLink:find(constant.TWITTER_VIDEO) then
     local msg = sendLink(message, videoLink, hasMultipleLinks and videoLink)
-    if not msg then
-      react(message)
-      removeReact(message)
-    end
+    if not msg then react(message) end
     return true
   end
   return false
@@ -163,15 +158,12 @@ function SauceSender:sendImageLink()
     link = link:gsub("web/", '')
   end
 
-  local imageLink, output = Gallerydl(link, nil, info.limit):getLink()
+  local imageLink, output = Gallerydl(link, nil, limit):getLink()
 
   if hasString(imageLink) then
     if shouldSendBaraagLinks(imageLink) or not imageLink:find(constant.BARAAG_LINK) then
       local ok = sendLink(message, imageLink, hasMultipleLinks and imageLink)
-      if not ok then
-        react(message)
-        removeReact(message)
-      end
+      if not ok then react(message) end
     end
   end
 end
@@ -182,7 +174,7 @@ end
 ---@return string gallerydlOutput
 function SauceSender:downloadSendAndDeleteImages()
   local message, info, link = self._message, self._info, self._link
-  local id = message.channel.id
+  local id = self._message.channel.id
   local hasMultipleLinks = info.multipleLinks
   local okMsgs = {}
   local msg = {}
@@ -191,7 +183,6 @@ function SauceSender:downloadSendAndDeleteImages()
 
   if not wholeFilestbl or not hasFile(wholeFilestbl) then
     react(message)
-    removeReact(message)
     return false, string.format(constant.WARNING_NO_FILE, link), gallerydlOutput
   end
 
@@ -217,13 +208,12 @@ end
 function SauceSender:sendTwitterImages()
   if not self._message.embed then
     if not clock:waitFor("messageUpdate", 5000) then
-      SauceSender:downloadSendAndDeleteImages()
+      SauceSender.downloadSendAndDeleteImages(self)
     end
   end
 end
 
-function get.link(self)
-  return self._link
-end
+function get.link(self)    return self._link    end
+function get.message(self) return self._message end
 
 return SauceSender
