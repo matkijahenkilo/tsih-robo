@@ -1,7 +1,6 @@
 local limitHandler = require("./limitHandler")
 local SauceSender = require("./SauceSender")
 local analyser = require("./linkAnalyser")
-local constants = require("./constants")
 local format = string.format
 require('discordia').extensions()
 
@@ -26,12 +25,6 @@ local function findLinksToSend(sauceSender)
   elseif analyser.linkRequireDownload(link) then
 
     sauceSender:downloadSendAndDeleteImages()
-
-  elseif link:find(constants.TWITTER_LINK) or link:find(constants.TWITTER_LINK2) then
-
-    if not sauceSender:sendTwitterVideoLink() then
-      sauceSender:sendTwitterImages()
-    end
 
   end
 end
@@ -75,43 +68,6 @@ local function sendSauce(message, interaction)
   end
 end
 
---[[ this function is way beyong my skill level, so I'll let it away from the code for now
---this entire function should reply as emphemeral
-local function fixPreviousLinks(interaction, argument, isInteraction)
-  local lastChannelMsg = interaction.channel:getLastMessage()
-  local notFixed = true
-  local count = 1
-  local limit = 1
-  local oldMsgs = interaction.channel:getMessagesBefore(lastChannelMsg.id, 100):toArray("id")
-
-  if type(argument) == "table" then
-    limit = argument.fix_previous_links.limit
-  else
-    if argument then
-      limit = tonumber(argument) or 1
-      if limit < 0 or limit > 20 then
-        limit = 1
-      end
-    end
-  end
-
-  interaction:reply(string.format("Fixing the %s previous message's links nanora!", limit), true)
-
-  for i = #oldMsgs, 1, -1 do
-    if count > limit then break end
-    local msg = oldMsgs[i]
-    if hasHttps(msg.content) and not msg.author.bot then
-      sendSauce(msg, isInteraction and interaction or nil)
-      notFixed = false
-      count = count + 1
-    end
-  end
-
-  if notFixed then
-    interaction:reply("I couldn't get any messages to fix nora!", true)
-  end
-end
-]]
 
 return {
   getSlashCommand = function(tools)

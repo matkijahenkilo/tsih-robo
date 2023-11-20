@@ -57,10 +57,7 @@ end
 local function filterLinks(links)
   local filteredLinks = {}
   if links then
-    if links:find(constants.TWITTER_IMAGE) then
-      filteredLinks = getSpecificLinksFromString(links, constants.TWITTER_VIDEO)
-      return filteredLinks[1] and filteredLinks or ""
-    elseif links:find(constants.BARAAG_MEDIA) then
+    if links:find(constants.BARAAG_MEDIA) then
       filteredLinks = getBaraagLinks(links)
       return filteredLinks[1] and filteredLinks or ""
     end
@@ -186,7 +183,6 @@ function Gallerydl:getLink()
   local stopwatch = discordia.Stopwatch()
 
   local link = self._link
-  local id = self._id
   local limit = self._limit
 
   if limit > 5 then limit = 5 end
@@ -210,8 +206,6 @@ function Gallerydl:getLink()
 
   if isEmpty(links) then
     if
-      not link:find(constants.TWITTER_LINK) and
-      not link:find(constants.TWITTER_LINK2) and
       not link:find("https://baraag.net/")
     then
       logger:log(logLevel.error, "gallery-dl : Could not get links from '%s' - '%s'",
@@ -230,6 +224,7 @@ function Gallerydl:getLink()
   if type(links) == "table" then
     return table.concat(links), outputstr
   end
+
   return links, outputstr
 end
 

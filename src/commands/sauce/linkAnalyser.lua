@@ -1,5 +1,4 @@
 local limitHandler = require("./limitHandler")
-local constants = require("./constants")
 local json = require("json")
 local fs = require("fs")
 local discordia = require('discordia')
@@ -7,6 +6,7 @@ discordia.extensions()
 
 local M = {}
 
+-- don't insert twitter into the nonDownloables list, lots of problem will come if so.
 local doesNotRequireDownload        = json.decode(fs.readFileSync("src/commands/sauce/links/nonDownloables.json"))
 local requireDownload               = json.decode(fs.readFileSync("src/commands/sauce/links/downloables.json"))
 local blacklistIsPresent, blacklist = pcall(json.decode, fs.readFileSync("src/commands/sauce/links/blacklist.json"))
@@ -53,7 +53,6 @@ local function hasMultipleLinks(t)
   for _, word in ipairs(t) do
     if M.linkRequireDownload(word)
       or M.linkDoesNotRequireDownload(word)
-      or word:find(constants.TWITTER_LINK)
     then
       count = count + 1
       if count > 1 then return true end

@@ -33,16 +33,25 @@ local function hasString(str)
   return str ~= ''
 end
 
-local function removeReact(message)
-  message:clearReactions()
+local function isTwitter(str)
+  IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks = {
+    "https://twitter.com",
+    "https://x.com",
+  }
+  for _, UnlimitedTwitterString in ipairs(IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks) do
+    if str:find(UnlimitedTwitterString) then
+      return true
+    end
+  end
+  return false
 end
 
----just a little "notification"
+---Just a little "notification"
 local function react(message)
   for _, emoji in ipairs(failEmojis) do
     message:addReaction(emoji)
   end
-  removeReact(message)
+  message:clearReactions()
 end
 
 ---Returns true if a message couldn't be sent
@@ -136,19 +145,8 @@ local function sendPartitionedImages(message, wholeFilestbl, link, hasMultipleLi
 end
 
 
----@return boolean success
-function SauceSender:sendTwitterVideoLink()
-  local message, info, link = self._message, self._info, self._link
-  local hasMultipleLinks = info.multipleLinks
-  local outputLink = Gallerydl(link, nil, info.limit):getLink()
-  if outputLink:find(constant.TWITTER_VIDEO) then
-    local msg = sendLink(message, outputLink, hasMultipleLinks and link)
-    if not msg then react(message) end
-    return true
-  end
-  return false
-end
 
+---Gets the content's direct link to send. This function does not expect twitter links.
 function SauceSender:sendImageLink()
   local message, info, link = self._message, self._info, self._link
   local limit = info.limit
@@ -175,11 +173,22 @@ end
 function SauceSender:downloadSendAndDeleteImages()
   local message, info, link = self._message, self._info, self._link
   local id = self._message.channel.id
+  local limit = info.limit
   local hasMultipleLinks = info.multipleLinks
   local okMsgs = {}
   local msg = {}
 
-  local wholeFilestbl, gallerydlOutput = Gallerydl(link, id, info.limit):downloadImage()
+  local wholeFilestbl, gallerydlOutput
+
+  if isTwitter(link) then
+    if not message.embed then
+      if not clock:waitFor("messageUpdate", 5000) then -- I really dislike this website's ramdomness!
+        wholeFilestbl, gallerydlOutput = Gallerydl(link, id, limit):downloadImage()
+      end
+    end
+  else
+    wholeFilestbl, gallerydlOutput = Gallerydl(link, id, limit):downloadImage()
+  end
 
   if not wholeFilestbl or not hasFile(wholeFilestbl) then
     react(message)
