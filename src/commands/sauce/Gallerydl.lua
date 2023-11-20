@@ -6,6 +6,17 @@ local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
 local constants = require("src.utils.constants")
 local logLevel = discordia.enums.logLevel
 
+local Gallerydl = class("Gallerydl") -- construct a new class
+
+---@param link string
+---@param id string|nil
+---@param limit integer
+function Gallerydl:__init(link, id, limit) -- define the initializer
+	self._link = link
+  self._id = id
+  self._limit = limit
+end
+
 local function isEmpty(t)
   return type(t) == "table" and (not t or t[1] == nil) or t == ''
 end
@@ -120,19 +131,19 @@ end
 
 
 
-local GalleryDL = class('GalleryDL') -- construct a new class
-
-function GalleryDL:__init(link) -- define the initializer
-	self._link = link
-end
-
----@param link string
----@param id string
----@param limit integer
 ---@return table | nil files
 ---@return string gallerydlOutput
-function GalleryDL:downloadImage(link, id, limit)
+function Gallerydl:downloadImage()
   local stopwatch = discordia.Stopwatch()
+
+  local link = self._link
+  local id = self._id
+  local limit = self._limit
+
+  if not id then
+    logger:log(logLevel.error, "Gallerydl:downloadImage() was called, but no id was set")
+    return nil, "no id set"
+  end
 
   local child = spawn("gallery-dl", {
     args = {
@@ -168,12 +179,15 @@ function GalleryDL:downloadImage(link, id, limit)
   return filestbl, outputstr
 end
 
----@param link string
----@param limit integer
 ---@return string links
 ---@return string | nil gallerydlOutput
-function GalleryDL:getLink(link, limit)
+function Gallerydl:getLink()
   local stopwatch = discordia.Stopwatch()
+
+  local link = self._link
+  local id = self._id
+  local limit = self._limit
+
   if limit > 5 then limit = 5 end
 
   local child = spawn("gallery-dl", {
@@ -218,4 +232,4 @@ function GalleryDL:getLink(link, limit)
   return links, outputstr
 end
 
-return GalleryDL
+return Gallerydl

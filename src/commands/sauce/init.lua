@@ -17,7 +17,7 @@
 -- for more information on which sites gallery-dl supports.
 --]]
 local limitHandler = require("./limitHandler")
-local imageSender = require("./imageSenderHandler")
+local SauceSender = require("./SauceSender")
 local analyser = require("./linkAnalyser")
 local constants = require("src.utils.constants")
 local format = string.format
@@ -39,19 +39,20 @@ local function isInkbunnyImage(str)
   return str:find("https://inkbunny.net/files/screen")
 end
 
-local function findLinksToSend(message, info, source)
-  if analyser.linkDoesNotRequireDownload(source) then
+local function findLinksToSend(sauceSender)
+  local link = sauceSender.link
+  if analyser.linkDoesNotRequireDownload(link) then
 
-    imageSender.sendImageLink(message, info, source)
+    sauceSender:sendImageLink()
 
-  elseif analyser.linkRequireDownload(source) then
+  elseif analyser.linkRequireDownload(link) then
 
-    imageSender.downloadSendAndDeleteImages(message, info, source)
+    sauceSender:downloadSendAndDeleteImages()
 
-  elseif source:find(constants.TWITTER_LINK) or source:find(constants.TWITTER_LINK2) then
+  elseif link:find(constants.TWITTER_LINK) or link:find(constants.TWITTER_LINK2) then
 
-    if not imageSender.sendTwitterVideoLink(message, info, source) then
-      imageSender.sendTwitterImages(message, info, source)
+    if not sauceSender:sendTwitterVideoLink() then
+      sauceSender:sendTwitterImages()
     end
 
   end
@@ -69,15 +70,24 @@ local function sendSauce(message, interaction)
   local condition = specificLinkCondition
 
   if wasCommand then
-    action = imageSender.downloadSendAndDeleteImages
     condition = anyLinkCondition
   end
 
   for _, link in ipairs(info.words) do
     if condition(link) then
       coroutine.wrap(function()
+
         if isInkbunnyImage(link) then return end --ignore direct image link
-        local ok, err = action(message, info, link)
+
+        local sauceSender = SauceSender(message, link, info)
+        local ok, err
+
+        if wasCommand then
+          ok, err = sauceSender:downloadSendAndDeleteImages()
+        else
+          findLinksToSend(sauceSender)
+        end
+
         if wasCommand and type(interaction) == "table" and not ok then
           interaction:reply(err, true)
         end
