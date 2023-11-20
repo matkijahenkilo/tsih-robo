@@ -120,7 +120,7 @@ end)
 
 client:on("messageCommand", function(interaction, command, message)
   if message then
-    pcall(commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand, interaction, command, message)
+    local ok, err = pcall(commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand, interaction, command, message)
     sendErrorMessage(interaction, ok, err)
   else
     interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")

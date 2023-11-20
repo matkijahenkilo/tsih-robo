@@ -107,7 +107,7 @@ return {
   executeMessageCommand = function (interaction, _, message)
     if hasHttps(message.content) then
       coroutine.wrap(function ()
-        interaction:reply(format("%s wants me to send this message's contents nanora!", message.author.name))
+        interaction:reply(format("%s wants me to send a message's contents nanora!", message.author.name))
       end)()
       sendSauce(message, interaction)
     else
