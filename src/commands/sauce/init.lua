@@ -90,17 +90,6 @@ return {
               :setRequired(true)
             )
         )
-        --[[ this is unreliable
-        :addOption(
-          tools.subCommand("fix_previous_links", "I'll fix the messages before this interaction nora!")
-            :addOption(
-              tools.integer("limit", "I will get n number of previous messages before this command nora.")
-              :setMinValue(1)
-              :setMaxValue(20)
-              :setRequired(true)
-            )
-        )
-        ]]--
   end,
 
   getMessageCommand = function(tools)
@@ -108,11 +97,6 @@ return {
   end,
 
   executeSlashCommand = function(interaction, _, args)
-    --[[if args.fix_previous_links then
-      fixPreviousLinks(interaction, args, true)
-      return
-    end]]--
-
     if args.global then
       limitHandler.setSauceLimitOnServer(interaction, args.global)
     else
@@ -136,10 +120,4 @@ return {
       sendSauce(message, nil)
     end
   end,
-
-  executeAsFavor = function (message)
-    message:reply("Not now nora.")
-    --local args = message.content:split(" ")
-    --fixPreviousLinks(message, args[3], true)
-  end
 }
