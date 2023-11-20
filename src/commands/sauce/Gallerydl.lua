@@ -3,7 +3,7 @@ local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local class = discordia.class
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
-local constants = require("src.utils.constants")
+local constants = require("./constants")
 local logLevel = discordia.enums.logLevel
 
 local Gallerydl = class("Gallerydl") -- construct a new class

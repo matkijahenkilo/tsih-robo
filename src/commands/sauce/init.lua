@@ -19,7 +19,7 @@
 local limitHandler = require("./limitHandler")
 local SauceSender = require("./SauceSender")
 local analyser = require("./linkAnalyser")
-local constants = require("src.utils.constants")
+local constants = require("./constants")
 local format = string.format
 require('discordia').extensions()
 
@@ -66,7 +66,6 @@ local function sendSauce(message, interaction)
 
   if not info then return end
 
-  local action = findLinksToSend
   local condition = specificLinkCondition
 
   if wasCommand then

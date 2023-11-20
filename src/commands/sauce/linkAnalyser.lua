@@ -1,5 +1,5 @@
 local limitHandler = require("./limitHandler")
-local constants = require("src.utils.constants")
+local constants = require("./constants")
 require('discordia').extensions()
 
 -- please check sauce/init.lua to get around this problem, sorry

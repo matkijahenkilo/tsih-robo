@@ -1,6 +1,6 @@
 local fs = require("fs")
 local Gallerydl = require("./Gallerydl")
-local constant = require("src.utils.constants")
+local constant = require("./constants")
 local discordia = require("discordia")
 local clock = discordia.Clock()
 local class = discordia.class
