@@ -145,7 +145,7 @@ function Gallerydl:downloadImage()
     return nil, "no id set"
   end
 
-  local child = spawn("gallery-dla", {
+  local child = spawn("gallery-dl", {
     args = {
       "--cookies", "cookies.txt",
       "--range", "1-"..limit, "--ugoira-conv",
