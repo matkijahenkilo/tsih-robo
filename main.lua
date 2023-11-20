@@ -132,7 +132,7 @@ clock:on("min", function()
 end)
 
 clock:on("hour", function(now)
-  local ok, err
+  local ok, err = true, ""
   if now.hour == 21 then
     logger:log(logLevel.info, "Tsih O'Clock")
     ok, err = pcall(commandsHandler["tsihoclock"].executeWithTimer, client)
