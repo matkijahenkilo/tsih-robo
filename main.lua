@@ -64,11 +64,11 @@ local function sendErrorMessage(message, ok, err)
   if not ok then
     message:reply({
       embed = {
-        title = "rolou uma maracutaia",
+        title = "I stumbled...",
         fields = {
           {
-            name = string.format("Envie essa desgraça que aconteceu para %s!", client.owner.username, err),
-            value = string.format("```lua\n%s```", err)
+            name = string.format("Please send this horrible mistake to %s!", client.owner.username, err),
+            value = string.format("```\n%s```", err)
           }
         },
         timestamp = discordia.Date():toISO('T', 'Z'),
