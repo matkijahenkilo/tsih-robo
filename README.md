@@ -30,7 +30,7 @@ as for links, she will always send up to 5 because Discord and only embed 5 link
 - `/question` returns a random string as an answer to a question.
 - `/hug` makes Tsih annoyed.
 - `/pinch` makes Tsih sad.
-- `/randomemoji true|false` adds or removes the server's id to `src/data/emojiServers.json` file, where Tsih will randomly use it to get the server's custom emoticons and use it as a random react.
+- `/randomemoji allow:boolean` adds or removes the server's id to `src/data/emojiServers.json` file, where Tsih will randomly use it to get the server's custom emoticons and use it as a random react.
 - `/role`
     - `give name:string hexcolor:string` gives the user a personalized cargo with the name and color of their choise.
     - `remove` removes the personalized cargo that Tsih created from the user.
