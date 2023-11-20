@@ -60,6 +60,24 @@ local function initializeCommands(commands)
   client:info("Done!")
 end
 
+local function sendErrorMessage(message, ok, err)
+  if not ok then
+    message:reply({
+      embed = {
+        title = "rolou uma maracutaia",
+        fields = {
+          {
+            name = string.format("Envie essa desgraça que aconteceu para %s!", client.owner.username, err),
+            value = string.format("```lua\n%s```", err)
+          }
+        },
+        timestamp = discordia.Date():toISO('T', 'Z'),
+        color = 0x0000ff
+      }
+    })
+  end
+end
+
 local function hasTsihMention(message)
   local content = message.content:lower()
   return content:find("tsih") or content:find("nora")
@@ -80,24 +98,30 @@ end)
 client:on("messageCreate", function(message)
   if message.author.bot then return end
 
+  local ok, err
+
   coroutine.wrap(function ()
     client:getChannel('990188076473147404'):send('a')
   end)()
 
   if hasTsihMention(message) or math.random() <= 0.001 then
-    commandsHandler["randomemoji"].execute(message, client)
+    ok, err = pcall(commandsHandler["randomemoji"].execute, message, client)
+    sendErrorMessage(message, ok, err)
   end
 
-  commandsHandler["sauce"].execute(message, client)
+  ok, err = pcall(commandsHandler["sauce"].execute, message, client)
+  sendErrorMessage(message, ok, err)
 end)
 
 client:on("slashCommand", function(interaction, command, args)
-  commandsHandler[command.name].executeSlashCommand(interaction, command, args, client)
+  local ok, err = pcall(commandsHandler[command.name].executeSlashCommand, interaction, command, args, client)
+  sendErrorMessage(interaction, ok, err)
 end)
 
 client:on("messageCommand", function(interaction, command, message)
   if message then
-    commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand(interaction, command, message)
+    pcall(commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand, interaction, command, message)
+    sendErrorMessage(interaction, ok, err)
   else
     interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
   end
@@ -108,9 +132,10 @@ clock:on("min", function()
 end)
 
 clock:on("hour", function(now)
+  local ok, err
   if now.hour == 21 then
     logger:log(logLevel.info, "Tsih O'Clock")
-    commandsHandler["tsihoclock"].executeWithTimer(client)
+    ok, err = pcall(commandsHandler["tsihoclock"].executeWithTimer, client)
   elseif now.hour == 6 then
     local songsDirectory = commandsHandler["song"].songsDirectory
     local songsFiles = fs.readdirSync(songsDirectory)
@@ -119,6 +144,9 @@ clock:on("hour", function(now)
         fs.unlink(songsDirectory .. value)
       end
     end
+  end
+  if not ok then
+    logger:log(logLevel.error, err)
   end
 end)
 
