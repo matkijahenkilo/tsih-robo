@@ -104,7 +104,7 @@ client:on("messageCreate", function(message)
     client:getChannel('990188076473147404'):send('a')
   end)()
 
-  if hasTsihMention(message) or math.random() <= 0.001 then
+  if hasTsihMention(message) or math.random() <= 0.01 then
     ok, err = pcall(commandsHandler["randomemoji"].execute, message, client)
     sendErrorMessage(message, ok, err)
   end
