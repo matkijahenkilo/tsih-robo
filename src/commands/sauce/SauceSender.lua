@@ -214,14 +214,6 @@ function SauceSender:downloadSendAndDeleteImages()
   return true, nil, gallerydlOutput
 end
 
-function SauceSender:sendTwitterImages()
-  if not self._message.embed then
-    if not clock:waitFor("messageUpdate", 5000) then
-      SauceSender.downloadSendAndDeleteImages(self)
-    end
-  end
-end
-
 function get.link(self)    return self._link    end
 function get.message(self) return self._message end
 

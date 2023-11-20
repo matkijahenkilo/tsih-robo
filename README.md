@@ -1,28 +1,66 @@
 # tsih-robo
 
-Tsih-robo is a discord bot chosen to be written in Lua because the language shares the same color as her hair. Tsih-robo was made using [Discordia](https://github.com/SinisterRectus/discordia) API.
+Tsih-robo is a discord bot chosen to be written in Lua because the language shares the same color as her hair! Tsih-robo was made using [Discordia](https://github.com/SinisterRectus/discordia) API.
 
-Tsih's **primary function** is to fill the gap of badly embeded links on discord for websites links like Pixiv, Pawoo, Baraag, Exhentai and etc using [gallery-dl](https://github.com/mikf/gallery-dl). Pretty much what [SaucyBot](https://github.com/Sn0wCrack/saucybot-discord) does, but with more websites that you can insert into a table as you see fit, but only websites that are compatible with [gallery-dl](https://github.com/mikf/gallery-dl).
+Tsih-robo's primary function is to fill the gap of badly embeded links on discord for websites links like Pixiv, Pawoo, Baraag, Exhentai and etc using [gallery-dl](https://github.com/mikf/gallery-dl). Pretty much what [SaucyBot](https://github.com/Sn0wCrack/saucybot-discord) does, but with more websites that you can insert into a json as you see fit, but only websites that are compatible with [gallery-dl](https://github.com/mikf/gallery-dl).
 
-It's just a fun project I always wanted to create but ended up wanting to maintain, and also my first programming project ever! 
+It's just a fun project I always wanted to create but ended up wanting to maintain, and also my first programming project ever!
+
+(o′┏▽┓｀o)
 
 ## Commands
 
-tsih-robo supports slash and message commands. If you're cloning this repo and running the bot yourself you need to load the bot as `./luvit main.lua true` to load the commands.
+Tsih-robo supports slash and message commands. If you're cloning this repo to run the bot yourself you need to load the bot with `luvit main.lua true` to load the commands.
 
-All of her commands are located in src/commands, where each file returns a table of functions.
+All of her commands are located in `src/commands`, where each folder has a `init.lua` file that returns a table of functions.
+
+- `/sauce`
+    - `channel limit:integer` personalizes how much images Tsih can send in a channel. It can go from 0* up to 100.
+    - `global limit:integer` personalizes how much images Tsih can send in the entire server.** It can go from 0* up to 10.
+
+as for links, she will always send up to 5 because Discord and only embed 5 links per message.
+
+*if set to 0, it means that she will not send anything.
+
+**the `channel` option has priority over `global`, meaning that if `global` is set to 10 and `channel` is set to 20, Tsih will send 20 images to the specific channel where the command was used.
+
+### Misc
+
+- `/avatar [user:User]` returns your or another user's avatar link.
+- `/question` returns a random string as an answer to a question.
+- `/hug` makes Tsih annoyed.
+- `/pinch` makes Tsih sad.
+- `/randomemoji true|false` adds or removes the server's id to `src/data/emojiServers.json` file, where Tsih will randomly use it to get the server's custom emoticons and use it as a random react.
+- `/role`
+    - `give name:string hexcolor:string` gives the user a personalized cargo with the name and color of their choise.
+    - `remove` removes the personalized cargo that Tsih created from the user.
+- `/tsihoclock`
+    - `sign` will make Tsih post daily a random image inside one of the two folders inside `assets/images/tsihoclock/` at 9PM UTC. Be sure to personalize it with your own set of images!
+    - `unsign` removes the channel from the daily image posting. Sad...
+    - `manual` sends an ephemeral message of one of the images. Nice!
+    - `auto` will run the same function that would run at 9PM UTC. Only the bot's owner can run it, it's a dangerous command that can annoy people!
+- `/song` just an ordinary function to make the bot play songs. It's broken to a certain degree! The options are:
+    - `play urls:string [, redownload:boolean]` you can add multiple links here, Tsih will download the sound files, insert into a playlist and play it on voice chat. If she didn't download it correctly, you can set True as a second argument to redownload the file.
+    - `nowplaying` shows what is playing currently.
+    - `shuffle` shuffles the current playlist.
+    - `skip`
+    - `stop`
+    - `pause`
+    - `resume`
+
+None of the commands above are ephemeral.
 
 ## Installation
 
-Be aware that simply installing tsih-robo may cause crashes during runtime because of the absence of the /assets folder. Because of that I recommend you to change or delete pinch.lua, hug.lua, tsihoclock.lua and omori.lua if you don't want to have a headache with it!
+Be aware that simply installing tsih-robo may cause crashes during runtime because of the absence of the /assets folder. Because of that I recommend you to change or delete `pinch`, `hug` and `tsihoclock` commands if you don't want to have a headache with it!
 
 ### pre-requisites programs
 
-`gallery-dl` required for sauce.lua
+`ffmpeg` required by the two programs below.
 
-`yt-dlp` required for song.lua. I do not recommend youtube-dl.
+`gallery-dl` required for `sauce` command
 
-`ffmpeg` reguired by the two programs above.
+`yt-dlp` required for `song` command. I do not recommend youtube-dl.
 
 ### bot installation:
 
@@ -32,15 +70,7 @@ Git clone [discordia-interactions](https://github.com/Bilal2453/discordia-intera
 
 Inside `src/data` folder, create a file named `token.txt` containing your discord application's token.
 
-run the bot on the termiinal with `./luvit main.lua [true]` where the true argument makes the bot load its commands into Discord's server, if nothing is passed then it will not load its commands.
-
-#### settings.lua
-
-You can change the bot's prefix within the file and insert as many server ids inside emoticonsServers table as you like in other for tsih-robo send a random custom reaction from a random server of the table.
-
-### known issues
-
-`song.lua` does not work as intended because of discordia-interactions implementation, although there was few times where it worked out flawlessly. Further investigation is required.
+If you're running the bot for the first time, then run `./luvit main.lua true` to load it's slash commands. After that you won't need to use the `true` argument again unless you add/change her slash commands!
 
 ### gallery-dl configuration
 
@@ -52,3 +82,7 @@ It's recommended to export your browser's cookies for gallery-dl.
 Please check [here](https://github.com/mikf/gallery-dl#configuration) to understand how to configurate your gallery-dl.
 
 When using `gallery-dl.conf`, be sure to drag it inside tsih-robo folder in case you're on Windows. If you're on Linux just put it to /etc/
+
+## known issues
+
+`song` command can magically work or not work. This issue might be related by the voice channel's creation date, if it's a very old channel then it probably won't work. Weird, right!?

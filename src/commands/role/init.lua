@@ -118,7 +118,7 @@ return {
             :setRequired(true)
           )
           :addOption(
-            tools.string("hex", "The role's color must be in hexadecimal value, sorry nora!")
+            tools.string("hexcolor", "The role's color must be in hexadecimal value, sorry nora!")
             :setRequired(true)
           )
         )
