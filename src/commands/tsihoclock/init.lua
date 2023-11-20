@@ -1,11 +1,11 @@
 local signHandler = require("./signHandler")
-local imageHandler = require("./imageSenderHandler")
+local tsihSender = require("./tsihSender")
 local counterHandler = require("./counterHandler")
 
 local functions = {
   sign   = signHandler.sign,
   unsign = signHandler.remove,
-  manual = imageHandler.tsihClockSlash
+  manual = tsihSender.tsihClockSlash
 }
 
 return {
@@ -40,7 +40,7 @@ return {
     if commandName == "auto" then
       if client.owner.id == interaction.user.id then
         interaction:reply("Oki nanora!", true)
-        imageHandler.sendAllTOC(client)
+        tsihSender.sendAllTOC(client)
       else
         interaction:reply("👁️〰️👁️", true)
       end
@@ -51,6 +51,6 @@ return {
 
   executeWithTimer = function(client)
     counterHandler.incrementTsihOClockCounter()
-    imageHandler.sendAllTOC(client)
+    tsihSender.sendAllTOC(client)
   end,
 }
