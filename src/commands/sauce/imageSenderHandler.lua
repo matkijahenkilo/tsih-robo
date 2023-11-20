@@ -54,7 +54,7 @@ local function sendDownloadedImage(message, images, source)
   return message.channel:send(messageToSend)
 end
 
-local function sendUrl(message, url, source)
+local function sendLink(message, link, source)
   local messageToSend = {
     reference = {
       message = message,
@@ -63,9 +63,9 @@ local function sendUrl(message, url, source)
   }
 
   if source then
-    messageToSend.content = string.format("`%s`\n%s", source, url)
+    messageToSend.content = string.format("`%s`\n%s", source, link)
   else
-    messageToSend.content = url
+    messageToSend.content = link
   end
 
   return message.channel:send(messageToSend)
@@ -86,9 +86,9 @@ local function deleteDownloadedImage(file, id)
   removeDirectory(id)
 end
 
-local function shouldSendBaraagLinks(url)
+local function shouldSendBaraagLinks(link)
   local quantity = 0
-  for _, value in ipairs(url:split('\n')) do
+  for _, value in ipairs(link:split('\n')) do
     if value:find(constant.BARAAG_MEDIA) and value:find(".mp4") then
       return true
     elseif value:find(constant.BARAAG_MEDIA) then
@@ -118,18 +118,18 @@ local function sendPartitionedImages(message, wholeFilestbl, source, hasMultiple
   return msgs
 end
 
-function M.sendTwitterVideoUrl(message, info, source)
+function M.sendTwitterVideoLink(message, info, source)
   local hasMultipleLinks = info.multipleLinks
-  local url = gallerydl.getUrl(source, info.limit)
-  if url:find(constant.TWITTER_VIDEO) then
-    local msg = sendUrl(message, url, hasMultipleLinks and source)
+  local link = gallerydl.getLink(source, info.limit)
+  if link:find(constant.TWITTER_VIDEO) then
+    local msg = sendLink(message, link, hasMultipleLinks and source)
     if not msg then react(message) end
     return true
   end
   return false
 end
 
-function M.sendImageUrl(message, info, source)
+function M.sendImageLink(message, info, source)
   local limit = info.limit
   local hasMultipleLinks = info.multipleLinks
 
@@ -137,11 +137,11 @@ function M.sendImageUrl(message, info, source)
     source = source:gsub("web/", '')
   end
 
-  local url = gallerydl.getUrl(source, limit)
+  local link = gallerydl.getLink(source, limit)
 
-  if hasString(url) then
-    if shouldSendBaraagLinks(url) or not url:find(constant.BARAAG_LINK) then
-      local ok = sendUrl(message, url, hasMultipleLinks and source)
+  if hasString(link) then
+    if shouldSendBaraagLinks(link) or not link:find(constant.BARAAG_LINK) then
+      local ok = sendLink(message, link, hasMultipleLinks and source)
       if not ok then react(message) end
     end
   end

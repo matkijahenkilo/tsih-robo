@@ -1,6 +1,7 @@
 local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
+local class = discordia.class
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
 local constants = require("src.utils.constants")
 local logLevel = discordia.enums.logLevel
@@ -119,14 +120,18 @@ end
 
 
 
-local gallerydl = {}
+local GalleryDL = class('GalleryDL') -- construct a new class
+
+function GalleryDL:__init(link) -- define the initializer
+	self._link = link
+end
 
 ---@param link string
 ---@param id string
 ---@param limit integer
 ---@return table | nil files
 ---@return string gallerydlOutput
-function gallerydl.downloadImage(link, id, limit)
+function GalleryDL:downloadImage(link, id, limit)
   local stopwatch = discordia.Stopwatch()
 
   local child = spawn("gallery-dl", {
@@ -167,7 +172,7 @@ end
 ---@param limit integer
 ---@return string links
 ---@return string | nil gallerydlOutput
-function gallerydl.getUrl(link, limit)
+function GalleryDL:getLink(link, limit)
   local stopwatch = discordia.Stopwatch()
   if limit > 5 then limit = 5 end
 
@@ -213,4 +218,4 @@ function gallerydl.getUrl(link, limit)
   return links, outputstr
 end
 
-return gallerydl
+return GalleryDL

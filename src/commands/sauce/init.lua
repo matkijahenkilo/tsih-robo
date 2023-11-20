@@ -2,12 +2,12 @@
 -- Please create your own customized nonDownloables.lua and
 -- downloables.lua files in 'src/commands/sauce/links/'.
 -- They both should return a table of strings, where the strings
--- should be URLs of any website compatible with gallery-dl
+-- should be links of any website compatible with gallery-dl
 -- that you also wish Tsih bot to automatically send its 
 -- contents when a link is sent to a text channel.
 --
--- URLs inserted in nonDownloables.lua will make Tsih send only the images' direct URL,
--- while URLs inserted in downloables.lua will make Tsih download and send the image(s)
+-- links inserted in nonDownloables.lua will make Tsih send only the images' direct link,
+-- while links inserted in downloables.lua will make Tsih download and send the image(s)
 -- to the text channel, and delete them from the computer.
 --
 -- Both files should contain the following structure example:
@@ -42,7 +42,7 @@ end
 local function findLinksToSend(message, info, source)
   if analyser.linkDoesNotRequireDownload(source) then
 
-    imageSender.sendImageUrl(message, info, source)
+    imageSender.sendImageLink(message, info, source)
 
   elseif analyser.linkRequireDownload(source) then
 
@@ -50,7 +50,7 @@ local function findLinksToSend(message, info, source)
 
   elseif source:find(constants.TWITTER_LINK) or source:find(constants.TWITTER_LINK2) then
 
-    if not imageSender.sendTwitterVideoUrl(message, info, source) then
+    if not imageSender.sendTwitterVideoLink(message, info, source) then
       imageSender.sendTwitterImages(message, info, source)
     end
 
