@@ -67,11 +67,11 @@ local function sendDownloadedImage(message, images, link)
     messageToSend.content = string.format("`%s`", link)
   end
 
-  p(message.content, link, messageToSend.content)
   return message.channel:send(messageToSend)
 end
 
-local function sendLink(message, link, hasMultipleLinks)
+---@return Message
+local function sendLink(message, outputLink, link)
   local messageToSend = {
     reference = {
       message = message,
@@ -79,10 +79,10 @@ local function sendLink(message, link, hasMultipleLinks)
     }
   }
 
-  if hasMultipleLinks then
-    messageToSend.content = string.format("`%s`\n%s", link, link)
+  if link then -- attach original link before it's contents
+    messageToSend.content = string.format("`%s`\n%s", link, outputLink)
   else
-    messageToSend.content = link
+    messageToSend.content = outputLink
   end
 
   return message.channel:send(messageToSend)
@@ -136,13 +136,13 @@ local function sendPartitionedImages(message, wholeFilestbl, link, hasMultipleLi
 end
 
 
-
+---@return boolean success
 function SauceSender:sendTwitterVideoLink()
   local message, info, link = self._message, self._info, self._link
   local hasMultipleLinks = info.multipleLinks
-  local videoLink = Gallerydl(link, nil, info.limit):getLink()
-  if videoLink:find(constant.TWITTER_VIDEO) then
-    local msg = sendLink(message, videoLink, hasMultipleLinks and videoLink)
+  local outputLink = Gallerydl(link, nil, info.limit):getLink()
+  if outputLink:find(constant.TWITTER_VIDEO) then
+    local msg = sendLink(message, outputLink, hasMultipleLinks and link)
     if not msg then react(message) end
     return true
   end
@@ -158,12 +158,12 @@ function SauceSender:sendImageLink()
     link = link:gsub("web/", '')
   end
 
-  local imageLink, output = Gallerydl(link, nil, limit):getLink()
+  local outputLink = Gallerydl(link, nil, limit):getLink()
 
-  if hasString(imageLink) then
-    if shouldSendBaraagLinks(imageLink) or not imageLink:find(constant.BARAAG_LINK) then
-      local ok = sendLink(message, imageLink, hasMultipleLinks and imageLink)
-      if not ok then react(message) end
+  if hasString(outputLink) then
+    if shouldSendBaraagLinks(outputLink) or not outputLink:find(constant.BARAAG_LINK) then
+      local msg = sendLink(message, outputLink, hasMultipleLinks and link)
+      if not msg then react(message) end
     end
   end
 end

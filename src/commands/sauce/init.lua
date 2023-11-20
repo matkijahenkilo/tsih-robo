@@ -1,21 +1,3 @@
---[[
--- Please create your own customized nonDownloables.lua and
--- downloables.lua files in 'src/commands/sauce/links/'.
--- They both should return a table of strings, where the strings
--- should be links of any website compatible with gallery-dl
--- that you also wish Tsih bot to automatically send its 
--- contents when a link is sent to a text channel.
---
--- links inserted in nonDownloables.lua will make Tsih send only the images' direct link,
--- while links inserted in downloables.lua will make Tsih download and send the image(s)
--- to the text channel, and delete them from the computer.
---
--- Both files should contain the following structure example:
---   return {'https://www.pixiv.net', ...etc}
---
--- See https://github.com/mikf/gallery-dl/blob/master/docs/supportedsites.md
--- for more information on which sites gallery-dl supports.
---]]
 local limitHandler = require("./limitHandler")
 local SauceSender = require("./SauceSender")
 local analyser = require("./linkAnalyser")
@@ -33,10 +15,6 @@ end
 
 local function hasHttps(str)
   return str and str:find("https://")
-end
-
-local function isInkbunnyImage(str)
-  return str:find("https://inkbunny.net/files/screen")
 end
 
 local function findLinksToSend(sauceSender)
@@ -76,7 +54,7 @@ local function sendSauce(message, interaction)
     if condition(link) then
       coroutine.wrap(function()
 
-        if isInkbunnyImage(link) then return end --ignore direct image link
+        if analyser.linkShouldBeIgnored(link) then return end
 
         local sauceSender = SauceSender(message, link, info)
         local ok, err

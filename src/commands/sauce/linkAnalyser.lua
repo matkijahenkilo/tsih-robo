@@ -1,17 +1,42 @@
 local limitHandler = require("./limitHandler")
 local constants = require("./constants")
-require('discordia').extensions()
+local json = require("json")
+local fs = require("fs")
+local discordia = require('discordia')
+discordia.extensions()
 
--- please check sauce/init.lua to get around this problem, sorry
-local doesNotRequireDownload = require("./links/nonDownloables.lua")
-local requireDownload = require("./links/downloables.lua")
+--[[
+-- Please create your own customized nonDownloables.json and
+-- downloables.json files in 'src/commands/sauce/links/'.
+--
+-- Both files should contain the following structure example:
+--   [
+--      "https://e621.net/",
+--      "https://booru.io/",
+--      "https://pawoo.net/"
+--   ]
+--
+-- See https://github.com/mikf/gallery-dl/blob/master/docs/supportedsites.md
+-- for more information on which sites gallery-dl supports~
+--]]
+
+local M = {}
+
+local doesNotRequireDownload        = json.decode(fs.readFileSync("src/commands/sauce/links/nonDownloables.json"))
+local requireDownload               = json.decode(fs.readFileSync("src/commands/sauce/links/downloables.json"))
+local blacklistIsPresent, blacklist = pcall(json.decode, fs.readFileSync("src/commands/sauce/links/blacklist.json"))
 
 if not doesNotRequireDownload or not doesNotRequireDownload[1] then
-  error("./links/nonDownloables.lua does not return any string for gallery-dl to read nora. Read sauce/init.lua for more information nanora!")
+  error("./links/nonDownloables.json does not return any string for gallery-dl to read nora.")
 end
 
 if not requireDownload or not requireDownload[1] then
-  error("./links/downloables.lua does not return any string for gallery-dl to read nora. Read sauce/init.lua for more information nanora!")
+  error("./links/downloables.json does not return any string for gallery-dl to read nora.")
+end
+
+if not blacklistIsPresent then
+  local loglevel = discordia.enums.logLevel.warning
+  discordia.Logger(loglevel, "%F %T", nil):log(loglevel, "blacklist.json is not present.")
 end
 
 local function verify(string, list)
@@ -23,14 +48,19 @@ local function verify(string, list)
   return false
 end
 
-local M = {}
-
 function M.linkRequireDownload(link)
   return verify(link, requireDownload)
 end
 
 function M.linkDoesNotRequireDownload(link)
   return verify(link, doesNotRequireDownload)
+end
+
+function M.linkShouldBeIgnored(link)
+  if not blacklistIsPresent then
+    return nil
+  end
+  return verify(link, blacklist)
 end
 
 local function hasMultipleLinks(t)
@@ -47,6 +77,8 @@ local function hasMultipleLinks(t)
   return false
 end
 
+---returns information about current channel's limit, message's contents, 
+---and if the message has multiple links in it.
 ---@param message Message
 ---@param isCommand boolean
 ---@return table | nil
