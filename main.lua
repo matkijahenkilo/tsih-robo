@@ -4,10 +4,11 @@ local tools       = require("discordia-slash").util.tools()
 local client      = discordia.Client():useApplicationCommands()
 local clock       = discordia.Clock()
 local logLevel    = discordia.enums.logLevel
-local logger = discordia.Logger(logLevel.info, "%F %T")
+local logger      = discordia.Logger(logLevel.info, "%F %T")
 local statusTable = require("src/utils/statusTable")
 
 local fs = require("fs")
+local errorHandler = require("./src/utils/ErrorHandler")(discordia, client)
 local commandsHandler
 local shouldResetCommands = args[2]
 discordia.extensions.string()
@@ -60,24 +61,6 @@ local function initializeCommands(commands)
   client:info("Done!")
 end
 
-local function sendErrorMessage(message, ok, err)
-  if not ok then
-    message:reply({
-      embed = {
-        title = "I stumbled...",
-        fields = {
-          {
-            name = string.format("Please send this horrible mistake to %s!", client.owner.username, err),
-            value = string.format("```\n%s```", err)
-          }
-        },
-        timestamp = discordia.Date():toISO('T', 'Z'),
-        color = 0x0000ff
-      }
-    })
-  end
-end
-
 local function hasTsihMention(message)
   local content = message.content:lower()
   return content:find("tsih") or content:find("nora")
@@ -106,22 +89,22 @@ client:on("messageCreate", function(message)
 
   if hasTsihMention(message) or math.random() <= 0.01 then
     ok, err = pcall(commandsHandler["randomemoji"].execute, message, client)
-    sendErrorMessage(message, ok, err)
+    errorHandler:sendErrorMessage(message, ok, err)
   end
 
   ok, err = pcall(commandsHandler["sauce"].execute, message, client)
-  sendErrorMessage(message, ok, err)
+  errorHandler:sendErrorMessage(message, ok, err)
 end)
 
 client:on("slashCommand", function(interaction, command, args)
   local ok, err = pcall(commandsHandler[command.name].executeSlashCommand, interaction, command, args, client)
-  sendErrorMessage(interaction, ok, err)
+  errorHandler:sendErrorMessage(interaction, ok, err)
 end)
 
 client:on("messageCommand", function(interaction, command, message)
   if message then
     local ok, err = pcall(commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand, interaction, command, message)
-    sendErrorMessage(interaction, ok, err)
+    errorHandler:sendErrorMessage(interaction, ok, err)
   else
     interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
   end
