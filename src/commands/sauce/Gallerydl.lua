@@ -6,7 +6,7 @@ local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
 local constants = require("./constants")
 local logLevel = discordia.enums.logLevel
 
-local Gallerydl = class("Gallerydl") -- construct a new class
+local Gallerydl, get = class("Gallerydl") -- construct a new class
 
 ---@param link string
 ---@param id string|nil
@@ -145,7 +145,7 @@ function Gallerydl:downloadImage()
     return nil, "no id set"
   end
 
-  local child = spawn("gallery-dl", {
+  local child = spawn("gallery-dla", {
     args = {
       "--cookies", "cookies.txt",
       "--range", "1-"..limit, "--ugoira-conv",
@@ -153,7 +153,9 @@ function Gallerydl:downloadImage()
       link
     }
   })
-
+  if not child then
+    return nil, outputstr
+  end
   local outputstr = readProcess(child)
   if not outputstr or outputstr == '' then
     logger:log(logLevel.error, "gallery-dl : No output from '%s'. Maybe authorization is missing?", link)
@@ -231,5 +233,8 @@ function Gallerydl:getLink()
   end
   return links, outputstr
 end
+
+function get.link(self) return self._link end
+function get.id(self)   return self._id   end
 
 return Gallerydl

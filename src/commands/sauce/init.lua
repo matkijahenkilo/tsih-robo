@@ -95,24 +95,27 @@ local function sendSauce(message, interaction)
   end
 end
 
-local function fixPreviousLinks(interaction, args, isInteraction)
+--[[ this function is way beyong my skill level, so I'll let it away from the code for now
+--this entire function should reply as emphemeral
+local function fixPreviousLinks(interaction, argument, isInteraction)
   local lastChannelMsg = interaction.channel:getLastMessage()
   local notFixed = true
   local count = 1
   local limit = 1
   local oldMsgs = interaction.channel:getMessagesBefore(lastChannelMsg.id, 100):toArray("id")
-  if type(args) == "table" then
-    limit = args.fix_previous_links.limit
+
+  if type(argument) == "table" then
+    limit = argument.fix_previous_links.limit
   else
-    if args then
-      limit = tonumber(args) or 1
+    if argument then
+      limit = tonumber(argument) or 1
       if limit < 0 or limit > 20 then
         limit = 1
       end
     end
   end
 
-  interaction:reply(string.format("Fixing the %s previous message's links nanora!", limit))
+  interaction:reply(string.format("Fixing the %s previous message's links nanora!", limit), true)
 
   for i = #oldMsgs, 1, -1 do
     if count > limit then break end
@@ -128,6 +131,7 @@ local function fixPreviousLinks(interaction, args, isInteraction)
     interaction:reply("I couldn't get any messages to fix nora!", true)
   end
 end
+]]
 
 return {
   getSlashCommand = function(tools)
@@ -150,7 +154,8 @@ return {
               :setRequired(true)
             )
         )
-        --[[:addOption(
+        --[[ this is unreliable
+        :addOption(
           tools.subCommand("fix_previous_links", "I'll fix the messages before this interaction nora!")
             :addOption(
               tools.integer("limit", "I will get n number of previous messages before this command nora.")
@@ -158,7 +163,8 @@ return {
               :setMaxValue(20)
               :setRequired(true)
             )
-        )]]-- this is unreliable
+        )
+        ]]--
   end,
 
   getMessageCommand = function(tools)
@@ -166,10 +172,10 @@ return {
   end,
 
   executeSlashCommand = function(interaction, _, args)
-    if args.fix_previous_links then
+    --[[if args.fix_previous_links then
       fixPreviousLinks(interaction, args, true)
       return
-    end
+    end]]--
 
     if args.global then
       limitHandler.setSauceLimitOnServer(interaction, args.global)
@@ -181,7 +187,7 @@ return {
   executeMessageCommand = function (interaction, _, message)
     if hasHttps(message.content) then
       coroutine.wrap(function ()
-        interaction:reply(format("%s wants me to send images from a link nanora!", message.author.name))
+        interaction:reply(format("%s wants me to send this message's contents nanora!", message.author.name))
       end)()
       sendSauce(message, interaction)
     else
@@ -196,7 +202,8 @@ return {
   end,
 
   executeAsFavor = function (message)
-    local args = message.content:split(" ")
-    fixPreviousLinks(message, args[3], true)
+    message:reply("Not now nora.")
+    --local args = message.content:split(" ")
+    --fixPreviousLinks(message, args[3], true)
   end
 }
