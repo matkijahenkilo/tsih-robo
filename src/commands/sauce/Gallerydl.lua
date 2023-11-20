@@ -6,7 +6,7 @@ local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
 local constants = require("./constants")
 local logLevel = discordia.enums.logLevel
 
-local Gallerydl, get = class("Gallerydl") -- construct a new class
+local Gallerydl, get = class("Gallerydl") -- Discordia classes are pretty neat, I should use them more
 
 ---@param link string
 ---@param id string|nil
@@ -153,9 +153,9 @@ function Gallerydl:downloadImage()
       link
     }
   })
-  if not child then
-    return nil, outputstr
-  end
+
+  if not child then return nil, outputstr end
+
   local outputstr = readProcess(child)
   if not outputstr or outputstr == '' then
     logger:log(logLevel.error, "gallery-dl : No output from '%s'. Maybe authorization is missing?", link)

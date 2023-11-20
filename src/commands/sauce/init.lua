@@ -54,12 +54,14 @@ local function sendSauce(message, interaction)
     if condition(link) then
       coroutine.wrap(function()
 
-        if analyser.linkShouldBeIgnored(link) then return end
+        if not wasCommand then -- ignore blacklisted links if function call was automated
+          if analyser.linkShouldBeIgnored(link) then return end
+        end
 
         local sauceSender = SauceSender(message, link, info)
         local ok, err
 
-        if wasCommand then
+        if wasCommand then -- always download content if function called as message command
           ok, err = sauceSender:downloadSendAndDeleteImages()
         else
           findLinksToSend(sauceSender)
