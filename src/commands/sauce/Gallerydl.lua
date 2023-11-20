@@ -1,12 +1,11 @@
 local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
-local class = discordia.class
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
 local constants = require("./constants")
 local logLevel = discordia.enums.logLevel
 
-local Gallerydl, get = class("Gallerydl") -- Discordia classes are pretty neat, I should use them more
+local Gallerydl, get = discordia.class("Gallerydl") -- Discordia classes are pretty neat, I should use them more
 
 ---@param link string
 ---@param id string|nil

@@ -5,21 +5,6 @@ local fs = require("fs")
 local discordia = require('discordia')
 discordia.extensions()
 
---[[
--- Please create your own customized nonDownloables.json and
--- downloables.json files in 'src/commands/sauce/links/'.
---
--- Both files should contain the following structure example:
---   [
---      "https://e621.net/",
---      "https://booru.io/",
---      "https://pawoo.net/"
---   ]
---
--- See https://github.com/mikf/gallery-dl/blob/master/docs/supportedsites.md
--- for more information on which sites gallery-dl supports~
---]]
-
 local M = {}
 
 local doesNotRequireDownload        = json.decode(fs.readFileSync("src/commands/sauce/links/nonDownloables.json"))
