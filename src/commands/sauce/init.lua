@@ -1,6 +1,7 @@
 local limitHandler = require("./limitHandler")
 local SauceSender = require("./SauceSender")
 local analyser = require("./linkAnalyser")
+local timer = require("timer")
 local format = string.format
 require('discordia').extensions()
 
@@ -107,7 +108,9 @@ return {
   executeMessageCommand = function (interaction, _, message)
     if hasHttps(message.content) then
       coroutine.wrap(function ()
-        interaction:reply(format("%s wants me to send a message's contents nanora!", message.author.name))
+        interaction:reply(format("%s wants me to send this message's contents!", message.author.name))
+        --deletes the reply after 10 seconds
+        timer.setTimeout(10000, coroutine.wrap(interaction.deleteReply), interaction, interaction.getReply)
       end)()
       sendSauce(message, interaction)
     else
