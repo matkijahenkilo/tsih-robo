@@ -1,6 +1,6 @@
 local fs = require("fs")
-local Gallerydl = require("./Gallerydl")
 local constant = require("./constants")
+local analyser = require("./linkAnalyser")
 local discordia = require("discordia")
 local clock = discordia.Clock()
 local class = discordia.class
@@ -8,12 +8,12 @@ local class = discordia.class
 local SauceSender, get = class("SauceSender")
 
 ---@param message Message
----@param link string
----@param info table
-function SauceSender:__init(message, link, info)
+---@param gallerydl Gallerydl
+---@param multipleLinks boolean
+function SauceSender:__init(message, gallerydl, multipleLinks)
   self._message = message
-  self._info = info
-  self._link = link
+  self._gallerydl = gallerydl
+  self._multipleLinks = multipleLinks
 end
 
 local failEmojis = {
@@ -33,19 +33,6 @@ local function hasString(str)
   return str ~= ''
 end
 
-local function isTwitter(str)
-  IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks = {
-    "https://twitter.com",
-    "https://x.com",
-  }
-  for _, UnlimitedTwitterString in ipairs(IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks) do
-    if str:find(UnlimitedTwitterString) then
-      return true
-    end
-  end
-  return false
-end
-
 ---Just a little "notification"
 local function react(message)
   for _, emoji in ipairs(failEmojis) do
@@ -54,7 +41,7 @@ local function react(message)
   message:clearReactions()
 end
 
----Returns true if a message couldn't be sent
+---Returns true if one of the list of messages couldn't be sent
 local function checkErrors(t)
   for _, v in ipairs(t) do
     if not v then return true end
@@ -148,15 +135,14 @@ end
 
 ---Gets the content's direct link to send. This function does not expect twitter links.
 function SauceSender:sendImageLink()
-  local message, info, link = self._message, self._info, self._link
-  local limit = info.limit
-  local hasMultipleLinks = info.multipleLinks
+  local message, gallerydl, hasMultipleLinks = self._message, self._gallerydl, self._multipleLinks
+  local link = gallerydl.link
 
   if link:find(constant.BARAAG_LINK) then
     link = link:gsub("web/", '')
   end
 
-  local outputLink = Gallerydl(link, nil, limit):getLink()
+  local outputLink = gallerydl:getLink()
 
   if hasString(outputLink) then
     if shouldSendBaraagLinks(outputLink) or not outputLink:find(constant.BARAAG_LINK) then
@@ -171,23 +157,22 @@ end
 ---@return string | nil discordError
 ---@return string gallerydlOutput
 function SauceSender:downloadSendAndDeleteImages()
-  local message, info, link = self._message, self._info, self._link
-  local id = self._message.channel.id
-  local limit = info.limit
-  local hasMultipleLinks = info.multipleLinks
+  local message, gallerydl, hasMultipleLinks = self._message, self._gallerydl, self._multipleLinks
+  local link = gallerydl.link
+  local id = message.channel.id
   local okMsgs = {}
   local msg = {}
 
   local wholeFilestbl, gallerydlOutput
 
-  if isTwitter(link) then
+  if analyser.isTwitter(link) then
     if not message.embed then
       if not clock:waitFor("messageUpdate", 5000) then -- I really dislike this website's ramdomness!
-        wholeFilestbl, gallerydlOutput = Gallerydl(link, id, limit):downloadImage()
+        wholeFilestbl, gallerydlOutput = gallerydl:downloadImage()
       end
     end
   else
-    wholeFilestbl, gallerydlOutput = Gallerydl(link, id, limit):downloadImage()
+    wholeFilestbl, gallerydlOutput = gallerydl:downloadImage()
   end
 
   if not wholeFilestbl or not hasFile(wholeFilestbl) then
@@ -214,7 +199,6 @@ function SauceSender:downloadSendAndDeleteImages()
   return true, nil, gallerydlOutput
 end
 
-function get.link(self)    return self._link    end
-function get.message(self) return self._message end
+function get.gallerydl(self) return self._gallerydl end
 
 return SauceSender

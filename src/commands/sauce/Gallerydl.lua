@@ -229,6 +229,5 @@ function Gallerydl:getLink()
 end
 
 function get.link(self) return self._link end
-function get.id(self)   return self._id   end
 
 return Gallerydl

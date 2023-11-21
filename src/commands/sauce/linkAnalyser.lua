@@ -48,6 +48,19 @@ function M.linkShouldBeIgnored(link)
   return verify(link, blacklist)
 end
 
+function M.isTwitter(link)
+  IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks = {
+    "https://twitter.com",
+    "https://x.com",
+  }
+  for _, UnlimitedTwitterString in ipairs(IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks) do
+    if link:find(UnlimitedTwitterString) then
+      return true
+    end
+  end
+  return false
+end
+
 local function hasMultipleLinks(t)
   local count = 0
   for _, word in ipairs(t) do

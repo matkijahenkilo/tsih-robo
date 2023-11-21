@@ -1,4 +1,5 @@
 local limitHandler = require("./limitHandler")
+local Gallerydl = require("./Gallerydl")
 local SauceSender = require("./SauceSender")
 local analyser = require("./linkAnalyser")
 local timer = require("timer")
@@ -18,7 +19,7 @@ local function hasHttps(str)
 end
 
 local function findLinksToSend(sauceSender)
-  local link = sauceSender.link
+  local link = sauceSender.gallerydl.link
   if analyser.linkDoesNotRequireDownload(link) then
 
     sauceSender:sendImageLink()
@@ -52,7 +53,9 @@ local function sendSauce(message, interaction)
           if analyser.linkShouldBeIgnored(link) then return end
         end
 
-        local sauceSender = SauceSender(message, link, info)
+        local gdl = Gallerydl(link, message.channel.id, info.limit)
+        local sauceSender = SauceSender(message, gdl, info.multipleLinks)
+
         local ok, err
 
         if wasCommand then -- always download content if function called as message command
