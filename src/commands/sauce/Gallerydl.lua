@@ -140,7 +140,7 @@ end
 function Gallerydl:getJson()
   -- pageJson[#pageJson][3] is the place you want to go for the post's author details and post's description
   local pageJson = json.decode(readProcess(spawn("gallery-dl", { args = { "-j", self._link } })))
-  return pageJson[#pageJson][3].author and pageJson[#pageJson] or nil
+  return pageJson[#pageJson][3].author and pageJson or nil
 end
 
 ---@return table | nil files

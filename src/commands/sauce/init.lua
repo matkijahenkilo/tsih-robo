@@ -64,7 +64,7 @@ local function sendSauce(message, interaction)
           findLinksToSend(sauceSender)
         end
 
-        if wasCommand and type(interaction) == "table" and not ok then
+        if not ok and wasCommand and type(interaction) == "table" then
           interaction:reply(err, true)
         end
       end)()

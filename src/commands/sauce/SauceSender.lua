@@ -85,6 +85,8 @@ local function addAdditionalAttachments(embeds, fileNames)
 end
 
 local function makeEmbededMessage(messageToSend, pageJson, sourceLink)
+  --local directLink = pageJson[2][2]
+  pageJson = pageJson[#pageJson][3]
   local files = table.copy(messageToSend.files)
   local fileNames = removePath(files)
   table.insert(files, SAUCE_ASSETS..TSIH_FAST)
@@ -152,7 +154,6 @@ local function sendDownloadedImage(message, images, sourceLink, pageJson, guaran
   local msg
 
   if pageJson then
-    pageJson = pageJson[3]
     msg = message.channel:send(makeEmbededMessage(messageToSend, pageJson, guaranteedSourceLink))
   else
     msg = message.channel:send(messageToSend)
