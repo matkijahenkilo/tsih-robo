@@ -48,6 +48,10 @@ function M.linkShouldBeIgnored(link)
   return verify(link, blacklist)
 end
 
+function M.isTwitterPost(link)
+  return link:find("/status/")
+end
+
 function M.isTwitter(link)
   IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks = {
     "https://twitter.com",

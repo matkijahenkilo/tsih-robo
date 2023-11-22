@@ -3,7 +3,10 @@ local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
 local constants = require("./constants")
+local analyser = require("./linkAnalyser")
+local json = require("json")
 local logLevel = discordia.enums.logLevel
+discordia.extensions()
 
 local Gallerydl, get = discordia.class("Gallerydl") -- Discordia classes are pretty neat, I should use them more
 
@@ -34,7 +37,7 @@ local function logDownloadedInfo(link, files, stopwatch)
   for _, file in ipairs(files) do
     mb = mb + getFileSizeInMegaBytes(file)
   end
-  local  msg = "gallery-dl : %s files from %s = %.2fmb. Took %.2f seconds"
+  local  msg = constants.GALLERY_DL_LOG
   logger:log(3, msg, #files, link, mb, time:toSeconds())
 end
 
@@ -86,7 +89,7 @@ local function filterLargeFiles(t)
       t[index] = nil
     end
   end
-  return fillNewTable(t)
+  return fillNewTable(t), "file too big"
 end
 
 local function filterNilFiles(t)
@@ -95,12 +98,19 @@ local function filterNilFiles(t)
       t[index] = nil
     end
   end
-  return fillNewTable(t)
+  return fillNewTable(t), "file does not exist"
 end
 
 ---@return table | nil
 local function getCleanedTable(t)
   return t:gsub("# ", ''):gsub("\r", ''):split('\n')
+end
+
+local function replaceSlash(t)
+  for index, _ in ipairs(t) do
+    t[index] = t[index]:gsub("\\", "/")
+  end
+  return t
 end
 
 ---Converts a table of files into a new format.
@@ -126,9 +136,15 @@ local function convertFiles(tbl, oldFormat, newFormat)
 end
 
 
+---@return table|nil pageJson
+function Gallerydl:getJson()
+  -- pageJson[#pageJson][3] is the place you want to go for the post's author details and post's description
+  local pageJson = json.decode(readProcess(spawn("gallery-dl", { args = { "-j", self._link } })))
+  return pageJson[#pageJson][3].author and pageJson[#pageJson] or nil
+end
 
 ---@return table | nil files
----@return string gallerydlOutput
+---@return string | nil gallerydlOutput
 function Gallerydl:downloadImage()
   local stopwatch = discordia.Stopwatch()
 
@@ -137,8 +153,11 @@ function Gallerydl:downloadImage()
   local limit = self._limit
 
   if not id then
-    logger:log(logLevel.error, "Gallerydl:downloadImage() was called, but no id was set")
-    return nil, "no id set"
+    return nil, logger:log(logLevel.error, "Gallerydl:downloadImage() was called, but no id was set")
+  end
+
+  if analyser.isTwitter(link) and not analyser.isTwitterPost(link) then
+    return nil, logger:log(logLevel.warning, "Gallerydl:downloadImage() ignored a Twitter profile to avoid spam (%s)", link)
   end
 
   local child = spawn("gallery-dl", {
@@ -150,26 +169,27 @@ function Gallerydl:downloadImage()
     }
   })
 
-  if not child then return nil, outputstr end
+  if not child then return nil end
 
   local outputstr = readProcess(child)
   if not outputstr or outputstr == '' then
-    logger:log(logLevel.error, "gallery-dl : No output from '%s'. Maybe authorization is missing?", link)
-    return nil, outputstr
+    return nil, logger:log(logLevel.error, constants.GALLERY_DL_AUTH_MISSING, link)
   end
-  local filestbl = getCleanedTable(outputstr)
-  filestbl = filterNilFiles(filestbl)
-  filestbl = filterLargeFiles(filestbl)
+  local filestbl, err = getCleanedTable(outputstr)
+  filestbl, err = filterNilFiles(filestbl)
+  filestbl, err = filterLargeFiles(filestbl)
+  filestbl = replaceSlash(filestbl)
   --filestbl = convertFiles(filestbl, ".mp4", ".gif")
 
   stopwatch:stop()
 
   if isEmpty(filestbl) then
-    logger:log(logLevel.error, "gallery-dl : Could not download from '%s' - '%s'",
+    outputstr = outputstr:gsub("\n", "")
+    return nil, logger:log(logLevel.error, constants.GALLERY_DL_DOWNLOAD_ERROR,
       link,
+      err,
       outputstr
     )
-    return nil, outputstr
   end
 
   logDownloadedInfo(link, filestbl, stopwatch)

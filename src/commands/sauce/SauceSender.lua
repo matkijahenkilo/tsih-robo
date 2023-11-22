@@ -2,8 +2,14 @@ local fs = require("fs")
 local constant = require("./constants")
 local analyser = require("./linkAnalyser")
 local discordia = require("discordia")
+local timer = require("timer")
 local clock = discordia.Clock()
 local class = discordia.class
+local format = string.format
+discordia.extensions()
+
+local SAUCE_ASSETS = "assets/images/sauce/"
+local TSIH_FAST = "tsih-fast.gif"
 
 local SauceSender, get = class("SauceSender")
 
@@ -38,7 +44,7 @@ local function react(message)
   for _, emoji in ipairs(failEmojis) do
     message:addReaction(emoji)
   end
-  message:clearReactions()
+  timer.setTimeout(2000, coroutine.wrap(message.clearReactions), message)
 end
 
 ---Returns true if one of the list of messages couldn't be sent
@@ -49,8 +55,88 @@ local function checkErrors(t)
   return false
 end
 
+local function removePath(t)
+  local t2 = {}
+  for index, filePath in ipairs(t) do
+    t2[index] = filePath:gsub(".*/", "")
+  end
+  return t2
+end
+
+local function findVideos(fileNames)
+  for _, name in ipairs(fileNames) do
+    if name:find(".mp4") then
+      return true
+    end
+  end
+  return false
+end
+
+local function addAdditionalAttachments(embeds, fileNames)
+  for i, fileName in ipairs(fileNames) do
+    if embeds[i] == nil then
+      embeds[i] = {}
+    end
+    embeds[i].type = "rich"
+    embeds[i].url = embeds[1].url
+    embeds[i].image = { url = format("attachment://%s", fileName) }
+  end
+  return embeds
+end
+
+local function makeEmbededMessage(messageToSend, pageJson, sourceLink)
+  local files = table.copy(messageToSend.files)
+  local fileNames = removePath(files)
+  table.insert(files, SAUCE_ASSETS..TSIH_FAST)
+  local embeds = {
+    {
+      type = "rich",
+      color = 0x80fdff,
+      timestamp = pageJson.date,
+      url = sourceLink,
+
+      author = {
+        url = sourceLink,
+        icon_url = pageJson.author.profile_image,
+        name = format("%s (@%s)", pageJson.author.nick, pageJson.author.name)
+      },
+
+      description = pageJson.content,
+
+      fields = {
+        {
+          name = "Retweets 🔁",
+          value = pageJson.retweet_count,
+          inline = true
+        },
+        {
+          name = "Likes 💖",
+          value = pageJson.favorite_count,
+          inline = true
+        }
+      },
+
+      footer = {
+        icon_url = "attachment://"..TSIH_FAST,
+        text = "Twitter"
+      }
+    }
+  }
+
+  if not findVideos(fileNames) then
+    embeds = addAdditionalAttachments(embeds, fileNames)
+  end
+
+  return {
+    content = messageToSend.content,
+    reference = messageToSend.reference,
+    files = files,
+    embeds = embeds
+  }
+end
+
 ---@return Message
-local function sendDownloadedImage(message, images, link)
+local function sendDownloadedImage(message, images, sourceLink, pageJson, guaranteedSourceLink)
   local messageToSend = {
     files = images,
     reference = {
@@ -59,11 +145,20 @@ local function sendDownloadedImage(message, images, link)
     }
   }
 
-  if link then
-    messageToSend.content = string.format("`%s`", link)
+  if sourceLink then
+    messageToSend.content = string.format("`%s`", sourceLink)
   end
 
-  return message.channel:send(messageToSend)
+  local msg
+
+  if pageJson then
+    pageJson = pageJson[3]
+    msg = message.channel:send(makeEmbededMessage(messageToSend, pageJson, guaranteedSourceLink))
+  else
+    msg = message.channel:send(messageToSend)
+  end
+
+  return msg
 end
 
 ---@return Message
@@ -111,19 +206,19 @@ local function shouldSendBaraagLinks(link)
   return quantity > 1
 end
 
-local function sendImages(message, separatedFilestbl, link, hasMultipleLinks)
-  local msg = sendDownloadedImage(message, separatedFilestbl, hasMultipleLinks and link)
+local function sendImages(message, separatedFilestbl, sourceLink, hasMultipleLinks, pageJson, guaranteedSourceLink)
+  local msg = sendDownloadedImage(message, separatedFilestbl, hasMultipleLinks and sourceLink, pageJson, guaranteedSourceLink)
   if not msg then react(message) end
   return msg
 end
 
-local function sendPartitionedImages(message, wholeFilestbl, link, hasMultipleLinks)
+local function sendPartitionedImages(message, filestbl, sourceLink, hasMultipleLinks, pageJson, guaranteedSourceLink)
   local msgs = {}
   local partitionedFilestbl = {}
-  for index, file in ipairs(wholeFilestbl)  do
+  for index, file in ipairs(filestbl)  do
     table.insert(partitionedFilestbl, file)
-    if #partitionedFilestbl == 10 or index == #wholeFilestbl then
-      local msg = sendImages(message, partitionedFilestbl, link, hasMultipleLinks)
+    if #partitionedFilestbl == 10 or index == #filestbl then
+      local msg = sendImages(message, partitionedFilestbl, sourceLink, hasMultipleLinks, pageJson, guaranteedSourceLink)
       table.insert(msgs, msg)
       partitionedFilestbl = {}
     end
@@ -154,21 +249,20 @@ end
 
 ---Downloads files, send them into a channel and deletes them from host after finished.
 ---@return boolean success
----@return string | nil discordError
 ---@return string gallerydlOutput
 function SauceSender:downloadSendAndDeleteImages()
   local message, gallerydl, hasMultipleLinks = self._message, self._gallerydl, self._multipleLinks
-  local link = gallerydl.link
+  local sourceLink = gallerydl.link
   local id = message.channel.id
   local okMsgs = {}
   local msg = {}
+  local wholeFilestbl, gallerydlOutput, pageJson
 
-  local wholeFilestbl, gallerydlOutput
-
-  if analyser.isTwitter(link) then
+  if analyser.isTwitter(sourceLink) then
     if not message.embed then
-      if not clock:waitFor("messageUpdate", 5000) then -- I really dislike this website's ramdomness!
+      if not clock:waitFor("messageUpdate", 5000) then
         wholeFilestbl, gallerydlOutput = gallerydl:downloadImage()
+        pageJson = gallerydl:getJson()
       end
     end
   else
@@ -177,26 +271,26 @@ function SauceSender:downloadSendAndDeleteImages()
 
   if not wholeFilestbl or not hasFile(wholeFilestbl) then
     react(message)
-    return false, string.format(constant.WARNING_NO_FILE, link), gallerydlOutput
+    return false, gallerydlOutput
   end
 
   if #wholeFilestbl > 10 then
-    local msgs = sendPartitionedImages(message, wholeFilestbl, link, hasMultipleLinks)
+    local msgs = sendPartitionedImages(message, wholeFilestbl, sourceLink, hasMultipleLinks, pageJson, sourceLink)
     for _, returnedMsg in ipairs(msgs) do
       table.insert(okMsgs, returnedMsg)
     end
   else
-    msg = sendImages(message, wholeFilestbl, link, hasMultipleLinks)
+    msg = sendImages(message, wholeFilestbl, sourceLink, hasMultipleLinks, pageJson, sourceLink)
     table.insert(okMsgs, msg)
   end
 
   deleteDownloadedImage(wholeFilestbl, id)
 
   if checkErrors(okMsgs) then
-    return false, string.format(constant.WARNING_NO_FILE, link), gallerydlOutput
+    return false, gallerydlOutput
   end
 
-  return true, nil, gallerydlOutput
+  return true, gallerydlOutput
 end
 
 function get.gallerydl(self) return self._gallerydl end
