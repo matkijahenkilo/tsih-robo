@@ -5,7 +5,7 @@ local M = {}
 
 M.IdsPath = "src/data/tsihclockids.json"
 
-local function registrationExists(t)
+local function registrationExists(t, id)
   if t[1] then
     for _, value in ipairs(t) do
       if value.id == id then
@@ -13,6 +13,7 @@ local function registrationExists(t)
       end
     end
   end
+  return false
 end
 
 local function isInGuild(interaction)
@@ -35,7 +36,7 @@ function M.sign(interaction)
     t = json.decode(ids)
   end
 
-  if registrationExists(t) then
+  if registrationExists(t, id) then
     interaction:reply("Room is already signed for Tsih O'Clock!")
     return
   end
