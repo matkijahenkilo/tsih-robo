@@ -4,7 +4,9 @@ local SauceSender = require("./SauceSender")
 local analyser = require("./linkAnalyser")
 local timer = require("timer")
 local format = string.format
-require('discordia').extensions()
+local discordia = require("discordia")
+local permissionsEnum = discordia.enums.permission
+discordia.extensions()
 
 local function specificLinkCondition(str)
   return str ~= ''
@@ -101,7 +103,16 @@ return {
   end,
 
   executeSlashCommand = function(interaction, _, args)
+    if not interaction.member:hasPermission(interaction.channel, permissionsEnum.manageMessages) then
+      interaction:reply("You're missing permissions to `manage messages` nanora!", true)
+      return
+    end
+
     if args.global then
+      if not interaction.member:hasPermission(interaction.channel, permissionsEnum.administrator) then
+        interaction:reply("Only the server's administrator can use this command nanora!", true)
+        return
+      end
       limitHandler.setSauceLimitOnServer(interaction, args.global)
     else
       limitHandler.setSauceLimitOnChannel(interaction, args.channel)

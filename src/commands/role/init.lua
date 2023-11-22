@@ -91,7 +91,7 @@ local function giveRoleToMember(interaction, command, client)
   local role, err = interaction.guild:createRole(name)
   if not role then
     print(err)
-    interaction:reply("I couldn't create your role, I might not have permissions to do this nanora!")
+    interaction:reply("I couldn't create your role, I might not have permissions to do this nanora!", true)
     return
   end
 

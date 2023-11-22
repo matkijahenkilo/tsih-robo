@@ -1,6 +1,7 @@
 local signHandler = require("./signHandler")
 local tsihSender = require("./tsihSender")
 local counterHandler = require("./counterHandler")
+local permissionsEnum = require("discordia").enums.permission
 
 local functions = {
   sign   = signHandler.sign,
@@ -31,6 +32,11 @@ return {
   end,
 
   executeSlashCommand = function(interaction, command, args, client)
+    if not interaction.member:hasPermission(interaction.channel, permissionsEnum.administrator) and not args.manual then
+      interaction:reply("Only the server's administrator can use this command nanora!", true)
+      return
+    end
+
     local commandName = command.options[1].name
     local format
     if args.manual then
