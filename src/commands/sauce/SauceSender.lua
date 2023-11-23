@@ -261,10 +261,10 @@ function SauceSender:downloadSendAndDeleteImages()
 
   if analyser.isTwitter(sourceLink) then
     if not message.embed then
-      if not clock:waitFor("messageUpdate", 5000) then
+      --if not clock:waitFor("messageUpdate", 5000) then
         wholeFilestbl, gallerydlOutput = gallerydl:downloadImage()
         pageJson = gallerydl:getJson()
-      end
+      --end
     end
   else
     wholeFilestbl, gallerydlOutput = gallerydl:downloadImage()
