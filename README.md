@@ -86,3 +86,15 @@ When using `gallery-dl.conf`, be sure to drag it inside tsih-robo folder in case
 ## known issues
 
 `song` command can magically work or not work. This issue might be related by the voice channel's creation date, if it's a very old channel then it probably won't work. Weird, right!?
+
+## Huge thanks
+
+This project wouldn't be possible without:
+
+- People that developed gallery-dl, luvit and Discordia API
+- Bilal2453, Ta-noshii, Nameless and other brilliant minds for helping me deal with my stupidity
+- Asuran95 and rafaelrc7 for telling me the bot was based and that I should rewrite most of the scripts
+- Ikuse for making incentivising Tsih art to keep the darkness away
+- People that use tsih-robo (and criticised her)
+- SaucyBot for being a worthy opponent
+- Other people that I forgot to mention
