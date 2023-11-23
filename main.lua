@@ -1,14 +1,14 @@
 ---@type discordia
-local discordia   = require("discordia")
-local tools       = require("discordia-slash").util.tools()
-local client      = discordia.Client():useApplicationCommands()
-local clock       = discordia.Clock()
-local logLevel    = discordia.enums.logLevel
-local logger      = discordia.Logger(logLevel.info, "%F %T")
-local statusTable = require("src/utils/statusTable")
-
-local fs = require("fs")
-local timer = require("timer")
+local discordia    = require("discordia")
+local tools        = require("discordia-slash").util.tools()
+local client       = discordia.Client():useApplicationCommands()
+local clock        = discordia.Clock()
+local logLevel     = discordia.enums.logLevel
+local logger       = discordia.Logger(logLevel.info, "%F %T")
+local statusTable  = require("src/utils/statusTable")
+local wrap         = coroutine.wrap
+local fs           = require("fs")
+local timer        = require("timer")
 local errorHandler = require("./src/utils/ErrorHandler")(discordia, client)
 local commandsHandler
 local shouldResetCommands = args[2]
@@ -84,10 +84,10 @@ client:on("messageCreate", function(message)
 
   local ok, err
 
-  coroutine.wrap(function () -- this only exists because my laptop is fucking weird
-    client:getChannel('990188076473147404'):send('a')
-    client:getChannel('1177269521074106519'):send('a')
-    client:getChannel('1177269541110284339'):send('a')
+  wrap(function () -- this only exists because my laptop is fucking weird
+    wrap(function() client:getChannel('990188076473147404'):send('a')  end)
+    wrap(function() client:getChannel('1177269521074106519'):send('a') end)
+    wrap(function() client:getChannel('1177269541110284339'):send('a') end)
   end)()
 
   if hasTsihMention(message) or math.random() <= 0.001 then
@@ -110,7 +110,7 @@ client:on("messageCommand", function(interaction, command, message)
     errorHandler:sendErrorMessage(interaction, ok, err)
   else
     interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
-    timer.setTimeout(5000, coroutine.wrap(interaction.deleteReply), interaction, interaction.getReply)
+    timer.setTimeout(5000, wrap(interaction.deleteReply), interaction, interaction.getReply)
   end
 end)
 
