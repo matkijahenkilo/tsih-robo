@@ -16,13 +16,14 @@ function ErrorHandler:sendErrorMessage(message, ok, err)
         fields = {
           {
             name = string.format("Please send this horrible mistake to %s!", client.owner.username, err),
-            value = string.format("This message will auto-delete itself in 30 seconds.\n```\n%s```", err)
+            value = string.format("This message *might* auto-delete itself after 30 seconds.\n```\n%s```", err)
           }
         },
         timestamp = discordia.Date():toISO('T', 'Z'),
         color = 0x0000ff
       }
     })
+    if not msg then return end
     timer.setTimeout(30000, coroutine.wrap(msg.delete), msg)
   end
 end

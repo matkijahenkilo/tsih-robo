@@ -122,7 +122,7 @@ return {
   executeMessageCommand = function (interaction, _, message)
     if hasHttps(message.content) then
       coroutine.wrap(function ()
-        interaction:reply(format("%s wants me to send a message's contents!", interaction.author.name))
+        interaction:reply(format("Fixing a message's content nora..."))
         --deletes the reply after 10 seconds
         timer.setTimeout(10000, coroutine.wrap(interaction.deleteReply), interaction, interaction.getReply)
       end)()
