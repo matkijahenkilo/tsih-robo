@@ -8,6 +8,7 @@ local logger      = discordia.Logger(logLevel.info, "%F %T")
 local statusTable = require("src/utils/statusTable")
 
 local fs = require("fs")
+local timer = require("timer")
 local errorHandler = require("./src/utils/ErrorHandler")(discordia, client)
 local commandsHandler
 local shouldResetCommands = args[2]
@@ -107,6 +108,7 @@ client:on("messageCommand", function(interaction, command, message)
     errorHandler:sendErrorMessage(interaction, ok, err)
   else
     interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
+    timer.setTimeout(5000, coroutine.wrap(interaction.deleteReply), interaction, interaction.getReply)
   end
 end)
 
