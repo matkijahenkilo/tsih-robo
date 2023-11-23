@@ -84,8 +84,10 @@ client:on("messageCreate", function(message)
 
   local ok, err
 
-  coroutine.wrap(function ()
+  coroutine.wrap(function () -- this only exists because my laptop is fucking weird
     client:getChannel('990188076473147404'):send('a')
+    client:getChannel('1177269521074106519'):send('a')
+    client:getChannel('1177269541110284339'):send('a')
   end)()
 
   if hasTsihMention(message) or math.random() <= 0.001 then
