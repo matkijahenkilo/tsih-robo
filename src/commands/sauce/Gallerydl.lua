@@ -68,7 +68,7 @@ local function filterLinks(links)
   return filteredLinks[1] and filteredLinks or links
 end
 
----@return string stdout
+---@return string | nil stdout
 local function readProcess(child)
   child:waitExit()
   return child.stdout.read()
@@ -136,11 +136,12 @@ local function convertFiles(tbl, oldFormat, newFormat)
 end
 
 
----@return table|nil pageJson
+---@return table | nil pageJson
 function Gallerydl:getJson()
-  -- pageJson[#pageJson][3] is the place you want to go for the post's author details and post's description
-  local pageJson = json.decode(readProcess(spawn("gallery-dl", { args = { "-j", "--cookies", "cookies.txt", self._link } })))
-  if not pageJson or pageJson[1] == nil then return nil end
+  local stdout = readProcess(spawn("gallery-dl", { args = { "-j", "--cookies", "cookies.txt", self._link } }))
+  if not stdout then return end
+  local pageJson = json.decode(stdout)
+  if not pageJson or pageJson[1] == nil then return end
   return pageJson[#pageJson][3].author and pageJson or nil
 end
 
