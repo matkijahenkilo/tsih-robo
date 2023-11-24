@@ -9,7 +9,7 @@ local format = string.format
 discordia.extensions()
 
 local SAUCE_ASSETS = "assets/images/sauce/"
-local TSIH_FAST = "tsih-fast.gif"
+local FOOTER_ICON = "tsih-icon.png"
 
 local SauceSender, get = class("SauceSender")
 
@@ -89,7 +89,7 @@ local function makeEmbededMessage(messageToSend, pageJson, sourceLink)
   pageJson = pageJson[#pageJson][3]
   local files = table.copy(messageToSend.files)
   local fileNames = removePath(files)
-  table.insert(files, SAUCE_ASSETS..TSIH_FAST)
+  table.insert(files, SAUCE_ASSETS..FOOTER_ICON)
   local embeds = {
     {
       type = "rich",
@@ -119,7 +119,7 @@ local function makeEmbededMessage(messageToSend, pageJson, sourceLink)
       },
 
       footer = {
-        icon_url = "attachment://"..TSIH_FAST,
+        icon_url = "attachment://"..FOOTER_ICON,
         text = "Twitter"
       }
     }
