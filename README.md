@@ -52,31 +52,39 @@ None of the commands above are ephemeral.
 
 ## Installation
 
-Be aware that simply installing tsih-robo may cause crashes during runtime because of the absence of the /assets folder. Because of that I recommend you to change or delete `pinch`, `hug` and `tsihoclock` commands if you don't want to have a headache with it!
+Be aware that simply installing tsih-robo may cause crashes during runtime because of the absence of the /assets folder. Because of that I recommend you to change or delete `pinch`, `hug`, `omori.lua`, `tsihoclock` commands and their code in `main.lua` if you don't want to have a headache with it!
 
 ### pre-requisites programs
 
 `ffmpeg` required by the two programs below.
 
-`gallery-dl` required for `sauce` command
+`gallery-dl` required for `sauce` command.
 
 `yt-dlp` required for `song` command. I do not recommend youtube-dl.
 
 ### bot installation:
 
-Follow [Discordia](https://github.com/SinisterRectus/discordia)'s installation guide.
+1. Follow [Discordia](https://github.com/SinisterRectus/discordia)'s installation guide.
 
-Git clone [discordia-interactions](https://github.com/Bilal2453/discordia-interactions) and [discordia-slash](https://github.com/GitSparTV/discordia-slash) inside `deps` folder
+2. `lit install creationix/coro-spawn` to install a module that spawns gallery-dl and yt-dlp child-processes during runtime.
 
-Inside `src/data` folder, create a file named `token.txt` containing your discord application's token.
+3. Git clone [discordia-interactions](https://github.com/Bilal2453/discordia-interactions) and [discordia-slash](https://github.com/GitSparTV/discordia-slash) inside `deps` folder:
+
+```
+git clone https://github.com/Bilal2453/discordia-interactions deps/discordia-interactions
+git clone https://github.com/GitSparTV/discordia-slash deps/discordia-slash
+```
+
+4. Create a file named `token.txt` inside `src/data` containing your discord application's token.
 
 If you're running the bot for the first time, then run `./luvit main.lua true` to load it's slash commands. After that you won't need to use the `true` argument again unless you add/change her slash commands!
 
 ### gallery-dl configuration
 
-Depending of which website Tsih-Robo is going to get the images and send, you will need to configurate your gallery-dl to work in those websites.
-For that, you will usually need to create an account for example, Inkbunny in order to get the link for the bot to send.
-Some websites like Pixiv will need you to run an [oauth](https://github.com/mikf/gallery-dl#oauth) command in gallery-dl in order to download the images from the website and send it to Discord.
+Depending of which website Tsih-Robo is going to get the images to send, you will need to configurate your gallery-dl to work in those websites, e.g. login credentials.
+
+For that, you will usually need to create an account for websites like Pixiv in order to get permissions for the bot see it's contents.
+Some websites like Pixiv will need you to run [oauth](https://github.com/mikf/gallery-dl#oauth) command in gallery-dl in order to download the images from the website and send it to Discord.
 It's recommended to export your browser's cookies for gallery-dl.
 
 Please check [here](https://github.com/mikf/gallery-dl#configuration) to understand how to configurate your gallery-dl.
@@ -91,7 +99,7 @@ When using `gallery-dl.conf`, be sure to drag it inside tsih-robo folder in case
 
 This project wouldn't be possible without:
 
-- People that developed gallery-dl, luvit and Discordia API
+- People that developed gallery-dl, luvit, Discordia API and it's extensions
 - Bilal2453, Ta-noshii, Nameless and other brilliant minds for helping me deal with my stupidity
 - Asuran95 and rafaelrc7 for telling me the bot was based and that I should rewrite most of the scripts
 - Ikuse for making incentivising Tsih art to keep the darkness away
