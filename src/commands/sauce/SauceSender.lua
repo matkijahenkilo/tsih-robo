@@ -41,10 +41,9 @@ end
 
 ---Just a little "notification"
 local function react(message)
-  for _, emoji in ipairs(failEmojis) do
-    message:addReaction(emoji)
-  end
-  timer.setTimeout(2000, coroutine.wrap(message.clearReactions), message)
+  for _, emoji in ipairs(failEmojis) do message:addReaction(emoji)    end
+  timer.sleep(1000)
+  for _, emoji in ipairs(failEmojis) do message:removeReaction(emoji) end
 end
 
 ---Returns true if one of the list of messages couldn't be sent
