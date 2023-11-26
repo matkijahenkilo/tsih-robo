@@ -114,11 +114,14 @@ clock:on("min", function()
 end)
 
 clock:on("hour", function(now)
-  local ok, err = true, ""
   if now.hour == 21 then
+    local ok, err = true, ""
     logger:log(logLevel.info, "Tsih O'Clock")
     ok, err = pcall(commandsHandler["tsihoclock"].executeWithTimer, client)
-  elseif now.hour == 6 then
+    if not ok then
+      logger:log(logLevel.error, err)
+    end
+  elseif now.hour == 6 then -- deletes every file downloaded by song command
     local songsDirectory = commandsHandler["song"].songsDirectory
     local songsFiles = fs.readdirSync(songsDirectory)
     if songsFiles[1] then
@@ -126,9 +129,6 @@ clock:on("hour", function(now)
         fs.unlink(songsDirectory .. value)
       end
     end
-  end
-  if not ok then
-    logger:log(logLevel.error, err)
   end
 end)
 
