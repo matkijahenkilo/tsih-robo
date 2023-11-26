@@ -1,5 +1,6 @@
 local emojiHandler = require("./emojiServerHandler")
 local logger = require("discordia").Logger(3, "%F %T", "randomemoji.log")
+local permissionsEnum = require("discordia").enums.permission
 
 local function getRandomServer(client)
   local idList = emojiHandler.getIds()
@@ -18,6 +19,11 @@ return {
   end,
 
   executeSlashCommand = function(interaction, _, arg)
+    if not interaction.member:hasPermission(interaction.channel, permissionsEnum.administrator) then
+      interaction:reply("Only the server's administrator can use this command nanora!", true)
+      return
+    end
+
     if arg.allow then
       if emojiHandler.addServer(interaction.guild.id) then
         interaction:reply("Nyahahaha! Now I can use this server's emojis to annoy everyone else nanora!")
