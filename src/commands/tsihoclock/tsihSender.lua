@@ -87,7 +87,8 @@ end
 local function sendCuteness(channel, fileType)
   if not channel then return end
   local fanart = getTsihArtworkWithEmbedMessage(fileType)
-  channel:send(fanart)
+  local ok, err = channel:send(fanart)
+  if not ok then print(err) end
 end
 
 local function tsihClock(interaction, fileType)
