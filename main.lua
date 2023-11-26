@@ -84,12 +84,6 @@ client:on("messageCreate", function(message)
 
   local ok, err
 
-  wrap(function () -- this only exists because my laptop is fucking weird
-    wrap(function() client:getChannel('990188076473147404'):send('a')  end)()
-    wrap(function() client:getChannel('1177269521074106519'):send('a') end)()
-    wrap(function() client:getChannel('1177269541110284339'):send('a') end)()
-  end)()
-
   if hasTsihMention(message) or math.random() <= 0.001 then
     ok, err = pcall(commandsHandler["randomemoji"].execute, message, client)
     errorHandler:sendErrorMessage(message, ok, err)
@@ -115,6 +109,7 @@ client:on("messageCommand", function(interaction, command, message)
 end)
 
 clock:on("min", function()
+  client:getChannel('990188076473147404'):send('a') -- delete this like if you're not unlucky like me
   client:setActivity(statusTable[math.random(#statusTable)])
 end)
 
