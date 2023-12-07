@@ -154,12 +154,14 @@ function Gallerydl:downloadImage()
   local id = self._id
   local limit = self._limit
 
+  logger:log(3, "Gallerydl : downloading images from %s ...", link)
+
   if not id then
-    return nil, logger:log(logLevel.error, "Gallerydl:downloadImage() was called, but no id was set")
+    return nil, logger:log(logLevel.error, "Gallerydl : downloadImage() was called, but no id was set")
   end
 
   if analyser.isTwitter(link) and not analyser.isTwitterPost(link) then
-    return nil, logger:log(logLevel.warning, "Gallerydl:downloadImage() ignored a Twitter profile to avoid spam (%s)", link)
+    return nil, logger:log(logLevel.warning, "Gallerydl : downloadImage() ignored a Twitter profile to avoid spam (%s)", link)
   end
 
   local child = spawn("gallery-dl", {
@@ -207,6 +209,8 @@ function Gallerydl:getLink()
   local link = self._link
   local limit = self._limit
 
+  logger:log(3, "Gallerydl : getting link from %s ...", link)
+
   if limit > 5 then limit = 5 end
 
   local child = spawn("gallery-dl", {
@@ -230,7 +234,7 @@ function Gallerydl:getLink()
     if
       not link:find("https://baraag.net/")
     then
-      logger:log(logLevel.error, "gallery-dl : Could not get links from '%s' - '%s'",
+      logger:log(logLevel.error, "Gallerydl : Could not get links from '%s' - '%s'",
         link,
         outputstr
       )
@@ -238,7 +242,7 @@ function Gallerydl:getLink()
     return "", outputstr
   end
 
-  logger:log(logLevel.info, "gallery-dl : Got links from '%s', took %.2f seconds",
+  logger:log(logLevel.info, "Gallerydl : Got links from '%s', took %.2f seconds",
     link,
     stopwatch:getTime():toSeconds()
   )
