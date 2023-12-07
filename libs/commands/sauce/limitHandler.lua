@@ -1,7 +1,4 @@
-local SAUCE_LIMITS_JSON = "data/sauceLimits.json"
-
-local json = require("json")
-local fs = require("fs")
+local dataManager = require("utils").DataManager("Sauce")
 
 local M = {}
 
@@ -11,7 +8,7 @@ local function createJsonFileWithChannelRule(newLimit, guildId, channelId)
       [channelId] = newLimit
     }
   }
-  fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(newJsonFileWithRule))
+  dataManager:writeData(newJsonFileWithRule)
 end
 
 local function verifyIfRuleExists(t, guildId, channelId)
@@ -24,14 +21,14 @@ end
 local function replaceChannelRule(t, newLimit, guildId, channelId)
   t[guildId][channelId] = newLimit
 
-  fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(t))
+  dataManager:writeData(t)
 end
 
 local function addGuildAndChannelRule(t, newLimit, guildId, channelId)
   if not t[guildId] then t[guildId] = {} end
   t[guildId][channelId] = newLimit
 
-  fs.writeFileSync(SAUCE_LIMITS_JSON, json.encode(t))
+  dataManager:writeData(t)
 end
 
 local function replyToSlash(interaction, newLimit, isGlobal)
@@ -58,9 +55,9 @@ local function isMemberOnGuild(interaction)
   return true
 end
 
-local function saveConfig(rawJson, newLimit, guildId, globalOrChannelId)
-  if rawJson then
-    local jsonContent = json.decode(rawJson)
+local function saveConfig(newLimit, guildId, globalOrChannelId)
+  local jsonContent = dataManager:readData()
+  if jsonContent then
     if verifyIfRuleExists(jsonContent, guildId, globalOrChannelId) then
       replaceChannelRule(jsonContent, newLimit, guildId, globalOrChannelId)
     else
@@ -77,14 +74,10 @@ function M.getRoomImageLimit(message)
   local guildId = message.guild.id
   local channelId = message.channel.id
 
-  local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON)
-  if rawJson then
-    local t = json.decode(rawJson)
-    if t then
-      if t[guildId] then
-        return t[guildId][channelId] or t[guildId]["global"]
-      end
-    end
+  local t = dataManager:readData()
+
+  if t[guildId] then
+    return t[guildId][channelId] or t[guildId]["global"]
   end
 end
 
@@ -95,9 +88,7 @@ function M.setSauceLimitOnChannel(interaction, channelCommand)
   local guildId = interaction.guild.id
   local channelId = interaction.channel.id
 
-  local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON)
-
-  saveConfig(rawJson, newLimit, guildId, channelId)
+  saveConfig(newLimit, guildId, channelId)
 
   replyToSlash(interaction, newLimit, false)
 end
@@ -108,9 +99,7 @@ function M.setSauceLimitOnServer(interaction, globalCommand)
   local newLimit = globalCommand.limit
   local guildId = interaction.guild.id
 
-  local rawJson = fs.readFileSync(SAUCE_LIMITS_JSON)
-
-  saveConfig(rawJson, newLimit, guildId, "global")
+  saveConfig(newLimit, guildId, "global")
 
   replyToSlash(interaction, newLimit, true)
 end

@@ -1,7 +1,4 @@
-local fs = require("fs")
-local json = require("json")
-
-local EMOJI_SERVERS_JSON = "data/emojiServers.json"
+local dataManager = require("utils").DataManager("RandomEmoji")
 
 local M = {}
 
@@ -14,15 +11,11 @@ local function isServerAlreadySaved(serverId, jsonContent)
   return false
 end
 
-local function createJson(id)
-  fs.writeFileSync(EMOJI_SERVERS_JSON, json.encode({id}));
-end
-
 local function removeId(id, jsonContent)
   for index, savedId in ipairs(jsonContent) do
     if savedId == id then
       table.remove(jsonContent, index)
-      fs.writeFileSync(EMOJI_SERVERS_JSON, json.encode(jsonContent))
+      dataManager:writeData(jsonContent)
       return true
     end
   end
@@ -32,47 +25,22 @@ end
 local function saveId(id, jsonContent)
   if not isServerAlreadySaved(id, jsonContent) then
     table.insert(jsonContent, id)
-    fs.writeFileSync(EMOJI_SERVERS_JSON, json.encode(jsonContent));
+    dataManager:writeData(jsonContent)
     return true
   end
   return false
 end
 
 function M.removeServer(id)
-  local rawJson = fs.readFileSync(EMOJI_SERVERS_JSON);
-
-  if rawJson then
-    local jsonContent = json.decode(rawJson);
-    if jsonContent then
-      return removeId(id, jsonContent)
-    end
-  end
-  return false
+  return removeId(id, dataManager:readData())
 end
 
 function M.addServer(id)
-  local rawJson = fs.readFileSync(EMOJI_SERVERS_JSON);
-
-  if rawJson then
-    local jsonContent = json.decode(rawJson);
-    if jsonContent then
-      return saveId(id, jsonContent)
-    else
-      createJson(id)
-    end
-  else
-    createJson(id)
-  end
+  return saveId(id, dataManager:readData())
 end
 
 function M.getIds()
-  local rawJson = fs.readFileSync(EMOJI_SERVERS_JSON);
-  if rawJson then
-    local jsonContent = json.decode(rawJson);
-    if jsonContent then
-      return jsonContent
-    end
-  end
+  return dataManager:readData()
 end
 
 return M

@@ -55,6 +55,7 @@ function TsihOClock:executeSlashCommand()
   if commandName == "auto" then
     if client.owner.id == interaction.user.id then
       interaction:reply("Oki nanora!", true)
+      counterHandler.incrementTsihOClockCounter()
       tsihSender.sendAllTOC(client)
     else
       interaction:reply("👁️〰️👁️", true)

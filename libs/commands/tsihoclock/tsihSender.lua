@@ -1,7 +1,6 @@
 local ORIGIN = "assets/images/tsihoclock/"
+local dataManager = require("utils").DataManager("TsihOClock")
 local fs = require("fs")
-local json = require("json")
-local signHandler = require("./signHandler")
 local counterHandler = require("./counterHandler.lua")
 local discordia = require("discordia")
 
@@ -75,6 +74,11 @@ local function getTsihArtworkWithEmbedMessage(fileFormat)
     },
   }
 
+  if type(tsihClockCounter) == "string" then
+    embeddedMessage.embed.color = 0xfffd80
+    return embeddedMessage
+  end
+
   if tsihClockCounter % 2 == 0 then
     embeddedMessage.embed.color = 0x80fdff
   else
@@ -86,8 +90,8 @@ end
 
 local function sendCuteness(channel, fileType)
   if not channel then return end
-  local fanart = getTsihArtworkWithEmbedMessage(fileType)
-  local ok, err = channel:send(fanart)
+  local art = getTsihArtworkWithEmbedMessage(fileType)
+  local ok, err = channel:send(art)
   if not ok then print(err) end
 end
 
@@ -104,20 +108,22 @@ local function tsihClock(interaction, fileType)
 end
 
 function M.sendAllTOC(client)
-  local ids = fs.readFileSync(signHandler.IdsPath)
-  if ids then
-    local t = json.decode(ids)
-    local total = 0
+  local idTable = dataManager:readData(false, "tsihoclockids")
+  local total = 0
 
-    for _, value in pairs(t) do
-      total = total + 1
-      coroutine.wrap(function()
-        tsihClock(client:getChannel(value.id))
-        print("Sending artwork to " .. value.guildName)
-      end)()
-    end
-    print("Sending " .. total .. " Tsih's fan arts nanora!")
+  if not idTable then
+    print("Failed to run Tsih O'Clock, idTable is nil.")
+    return
   end
+
+  for _, value in pairs(idTable) do
+    total = total + 1
+    coroutine.wrap(function()
+      tsihClock(client:getChannel(value.id))
+      print("Sending artwork to " .. value.guildName)
+    end)()
+  end
+  print("Sending " .. total .. " Tsih's fan arts nanora!")
 end
 
 function M.tsihClockSlash(interaction, format)

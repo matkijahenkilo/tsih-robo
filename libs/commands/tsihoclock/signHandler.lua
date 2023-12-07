@@ -1,12 +1,9 @@
-local json = require("json")
-local fs = require("fs")
+local dataManager = require("utils").DataManager("TsihOClock")
 
 local M = {}
 
-M.IdsPath = "data/tsihclockids.json"
-
 local function registrationExists(t, id)
-  if t[1] then
+  if t and t[1] then
     for _, value in ipairs(t) do
       if value.id == id then
         return true
@@ -27,22 +24,17 @@ end
 function M.sign(interaction)
   if not isInGuild(interaction) then return end
 
-  local ids = fs.readFileSync(M.IdsPath)
   local id = interaction.channel.id
   local guildName = interaction.guild.name
-  local t = {}
+  local idTable = dataManager:readData(false, "tsihoclockids")
 
-  if ids then
-    t = json.decode(ids)
-  end
-
-  if registrationExists(t, id) then
+  if registrationExists(idTable, id) then
     interaction:reply("Room is already signed for Tsih O'Clock!")
     return
   end
 
-  table.insert(t, { id = id, guildName = guildName })
-  fs.writeFileSync(M.IdsPath, json.encode(t))
+  table.insert(idTable, { id = id, guildName = guildName })
+  dataManager:writeData(idTable, "tsihoclockids")
 
   interaction:reply("This room is now signed for Tsih O'Clock nanora!")
 end
@@ -51,17 +43,13 @@ function M.remove(interaction)
   if not isInGuild(interaction) then return end
 
   local id = interaction.channel.id
-  local ids = fs.readFileSync(M.IdsPath)
-
-  if ids then
-    local t = json.decode(ids)
-    for key, value in pairs(t) do
-      if value.id == id then
-        table.remove(t, key)
-        fs.writeFileSync(M.IdsPath, json.encode(t))
-        interaction:reply("Ugeeeh! You won't be seeing my artworks here anymore nanora!")
-        return
-      end
+  local idTable = dataManager:readData(false, "tsihoclockids")
+  for key, value in pairs(idTable) do
+    if value.id == id then
+      table.remove(idTable, key)
+      dataManager:writeData(idTable, "tsihoclockids")
+      interaction:reply("Ugeeeh! You won't be seeing my artworks here anymore nanora!")
+      return
     end
   end
 

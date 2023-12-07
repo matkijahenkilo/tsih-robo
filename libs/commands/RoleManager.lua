@@ -1,12 +1,8 @@
 local discordia = require("discordia")
 local utils = require("utils")
 local Command = utils.Command
+local dataManager = utils.DataManager("RoleManager")
 local color = discordia.Color()
-local json = require("json")
-local fs = require("fs")
-local format = string.format
-
-local PATH = "data/%s.json"
 
 local RoleManager = discordia.class("RoleManager", Command)
 
@@ -31,12 +27,13 @@ local function deleteOldRoleFromGuildMember(interaction, member, client)
   end
 end
 
-local function insertMemberInfoToTable(interaction, role, member)
-  table.insert(member, {
-    ["userID"] = interaction.member.id,
-    ["roleID"] = role.id,
+---@return table
+local function insertMemberInfoToTable(interaction, role, t)
+  table.insert(t, {
+    userID = interaction.member.id,
+    roleID = role.id,
   })
-  return member
+  return t
 end
 
 local function replaceOldMemberInfoWithNewInfo(interaction, role, member)
@@ -50,37 +47,25 @@ local function replaceOldMemberInfoWithNewInfo(interaction, role, member)
 end
 
 local function updateJsonFile(interaction, client, role)
-  local customGuildRolesTable
-  local jsonInfo = fs.readFileSync(format(PATH, interaction.guild.id))
-  if jsonInfo then
-    customGuildRolesTable = json.decode(jsonInfo)
-
-    if customGuildRolesTable then
-      deleteOldRoleFromGuildMember(interaction, customGuildRolesTable, client)
-    end
-  end
+  local customGuildRolesTable = dataManager:readData(false, interaction.guild.id)
 
   if not customGuildRolesTable then
     customGuildRolesTable = insertMemberInfoToTable(interaction, role, {})
   else
+    deleteOldRoleFromGuildMember(interaction, customGuildRolesTable, client)
     customGuildRolesTable = replaceOldMemberInfoWithNewInfo(interaction, role, customGuildRolesTable)
   end
 
-  fs.writeFileSync(format(PATH, interaction.guild.id), json.encode(customGuildRolesTable))
+  dataManager:writeData(customGuildRolesTable, interaction.guild.id)
 end
 
 local function deleteMemberRoleAndInfoFromJson(interaction, _, client)
-  local customGuildRolesTable
-  local jsonInfo = fs.readFileSync(format(PATH, interaction.guild.id))
+  local customGuildRolesTable = dataManager:readData(false, interaction.guild.id)
 
-  if not jsonInfo then
-    local err = "RoleManager in function deleteMemberRoleAndInfoFromJson : jsonInfo is nil, are you reading a valid json file?"
-    client:error(err)
-    interaction:reply(utils.StackTrace(client):getEmbededMessage(err), true)
+  if not customGuildRolesTable then
+    interaction:reply("I yet have to create custom roles in this server nanora!", true)
     return
   end
-
-  customGuildRolesTable = json.decode(jsonInfo)
 
   for index, value in ipairs(customGuildRolesTable) do
     if interaction.member.id == value.userID then
@@ -88,11 +73,13 @@ local function deleteMemberRoleAndInfoFromJson(interaction, _, client)
       if not oldRole then return end
       oldRole:delete()
       table.remove(customGuildRolesTable, index)
-      fs.writeFileSync(format(PATH, interaction.guild.id), json.encode(customGuildRolesTable))
+      dataManager:writeData(customGuildRolesTable, interaction.guild.id)
       interaction:reply("You are now free nanora!")
       return
     end
   end
+
+  interaction:reply("But you don't have any roles from me nanora!", true)
 end
 
 local function giveRoleToMember(interaction, command, client)

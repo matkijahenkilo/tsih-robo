@@ -1,34 +1,28 @@
-local FILE_JSON = "data/tsihclockcounter.json"
-
-local json = require("json")
-local fs = require("fs")
+local dataManager = require("utils").DataManager("TsihOClock")
 
 local M = {}
 
 local function setNewTotal(newTotal)
-  local rawJson = fs.readFileSync(FILE_JSON)
-  if rawJson then
-    local t = json.decode(rawJson)
-    t["total"] = newTotal or 1
-    fs.writeFileSync(FILE_JSON, json.encode(t))
+  local total = dataManager:readData(false, "total")
+  if total then
+    total = newTotal or 1
+    dataManager:writeData(total, "total")
   else
-    fs.writeFileSync(FILE_JSON, json.encode({ total = 1 }))
+    dataManager:writeData(1, "total")
   end
 end
 
 function M.getCurrentCounter()
-  local rawJson = fs.readFileSync(FILE_JSON)
-  if rawJson then
-    return json.decode(rawJson).total
-  else
-    return "ニール"
-  end
+  local total = dataManager:readData(false, "total")
+  return total or nil
 end
 
 function M.incrementTsihOClockCounter()
   local total = M.getCurrentCounter()
   if total then
     total = total + 1
+  else
+    return "ニール"
   end
   setNewTotal(total)
 end
