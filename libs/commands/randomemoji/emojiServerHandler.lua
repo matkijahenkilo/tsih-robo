@@ -1,7 +1,7 @@
 local fs = require("fs")
 local json = require("json")
 
-local EMOJI_SERVERS_JSON = "src/data/emojiServers.json"
+local EMOJI_SERVERS_JSON = "data/emojiServers.json"
 
 local M = {}
 

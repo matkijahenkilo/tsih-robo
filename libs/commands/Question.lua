@@ -1,3 +1,10 @@
+local Command = require("utils").Command
+local Question = require("discordia").class("Question", Command)
+
+function Question:__init(message, client, args)
+  Command.__init(self, message, client, args)
+end
+
 local answer = {
   "Of course!",
   "That's a strong yes nanora!",
@@ -17,20 +24,22 @@ local answer = {
   "Whooooa! n-no nora!",
 }
 
-return {
-  getSlashCommand = function(tools)
-    return tools.slashCommand("question", "I answer a question with yes or no nanora!")
-        :addOption(
-          tools.string("question", "The!!!!!!!! question."):setRequired(true)
-        )
-  end,
+function Question.getSlashCommand(tools)
+  return tools.slashCommand("question", "I answer a question with yes or no nanora!")
+    :addOption(
+      tools.string("question", "The!!!!!!!! question."):setRequired(true)
+    )
+end
 
-  executeSlashCommand = function(interaction, _, args)
-    local person = interaction.member or interaction.user
+function Question:executeSlashCommand()
+  local interaction, args = self._message, self._args
+
+  local person = interaction.member or interaction.user
     interaction:reply(string.format('%s asked:\n> %s\n%s',
       person.name,
       args.question,
       answer[math.random(#answer)]
     ))
-  end
-}
+end
+
+return Question

@@ -1,4 +1,4 @@
-local FILE_JSON = "src/data/tsihclockcounter.json"
+local FILE_JSON = "data/tsihclockcounter.json"
 
 local json = require("json")
 local fs = require("fs")

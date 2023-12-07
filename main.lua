@@ -1,26 +1,17 @@
 ---@type discordia
 local discordia    = require("discordia")
 local tools        = require("discordia-slash").util.tools()
+local utils        = require("utils")
 local client       = discordia.Client():useApplicationCommands()
 local clock        = discordia.Clock()
-local logLevel     = discordia.enums.logLevel
-local logger       = discordia.Logger(logLevel.info, "%F %T")
-local statusTable  = require("src/utils/statusTable")
+local statusTable  = utils.statusTable
+local stackTrace   = utils.StackTrace(client)
 local wrap         = coroutine.wrap
-local fs           = require("fs")
 local timer        = require("timer")
-local errorHandler = require("./src/utils/ErrorHandler")(discordia, client)
-local commandsHandler
-local shouldResetCommands = args[2]
+local commands     = {}
 discordia.extensions.string()
 
 do
-  local botCommands = fs.readdirSync("src/commands")
-  local commands = {}
-  for _, commandName in ipairs(botCommands) do
-    commands[commandName] = require("./src/commands/" .. commandName .. "/" .. "init")
-  end
-
   local commandsMetaTable = {
     __index = function()
       local M = {}
@@ -30,11 +21,10 @@ do
       return M
     end
   }
-
-  commandsHandler = setmetatable(commands, commandsMetaTable)
+  commands = setmetatable(require("commands"), commandsMetaTable)
 end
 
-local function initializeCommands(commands)
+local function initializeCommands()
   client:info("Bot was opted to reset all global commands~")
   local i, j = 1, 1
   for commandId in pairs(client:getGlobalApplicationCommands()) do
@@ -48,12 +38,12 @@ local function initializeCommands(commands)
   i = 1
   for _, command in pairs(commands) do
     if command.getSlashCommand then
-      client:info("Creating slash command #"..i)
+      client:info(string.format("Creating slash command #%s - %s", i, command.__name))
       client:createGlobalApplicationCommand(command.getSlashCommand(tools))
       i = i + 1
     end
     if command.getMessageCommand then
-      client:info("Creating message command #"..j)
+      client:info(string.format("Creating message command #%s - %s", i, command.__name))
       client:createGlobalApplicationCommand(command.getMessageCommand(tools))
       j = j + 1
     end
@@ -65,6 +55,18 @@ end
 local function hasTsihMention(message)
   local content = message.content:lower()
   return content:find("tsih") or content:find("nora")
+end
+
+local function executeCommand(commandName, message)
+  local cmd = commands[commandName](message, client)
+  local ok, err = pcall(cmd.execute, cmd, message, client)
+  stackTrace:sendErrorMessage(message, ok, err)
+end
+
+local function executeSlashCommand(commandName, interaction, args, command)
+  local cmd = commands[commandName](interaction, client, args, command)
+  local ok, err = pcall(cmd.executeSlashCommand, cmd, interaction, client, args, command)
+  if not ok then client:error(err) interaction:reply(stackTrace:getEmbededMessage(err), true) end
 end
 
 
@@ -82,26 +84,21 @@ end)
 client:on("messageCreate", function(message)
   if message.author.bot then return end
 
-  local ok, err
-
   if hasTsihMention(message) or math.random() <= 0.001 then
-    ok, err = pcall(commandsHandler["randomemoji"].execute, message, client)
-    errorHandler:sendErrorMessage(message, ok, err)
+    executeCommand("randomemoji", message)
   end
 
-  ok, err = pcall(commandsHandler["sauce"].execute, message, client)
-  errorHandler:sendErrorMessage(message, ok, err)
+  executeCommand("sauce", message)
 end)
 
 client:on("slashCommand", function(interaction, command, args)
-  local ok, err = pcall(commandsHandler[command.name].executeSlashCommand, interaction, command, args, client)
-  errorHandler:sendErrorMessage(interaction, ok, err)
+  executeSlashCommand(command.name, interaction, args, command)
 end)
 
 client:on("messageCommand", function(interaction, command, message)
   if message then
-    local ok, err = pcall(commandsHandler[command.name:gsub("Send ", '')].executeMessageCommand, interaction, command, message)
-    errorHandler:sendErrorMessage(interaction, ok, err)
+    local ok, err = pcall(commands[command.name:gsub("Send ", '')].executeMessageCommand, interaction, command, message)
+    stackTrace:sendErrorMessage(interaction, ok, err)
   else
     interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
     timer.setTimeout(5000, wrap(interaction.deleteReply), interaction, interaction.getReply)
@@ -109,34 +106,25 @@ client:on("messageCommand", function(interaction, command, message)
 end)
 
 clock:on("min", function()
-  client:getChannel('990188076473147404'):send('a') -- delete this like if you're not unlucky like me
+  client:getChannel('990188076473147404'):send('a') -- delete this line if you're not unlucky like me
   client:setActivity(statusTable[math.random(#statusTable)])
 end)
 
 clock:on("hour", function(now)
   if now.hour == 21 then
-    local ok, err = true, ""
-    logger:log(logLevel.info, "Tsih O'Clock")
-    ok, err = pcall(commandsHandler["tsihoclock"].executeWithTimer, client)
-    if not ok then
-      logger:log(logLevel.error, err)
-    end
-  elseif now.hour == 6 then -- deletes every file downloaded by song command
-    local songsDirectory = commandsHandler["song"].songsDirectory
-    local songsFiles = fs.readdirSync(songsDirectory)
-    if songsFiles[1] then
-      for _, value in ipairs(songsFiles) do
-        fs.unlink(songsDirectory .. value)
-      end
-    end
+    local ok, err = true, nil
+    client:info("Tsih O'Clock")
+    local cmd = commands["tsihoclock"]
+    ok, err = pcall(cmd.executeWithTimer, cmd)
+    if not ok then client:error(err) end
   end
 end)
 
 do
-  local file = io.open("src/data/token.txt", "r")
-  if not file then error("token.txt not found in src/data") end
+  local file = io.open("data/token.txt", "r")
+  if not file then error("token.txt not found in ./data/") end
   local token = file:read("a")
   file:close()
   client:run('Bot ' .. token)
-  if shouldResetCommands then initializeCommands(commandsHandler) end
+  if args[2] then initializeCommands() end
 end

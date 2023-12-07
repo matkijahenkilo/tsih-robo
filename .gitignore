@@ -30,4 +30,4 @@ assets/images/tsihoclock/image/*
 !assets/images/tsihoclock/image/learn_lua.png
 
 # customizable links for gallery-dl
-!src/commands/sauce/links/*
+!libs/commands/sauce/links/*

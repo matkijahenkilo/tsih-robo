@@ -7,9 +7,9 @@ discordia.extensions()
 local M = {}
 
 -- don't insert twitter into the nonDownloables list, lots of problem will come if so.
-local doesNotRequireDownload        = json.decode(fs.readFileSync("src/commands/sauce/links/nonDownloables.json"))
-local requireDownload               = json.decode(fs.readFileSync("src/commands/sauce/links/downloables.json"))
-local blacklistIsPresent, blacklist = pcall(json.decode, fs.readFileSync("src/commands/sauce/links/blacklist.json"))
+local doesNotRequireDownload        = json.decode(fs.readFileSync("libs/commands/sauce/links/nonDownloables.json"))
+local requireDownload               = json.decode(fs.readFileSync("libs/commands/sauce/links/downloables.json"))
+local blacklistIsPresent, blacklist = pcall(json.decode, fs.readFileSync("libs/commands/sauce/links/blacklist.json"))
 
 if not doesNotRequireDownload or not doesNotRequireDownload[1] then
   error("./links/nonDownloables.json does not return any string for gallery-dl to read nora.")

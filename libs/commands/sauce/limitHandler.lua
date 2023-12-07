@@ -1,4 +1,4 @@
-local SAUCE_LIMITS_JSON = "src/data/sauceLimits.json"
+local SAUCE_LIMITS_JSON = "data/sauceLimits.json"
 
 local json = require("json")
 local fs = require("fs")

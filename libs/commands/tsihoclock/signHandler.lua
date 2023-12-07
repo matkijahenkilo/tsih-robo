@@ -3,7 +3,7 @@ local fs = require("fs")
 
 local M = {}
 
-M.IdsPath = "src/data/tsihclockids.json"
+M.IdsPath = "data/tsihclockids.json"
 
 local function registrationExists(t, id)
   if t[1] then

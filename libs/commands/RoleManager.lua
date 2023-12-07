@@ -1,6 +1,19 @@
-local color = require("discordia").Color()
+local discordia = require("discordia")
+local utils = require("utils")
+local Command = utils.Command
+local color = discordia.Color()
 local json = require("json")
 local fs = require("fs")
+local format = string.format
+
+local PATH = "data/%s.json"
+
+local RoleManager = discordia.class("RoleManager", Command)
+
+function RoleManager:__init(message, client, args, command)
+  Command.__init(self, message, client, args)
+  self._command = command
+end
 
 local function isHex(x)
   if x == '' then return false end
@@ -38,7 +51,7 @@ end
 
 local function updateJsonFile(interaction, client, role)
   local customGuildRolesTable
-  local jsonInfo = fs.readFileSync("src/data/" .. interaction.guild.id .. ".json")
+  local jsonInfo = fs.readFileSync(format(PATH, interaction.guild.id))
   if jsonInfo then
     customGuildRolesTable = json.decode(jsonInfo)
 
@@ -53,32 +66,38 @@ local function updateJsonFile(interaction, client, role)
     customGuildRolesTable = replaceOldMemberInfoWithNewInfo(interaction, role, customGuildRolesTable)
   end
 
-  fs.writeFileSync("src/data/" .. interaction.guild.id .. ".json", json.encode(customGuildRolesTable))
+  fs.writeFileSync(format(PATH, interaction.guild.id), json.encode(customGuildRolesTable))
 end
 
 local function deleteMemberRoleAndInfoFromJson(interaction, _, client)
   local customGuildRolesTable
-  local jsonInfo = fs.readFileSync("src/data/" .. interaction.guild.id .. ".json")
-  if jsonInfo then
-    customGuildRolesTable = json.decode(jsonInfo)
+  local jsonInfo = fs.readFileSync(format(PATH, interaction.guild.id))
 
-    for index, value in ipairs(customGuildRolesTable) do
-      if interaction.member.id == value.userID then
-        local oldRole = client:getRole(value.roleID)
-        if not oldRole then return end
-        oldRole:delete()
-        table.remove(customGuildRolesTable, index)
-        fs.writeFileSync("src/data/" .. interaction.guild.id .. ".json", json.encode(customGuildRolesTable))
-        interaction:reply("You are now free nanora!")
-        return
-      end
+  if not jsonInfo then
+    local err = "RoleManager in function deleteMemberRoleAndInfoFromJson : jsonInfo is nil, are you reading a valid json file?"
+    client:error(err)
+    interaction:reply(utils.StackTrace(client):getEmbededMessage(err), true)
+    return
+  end
+
+  customGuildRolesTable = json.decode(jsonInfo)
+
+  for index, value in ipairs(customGuildRolesTable) do
+    if interaction.member.id == value.userID then
+      local oldRole = client:getRole(value.roleID)
+      if not oldRole then return end
+      oldRole:delete()
+      table.remove(customGuildRolesTable, index)
+      fs.writeFileSync(format(PATH, interaction.guild.id), json.encode(customGuildRolesTable))
+      interaction:reply("You are now free nanora!")
+      return
     end
   end
 end
 
 local function giveRoleToMember(interaction, command, client)
   local name = command.give.name
-  local hex  = command.give.hex
+  local hex  = command.give.hexcolor
   if hex:find('#') then
     hex = hex:gsub('#', '')
   end
@@ -108,31 +127,33 @@ local functions = {
   delete = deleteMemberRoleAndInfoFromJson
 }
 
-return {
-  getSlashCommand = function(tools)
-    return tools.slashCommand("role", "I can give or delete a personalized role nora!")
-        :addOption(
-          tools.subCommand("give", "I'll give you a personalized role nanora!")
-          :addOption(
-            tools.string("name", "Your role's name nora!")
-            :setRequired(true)
-          )
-          :addOption(
-            tools.string("hexcolor", "The role's color must be in hexadecimal value, sorry nora!")
-            :setRequired(true)
-          )
-        )
-        :addOption(
-          tools.subCommand("delete", "I'll delete your personalized role nanora!")
-        )
-  end,
+function RoleManager.getSlashCommand(tools)
+  return tools.slashCommand("rolemanager", "I can give or delete a personalized role nora!")
+    :addOption(
+      tools.subCommand("give", "I'll give you a personalized role nanora!")
+      :addOption(
+        tools.string("name", "Your role's name nora!")
+        :setRequired(true)
+      )
+      :addOption(
+        tools.string("hexcolor", "The role's color must be in hexadecimal value, sorry nora!")
+        :setRequired(true)
+      )
+    )
+    :addOption(
+      tools.subCommand("delete", "I'll delete your personalized role nanora!")
+    )
+end
 
-  executeSlashCommand = function(interaction, command, args, client)
-    if not interaction.guild then
-      interaction:reply("This isn't a server nanola,,,,,", true)
-      return
-    end
+function RoleManager:executeSlashCommand()
+  local interaction, client, args, command = self._message, self._client, self._args, self._command
 
-    functions[command.options[1].name](interaction, args, client)
+  if not interaction.guild then
+    interaction:reply("This isn't a server nanola,,,,,", true)
+    return
   end
-}
+
+  functions[command.options[1].name](interaction, args, client)
+end
+
+return RoleManager
