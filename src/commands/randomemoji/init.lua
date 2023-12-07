@@ -56,7 +56,7 @@ return {
       emoji = guild.emojis:random()
     until emoji
 
-    local ok = message:addReaction(emoji)
+    local ok, err = message:addReaction(emoji)
 
     if ok then
       logger:log(3, "randomemoji: sent emoji '%s' after %s retries",
@@ -64,7 +64,7 @@ return {
         limit
       )
     else
-      logger:log(1, "randomemoji: Failed to send emoji '%s'", emoji.name)
+      logger:log(1, "randomemoji: Failed to send emoji '%s' - %s", emoji.name, err)
     end
   end
 }
