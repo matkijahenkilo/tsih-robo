@@ -8,6 +8,7 @@ local format = string.format
 discordia.extensions()
 
 local MAX_UPLOAD_LIMIT = 25
+local BARAAG_LINK = "https://baraag.net/"
 local BARAAG_MEDIA = "media.baraag.net"
 
 local Gallerydl, get = discordia.class("Gallerydl")
@@ -153,7 +154,7 @@ function Gallerydl:getJson()
   local stdout = readProcess(spawn("gallery-dl", { args = { "-j", "--cookies", "cookies.txt", self._link } }))
   if not stdout then return end
   local pageJson = json.decode(stdout)
-  if not pageJson or pageJson[1] == nil then return end
+  if not pageJson or not pageJson[1] then return end
   return pageJson[#pageJson][3].author and pageJson or nil
 end
 
@@ -169,11 +170,11 @@ function Gallerydl:downloadImage()
   logger:log(3, "Gallerydl : downloading images from %s ...", link)
 
   if not id then
-    return error("Gallerydl : downloadImage() was called, but no id was set")
+    return error("Gallerydl : no id was set")
   end
 
   if analyser.isTwitter(link) and not analyser.isTwitterPost(link) then
-    return error(format("Gallerydl : downloadImage() ignored a Twitter profile to avoid spam (%s)", link))
+    return error(format("Gallerydl : ignored a Twitter profile to avoid spam (%s)", link))
   end
 
   local child = spawn("gallery-dl", {
@@ -236,31 +237,31 @@ function Gallerydl:getLink()
 
   local outputstr = readProcess(child)
   if not outputstr then
-    return ""
+    return "", error(format(("Gallerydl : Could not get anything from '%s', reason: '%s'"),
+      link,
+      outputstr
+    ))
   end
+
   local links = filterLinks(outputstr)
 
   stopwatch:stop()
-
   if isEmpty(links) then
-    if
-      not link:find("https://baraag.net/")
-    then
-      error(format(("Gallerydl : Could not get links from '%s' - '%s'"),
+    if not link:find(BARAAG_LINK) then
+      return "", error(format(("Gallerydl : Could not get links from '%s', reason: '%s'"),
         link,
         outputstr
       ))
     end
-    return ""
   end
 
   logDownloadedInfo(link, {}, stopwatch, false)
 
   if type(links) == "table" then
-    return table.concat(links), outputstr
+    return table.concat(links)
   end
 
-  return links, outputstr
+  return links
 end
 
 function get.link(self) return self._link end

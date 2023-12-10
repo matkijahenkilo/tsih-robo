@@ -8,16 +8,13 @@ local utils = require("utils")
 local StackTrace = utils.StackTrace
 local Command = utils.Command
 local permissionsEnum = discordia.enums.permission
-local format = string.format
 discordia.extensions()
 
 local Sauce = discordia.class("Sauce", Command)
 
---The third argument, args, can be both the arguments
---of the slash command, or the previous message
---where the message command "sauce" was used.
-function Sauce:__init(message, client, args)
+function Sauce:__init(message, client, args, previousMsg)
   Command.__init(self, message, client, args)
+  self._previousMsg = previousMsg
 end
 
 local function specificLinkCondition(str)
@@ -89,12 +86,12 @@ local function sendSauce(self, message, previousMsg)
 end
 
 function Sauce:executeMessageCommand()
-  local interaction, previousMessage = self._message, self._args
+  local interaction, previousMessage = self._message, self._previousMsg
   if hasHttps(previousMessage.content) then
     coroutine.wrap(function ()
       interaction:reply("Fixing a message's content nora...")
-      --deletes the reply after 10 seconds
-      timer.setTimeout(10000, coroutine.wrap(interaction.deleteReply), interaction, interaction.getReply)
+      --deletes the reply after 5 seconds
+      timer.setTimeout(5000, coroutine.wrap(interaction.deleteReply), interaction, interaction.getReply)
     end)()
     sendSauce(self, previousMessage, interaction)
   else

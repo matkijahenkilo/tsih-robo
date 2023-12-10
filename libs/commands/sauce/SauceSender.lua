@@ -7,7 +7,6 @@ local class = discordia.class
 local format = string.format
 discordia.extensions()
 
-local BARAAG_LINK = "https://www.baraag.com/"
 local BARAAG_MEDIA = "media.baraag.net"
 local SAUCE_ASSETS = "assets/images/sauce/"
 local FOOTER_ICON = "tsih-icon.png"
@@ -232,49 +231,51 @@ end
 
 
 ---Gets the content's direct link to send. This function does not expect twitter links.
+---@return boolean success
 function SauceSender:sendImageLink()
   local message, gallerydl, hasMultipleLinks = self._message, self._gallerydl, self._multipleLinks
   local link = gallerydl.link
 
-  if link:find(BARAAG_LINK) then
-    link = link:gsub("web/", '')
-  end
-
   local outputLink = gallerydl:getLink()
 
   if hasString(outputLink) then
-    if shouldSendBaraagLinks(outputLink) or not outputLink:find(BARAAG_LINK) then
+    if shouldSendBaraagLinks(outputLink) or not outputLink:find(BARAAG_MEDIA) then
       local msg = sendLink(message, outputLink, hasMultipleLinks and link)
-      if not msg then react(message) end
+      if not msg then
+        react(message)
+        return false
+      end
     end
   end
+
+  return true
 end
 
 ---Downloads files, send them into a channel and deletes them from host after finished.
 ---@return boolean success
----@return string gallerydlOutput
+---@return string|nil output
 function SauceSender:downloadSendAndDeleteImages()
   local message, gallerydl, hasMultipleLinks = self._message, self._gallerydl, self._multipleLinks
   local sourceLink = gallerydl.link
   local id = message.channel.id
   local okMsgs = {}
   local msg = {}
-  local wholeFilestbl, gallerydlOutput, pageJson
+  local wholeFilestbl, pageJson, output
 
   if analyser.isTwitter(sourceLink) then
     if not message.embed then
       --if not clock:waitFor("messageUpdate", 5000) then
-        wholeFilestbl, gallerydlOutput = gallerydl:downloadImage()
+        wholeFilestbl, output = gallerydl:downloadImage()
         pageJson = gallerydl:getJson()
       --end
     end
   else
-    wholeFilestbl, gallerydlOutput = gallerydl:downloadImage()
+    wholeFilestbl, output = gallerydl:downloadImage()
   end
 
   if not wholeFilestbl or not hasFile(wholeFilestbl) then
     react(message)
-    return false, gallerydlOutput
+    return false, output
   end
 
   if #wholeFilestbl > 10 then
@@ -290,10 +291,11 @@ function SauceSender:downloadSendAndDeleteImages()
   deleteDownloadedImage(wholeFilestbl, id)
 
   if checkErrors(okMsgs) then
-    return false, gallerydlOutput
+    react(message)
+    return false, output
   end
 
-  return true, gallerydlOutput
+  return true
 end
 
 function get.gallerydl(self) return self._gallerydl end

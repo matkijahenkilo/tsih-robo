@@ -91,13 +91,14 @@ client:on("messageCreate", function(message)
   executeCommand("sauce", message)
 end)
 
+-- check https://github.com/GitSparTV/discordia-slash for details
 client:on("slashCommand", function(interaction, command, args)
   executeSlashCommand(command.name, interaction, args, command)
 end)
 
 client:on("messageCommand", function(interaction, command, message)
   if message then
-    local cmd = commandsTable[command.name](interaction, client, message)
+    local cmd = commandsTable[command.name](interaction, client, nil, message)
     local ok, err = pcall(cmd.executeMessageCommand, cmd)
     stackTrace:log(interaction, ok, err)
   else
