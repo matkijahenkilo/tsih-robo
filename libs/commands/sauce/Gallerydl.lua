@@ -37,7 +37,7 @@ local function logDownloadedInfo(link, files, stopwatch, wasDownloaded)
   local time = stopwatch:getTime()
   local mb = 0
 
-  if files then
+  if #files > 0 then
     for _, file in ipairs(files) do
       mb = mb + getFileSizeInMegaBytes(file)
     end
