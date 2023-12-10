@@ -103,14 +103,18 @@ end
 function Sauce:executeSlashCommand()
   local interaction, args = self._message, self._args
   if not interaction.member:hasPermission(interaction.channel, permissionsEnum.manageMessages) then
-    interaction:reply("You're missing permissions to `manage messages` nanora!", true)
-    return
+    if self._client.owner.id ~= self._message.user.id then
+      interaction:reply("You're either not the not the bot's owner or you are missing permissions to `manage messages` nanora!", true)
+      return
+    end
   end
 
   if args.global then
     if not interaction.member:hasPermission(interaction.channel, permissionsEnum.administrator) then
-      interaction:reply("Only the server's administrator can use this command nanora!", true)
-      return
+      if self._client.owner.id ~= self._message.user.id then
+        interaction:reply("Only the server's administrator and the bot's owner can use this command nanora!", true)
+        return
+      end
     end
     limitHandler.setSauceLimitOnServer(interaction, args.global)
   else
