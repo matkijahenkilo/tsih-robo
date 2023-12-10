@@ -18,11 +18,11 @@ function Avatar:executeSlashCommand()
 
   if not args then
     avatarLink = interaction.member or interaction.user
-    avatarLink = avatarLink:getAvatarURL(1024)
   else
     avatarLink = args.member or args.user
-    avatarLink = avatarLink:getAvatarURL(1024)
   end
+
+  avatarLink = avatarLink:getAvatarURL(1024)
 
   interaction:reply {
     embed = {
