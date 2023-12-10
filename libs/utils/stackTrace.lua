@@ -48,7 +48,9 @@ end
 function StackTrace:log(message, ok, err)
   if not ok then
     logger:log(logEnum.error, err)
-    sendStackTraceMessage(self, message, err)
+    if message then
+      sendStackTraceMessage(self, message, err)
+    end
   end
 end
 

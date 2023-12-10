@@ -79,8 +79,8 @@ local function sendSauce(self, message, previousMsg)
           ok, err = pcall(sauceSender.downloadSendAndDeleteImages, sauceSender)
         end
 
-        if not ok and wasCommand then
-          StackTrace(self._client):log(message, ok, err)
+        if not ok then
+          StackTrace(self._client):log(wasCommand and message or nil, ok, err)
         end
 
       end)()
