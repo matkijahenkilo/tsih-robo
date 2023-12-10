@@ -255,7 +255,9 @@ function Gallerydl:getLink()
     end
   end
 
-  logDownloadedInfo(link, {}, stopwatch, false)
+  if not link:find(BARAAG_LINK) then
+    logDownloadedInfo(link, {}, stopwatch, false)
+  end
 
   if type(links) == "table" then
     return table.concat(links)
