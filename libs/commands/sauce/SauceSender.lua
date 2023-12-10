@@ -1,5 +1,4 @@
 local fs = require("fs")
-local constant = require("./constants")
 local analyser = require("./linkAnalyser")
 local discordia = require("discordia")
 local timer = require("timer")
@@ -8,6 +7,8 @@ local class = discordia.class
 local format = string.format
 discordia.extensions()
 
+local BARAAG_LINK = "https://www.baraag.com/"
+local BARAAG_MEDIA = "media.baraag.net"
 local SAUCE_ASSETS = "assets/images/sauce/"
 local FOOTER_ICON = "tsih-icon.png"
 
@@ -199,9 +200,9 @@ end
 local function shouldSendBaraagLinks(link)
   local quantity = 0
   for _, value in ipairs(link:split('\n')) do
-    if value:find(constant.BARAAG_MEDIA) and value:find(".mp4") then
+    if value:find(BARAAG_MEDIA) and value:find(".mp4") then
       return true
-    elseif value:find(constant.BARAAG_MEDIA) then
+    elseif value:find(BARAAG_MEDIA) then
       quantity = quantity + 1
     end
   end
@@ -235,14 +236,14 @@ function SauceSender:sendImageLink()
   local message, gallerydl, hasMultipleLinks = self._message, self._gallerydl, self._multipleLinks
   local link = gallerydl.link
 
-  if link:find(constant.BARAAG_LINK) then
+  if link:find(BARAAG_LINK) then
     link = link:gsub("web/", '')
   end
 
   local outputLink = gallerydl:getLink()
 
   if hasString(outputLink) then
-    if shouldSendBaraagLinks(outputLink) or not outputLink:find(constant.BARAAG_LINK) then
+    if shouldSendBaraagLinks(outputLink) or not outputLink:find(BARAAG_LINK) then
       local msg = sendLink(message, outputLink, hasMultipleLinks and link)
       if not msg then react(message) end
     end

@@ -2,20 +2,22 @@ local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
-local constants = require("./constants")
 local analyser = require("./linkAnalyser")
 local json = require("json")
-local logLevel = discordia.enums.logLevel
+local format = string.format
 discordia.extensions()
 
-local Gallerydl, get = discordia.class("Gallerydl") -- Discordia classes are pretty neat, I should use them more
+local MAX_UPLOAD_LIMIT = 25
+local BARAAG_MEDIA = "media.baraag.net"
+
+local Gallerydl, get = discordia.class("Gallerydl")
 
 ---@param link string
----@param id string|nil
+---@param channelId string|nil
 ---@param limit integer
-function Gallerydl:__init(link, id, limit) -- define the initializer
+function Gallerydl:__init(link, channelId, limit)
 	self._link = link
-  self._id = id
+  self._id = channelId
   self._limit = limit
 end
 
@@ -31,14 +33,24 @@ local function fileExists(file)
   return fs.statSync(file) ~= nil
 end
 
-local function logDownloadedInfo(link, files, stopwatch)
-  local mb = 0
+local function logDownloadedInfo(link, files, stopwatch, wasDownloaded)
   local time = stopwatch:getTime()
-  for _, file in ipairs(files) do
-    mb = mb + getFileSizeInMegaBytes(file)
+  local mb = 0
+
+  if files then
+    for _, file in ipairs(files) do
+      mb = mb + getFileSizeInMegaBytes(file)
+    end
   end
-  local  msg = constants.GALLERY_DL_LOG
-  logger:log(3, msg, #files, link, mb, time:toSeconds())
+
+  local msg = ""
+  if wasDownloaded then
+    msg = "Gallerydl : %s files from %s = %.2fmb. Took %.2f seconds"
+    logger:log(3, msg, #files, link, mb, time:toSeconds())
+  else
+    msg = "Gallerydl : got links from %s. Took %.2f seconds"
+    logger:log(3, msg, link, mb, time:toSeconds())
+  end
 end
 
 local function getSpecificLinksFromString(str, val)
@@ -52,7 +64,7 @@ local function getSpecificLinksFromString(str, val)
 end
 
 local function getBaraagLinks(link)
-  local baraagLinks = getSpecificLinksFromString(link, constants.BARAAG_MEDIA)
+  local baraagLinks = getSpecificLinksFromString(link, BARAAG_MEDIA)
   table.remove(baraagLinks, 1) --removes the first, already embedded image
   return baraagLinks
 end
@@ -60,7 +72,7 @@ end
 local function filterLinks(links)
   local filteredLinks = {}
   if links then
-    if links:find(constants.BARAAG_MEDIA) then
+    if links:find(BARAAG_MEDIA) then
       filteredLinks = getBaraagLinks(links)
       return filteredLinks[1] and filteredLinks or ""
     end
@@ -84,7 +96,7 @@ end
 
 local function filterLargeFiles(t)
   for index, file in ipairs(t) do
-    if getFileSizeInMegaBytes(file) >= constants.MAX_UPLOAD_LIMIT then
+    if getFileSizeInMegaBytes(file) >= MAX_UPLOAD_LIMIT then
       fs.unlinkSync(file)
       t[index] = nil
     end
@@ -157,11 +169,11 @@ function Gallerydl:downloadImage()
   logger:log(3, "Gallerydl : downloading images from %s ...", link)
 
   if not id then
-    return nil, logger:log(logLevel.error, "Gallerydl : downloadImage() was called, but no id was set")
+    return error("Gallerydl : downloadImage() was called, but no id was set")
   end
 
   if analyser.isTwitter(link) and not analyser.isTwitterPost(link) then
-    return nil, logger:log(logLevel.warning, "Gallerydl : downloadImage() ignored a Twitter profile to avoid spam (%s)", link)
+    return error(format("Gallerydl : downloadImage() ignored a Twitter profile to avoid spam (%s)", link))
   end
 
   local child = spawn("gallery-dl", {
@@ -177,7 +189,7 @@ function Gallerydl:downloadImage()
 
   local outputstr = readProcess(child)
   if not outputstr or outputstr == '' then
-    return nil, logger:log(logLevel.error, constants.GALLERY_DL_AUTH_MISSING, link)
+    return error(format("Gallerydl : Couldn't get anything from `%s`, reason: %s", link, outputstr))
   end
   local filestbl, err = getCleanedTable(outputstr)
   filestbl, err = filterNilFiles(filestbl)
@@ -189,16 +201,16 @@ function Gallerydl:downloadImage()
 
   if isEmpty(filestbl) then
     outputstr = outputstr:gsub("\n", "")
-    return nil, logger:log(logLevel.error, constants.GALLERY_DL_DOWNLOAD_ERROR,
+    return error(format("Gallerydl : Could not download files from `%s` nanora!\nreason: %s\nfile(s): `%s`",
       link,
       err,
       outputstr
-    )
+    ))
   end
 
-  logDownloadedInfo(link, filestbl, stopwatch)
+  logDownloadedInfo(link, filestbl, stopwatch, true)
 
-  return filestbl, outputstr
+  return filestbl
 end
 
 ---@return string links
@@ -209,7 +221,7 @@ function Gallerydl:getLink()
   local link = self._link
   local limit = self._limit
 
-  logger:log(3, "Gallerydl : getting link from %s ...", link)
+  logger:log(3, "Gallerydl : Getting link from %s ...", link)
 
   if limit > 5 then limit = 5 end
 
@@ -234,18 +246,15 @@ function Gallerydl:getLink()
     if
       not link:find("https://baraag.net/")
     then
-      logger:log(logLevel.error, "Gallerydl : Could not get links from '%s' - '%s'",
+      error(format(("Gallerydl : Could not get links from '%s' - '%s'"),
         link,
         outputstr
-      )
+      ))
     end
-    return "", outputstr
+    return ""
   end
 
-  logger:log(logLevel.info, "Gallerydl : Got links from '%s', took %.2f seconds",
-    link,
-    stopwatch:getTime():toSeconds()
-  )
+  logDownloadedInfo(link, {}, stopwatch, false)
 
   if type(links) == "table" then
     return table.concat(links), outputstr

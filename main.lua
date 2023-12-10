@@ -1,14 +1,14 @@
 ---@type discordia
-local discordia   = require("discordia")
-local tools       = require("discordia-slash").util.tools()
-local timer       = require("timer")
-local utils       = require("utils")
-local client      = discordia.Client():useApplicationCommands()
-local clock       = discordia.Clock()
-local statusTable = utils.statusTable
-local stackTrace  = utils.StackTrace(client)
-local wrap        = coroutine.wrap
-local commandsTable    = {}
+local discordia     = require("discordia")
+local tools         = require("discordia-slash").util.tools()
+local timer         = require("timer")
+local utils         = require("utils")
+local client        = discordia.Client():useApplicationCommands()
+local clock         = discordia.Clock()
+local statusTable   = utils.statusTable
+local stackTrace    = utils.StackTrace(client)
+local wrap          = coroutine.wrap
+local commandsTable = {}
 discordia.extensions.string()
 
 do
@@ -97,7 +97,7 @@ end)
 
 client:on("messageCommand", function(interaction, command, message)
   if message then
-    local cmd = commandsTable[command.name](interaction, nil, message)
+    local cmd = commandsTable[command.name](interaction, client, message)
     local ok, err = pcall(cmd.executeMessageCommand, cmd)
     stackTrace:log(interaction, ok, err)
   else

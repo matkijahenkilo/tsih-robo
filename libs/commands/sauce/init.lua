@@ -1,16 +1,21 @@
+local discordia = require("discordia")
 local limitHandler = require("./limitHandler")
 local Gallerydl = require("./Gallerydl")
 local SauceSender = require("./SauceSender")
 local analyser = require("./linkAnalyser")
 local timer = require("timer")
-local format = string.format
-local discordia = require("discordia")
-local Command = require("utils").Command
+local utils = require("utils")
+local StackTrace = utils.StackTrace
+local Command = utils.Command
 local permissionsEnum = discordia.enums.permission
+local format = string.format
 discordia.extensions()
 
 local Sauce = discordia.class("Sauce", Command)
 
+--The third argument, args, can be both the arguments
+--of the slash command, or the previous message
+--where the message command "sauce" was used.
 function Sauce:__init(message, client, args)
   Command.__init(self, message, client, args)
 end
@@ -41,9 +46,9 @@ local function findLinksToSend(sauceSender)
 end
 
 ---@param message Message
----@param interaction Interaction | nil
-local function sendSauce(message, interaction)
-  local wasCommand = interaction and true or false
+---@param previousMsg Interaction | nil
+local function sendSauce(self, message, previousMsg)
+  local wasCommand = previousMsg and true or false
   local info = analyser.getinfo(message, wasCommand)
 
   if not info then return end
@@ -67,29 +72,31 @@ local function sendSauce(message, interaction)
 
         local ok, err
 
-        if wasCommand then -- always download content if function called as message command
-          ok, err = sauceSender:downloadSendAndDeleteImages()
+        if not wasCommand then
+          ok, err = pcall(findLinksToSend, sauceSender)
         else
-          findLinksToSend(sauceSender)
+          --always download content to send if function called as message command
+          ok, err = pcall(sauceSender.downloadSendAndDeleteImages, sauceSender)
         end
 
-        if not ok and wasCommand and type(interaction) == "table" then
-          interaction:reply(err, true)
+        if not ok and wasCommand then
+          StackTrace(self._client):log(message, ok, err)
         end
+
       end)()
     end
   end
 end
 
 function Sauce:executeMessageCommand()
-  local interaction, message = self._message, self._args
-  if hasHttps(message.content) then
+  local interaction, previousMessage = self._message, self._args
+  if hasHttps(previousMessage.content) then
     coroutine.wrap(function ()
-      interaction:reply(format("Fixing a message's content nora..."))
+      interaction:reply("Fixing a message's content nora...")
       --deletes the reply after 10 seconds
       timer.setTimeout(10000, coroutine.wrap(interaction.deleteReply), interaction, interaction.getReply)
     end)()
-    sendSauce(message, interaction)
+    sendSauce(self, previousMessage, interaction)
   else
     interaction:reply("This message has no links nanora!", true)
   end
@@ -97,7 +104,7 @@ end
 
 function Sauce:execute()
   if hasHttps(self._message.content) then
-    sendSauce(self._message, nil)
+    sendSauce(self, self._message, nil)
   end
 end
 
