@@ -1,14 +1,14 @@
 ---@type discordia
-local discordia    = require("discordia")
-local tools        = require("discordia-slash").util.tools()
-local utils        = require("utils")
-local client       = discordia.Client():useApplicationCommands()
-local clock        = discordia.Clock()
-local statusTable  = utils.statusTable
-local stackTrace   = utils.StackTrace(client)
-local wrap         = coroutine.wrap
-local timer        = require("timer")
-local commands     = {}
+local discordia   = require("discordia")
+local tools       = require("discordia-slash").util.tools()
+local timer       = require("timer")
+local utils       = require("utils")
+local client      = discordia.Client():useApplicationCommands()
+local clock       = discordia.Clock()
+local statusTable = utils.statusTable
+local stackTrace  = utils.StackTrace(client)
+local wrap        = coroutine.wrap
+local commandsTable    = {}
 discordia.extensions.string()
 
 do
@@ -21,7 +21,7 @@ do
       return M
     end
   }
-  commands = setmetatable(require("commands"), commandsMetaTable)
+  commandsTable = setmetatable(require("commands"), commandsMetaTable)
 end
 
 local function initializeCommands()
@@ -36,7 +36,7 @@ local function initializeCommands()
   client:info("Creating commands...")
 
   i = 1
-  for _, command in pairs(commands) do
+  for _, command in pairs(commandsTable) do
     if command.getSlashCommand then
       client:info(string.format("Creating slash command #%s - %s", i, command.__name))
       client:createGlobalApplicationCommand(command.getSlashCommand(tools))
@@ -57,14 +57,14 @@ local function hasTsihMention(message)
   return content:find("tsih") or content:find("nora")
 end
 
-local function executeCommand(commandName, message)
-  local cmd = commands[commandName](message, client)
-  local ok, err = pcall(cmd.execute, cmd, message, client)
-  stackTrace:sendErrorMessage(message, ok, err)
+local function executeCommand(cmdName, message)
+  local cmd = commandsTable[cmdName](message, client)
+  local ok, err = pcall(cmd.execute, cmd)
+  stackTrace:log(message, ok, err)
 end
 
-local function executeSlashCommand(commandName, interaction, args, command)
-  local cmd = commands[commandName](interaction, client, args, command)
+local function executeSlashCommand(cmdName, interaction, args, command)
+  local cmd = commandsTable[cmdName](interaction, client, args, command)
   local ok, err = pcall(cmd.executeSlashCommand, cmd, interaction, client, args, command)
   if not ok then client:error(err) interaction:reply(stackTrace:getEmbededMessage(err), true) end
 end
@@ -97,8 +97,9 @@ end)
 
 client:on("messageCommand", function(interaction, command, message)
   if message then
-    local ok, err = pcall(commands[command.name:gsub("Send ", '')].executeMessageCommand, interaction, command, message)
-    stackTrace:sendErrorMessage(interaction, ok, err)
+    local cmd = commandsTable[command.name](interaction, nil, message)
+    local ok, err = pcall(cmd.executeMessageCommand, cmd)
+    stackTrace:log(interaction, ok, err)
   else
     interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
     timer.setTimeout(5000, wrap(interaction.deleteReply), interaction, interaction.getReply)
@@ -112,10 +113,9 @@ end)
 
 clock:on("hour", function(now)
   if now.hour == 21 then
-    local ok, err = true, nil
-    client:info("Tsih O'Clock")
-    local cmd = commands["tsihoclock"]
-    ok, err = pcall(cmd.executeWithTimer, cmd)
+    client:info("Tsih O'Clock!")
+    local cmd = commandsTable["tsihoclock"]
+    local ok, err = pcall(cmd.executeWithTimer, cmd)
     if not ok then client:error(err) end
   end
 end)

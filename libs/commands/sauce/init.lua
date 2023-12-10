@@ -81,7 +81,8 @@ local function sendSauce(message, interaction)
   end
 end
 
-function Sauce:executeMessageCommand(interaction, _, message)
+function Sauce:executeMessageCommand()
+  local interaction, message = self._message, self._args
   if hasHttps(message.content) then
     coroutine.wrap(function ()
       interaction:reply(format("Fixing a message's content nora..."))
@@ -94,9 +95,9 @@ function Sauce:executeMessageCommand(interaction, _, message)
   end
 end
 
-function Sauce:execute(message)
-  if hasHttps(message.content) then
-    sendSauce(message, nil)
+function Sauce:execute()
+  if hasHttps(self._message.content) then
+    sendSauce(self._message, nil)
   end
 end
 
@@ -145,7 +146,7 @@ function Sauce.getSlashCommand(tools)
 end
 
 function Sauce.getMessageCommand(tools)
-  return tools.messageCommand("Send sauce")
+  return tools.messageCommand("sauce")
 end
 
 return Sauce
