@@ -149,7 +149,7 @@ local function sendDownloadedImage(message, images, sourceLink, pageJson, guaran
   }
 
   if sourceLink then
-    messageToSend.content = string.format("`%s`", sourceLink)
+    messageToSend.content = string.format("<%s>", sourceLink)
   end
 
   local msg
