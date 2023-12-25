@@ -21,12 +21,16 @@ function DataManager:__init(commandName)
   verifyFile()
 end
 
+--Returns the entire storage.json as a lua table.
 ---@return table
 function DataManager:readFile()
   return json.decode(fs.readFileSync(STORAGE))
 end
 
----@return any
+
+---Returns the command name's value as a lua table.
+---Can be specified a return of an inner key if self._key was set.
+---@return table
 function DataManager:readData()
   local t = json.decode(fs.readFileSync(STORAGE))[self._commandName]
   local k = self._key
@@ -34,6 +38,7 @@ function DataManager:readData()
   return k and (t[k] or {}) or t
 end
 
+---Replaces a value from storage.json with information given by a table.
 ---@param v table
 function DataManager:writeData(v)
   if not v or type(v) ~= "table" then
