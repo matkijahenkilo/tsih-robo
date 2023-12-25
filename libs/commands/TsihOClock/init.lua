@@ -11,12 +11,6 @@ function TsihOClock:__init(message, client, args, command)
   self._command = command
 end
 
-local functions = {
-  sign   = idHandler.sign,
-  unsign = idHandler.remove,
-  manual = tsihSender.tsihClockSlash
-}
-
 function TsihOClock.getSlashCommand(tools)
   return tools.slashCommand("tsihoclock", "For signing text channels to receive daily Tsih artworks nanora!")
     :addOption(
@@ -41,6 +35,11 @@ end
 function TsihOClock:executeSlashCommand()
   local interaction, command, args, client = self._message, self._command, self._args, self._client
 
+  if not interaction.guild then
+    interaction:reply("This function only works within servers nanora!", true)
+    return
+  end
+
   if not interaction.member:hasPermission(interaction.channel, permissionsEnum.administrator) and not args.manual then
     interaction:reply("Only the server's administrator can use this command nanora!", true)
     return
@@ -53,6 +52,7 @@ function TsihOClock:executeSlashCommand()
   end
 
   if commandName == "auto" then
+
     if client.owner.id == interaction.user.id then
       interaction:reply("Oki nanora!", true)
       counterHandler.incrementTsihOClockCounter()
@@ -60,8 +60,23 @@ function TsihOClock:executeSlashCommand()
     else
       interaction:reply("👁️〰️👁️", true)
     end
-  else
-    functions[commandName](interaction, format)
+
+  elseif commandName == "sign" then
+
+    if idHandler.sign(interaction, format) then
+      interaction:reply("This room is now signed for Tsih O'Clock nanora!")
+    else
+      interaction:reply("Room is already signed for Tsih O'Clock!")
+    end
+
+  elseif commandName == "remove" then
+
+    if idHandler.remove(interaction, format) then
+      interaction:reply("B-but this room isn't even signed up nora!")
+    else
+      interaction:reply("Ugeeeh! You won't be seeing my artworks here anymore nanora!")
+    end
+
   end
 end
 
