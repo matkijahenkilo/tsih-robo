@@ -2,7 +2,7 @@ local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
-local analyser = require("./linkAnalyser")
+local parser = require("./linkParser")
 local json = require("json")
 local format = string.format
 discordia.extensions()
@@ -173,7 +173,7 @@ function Gallerydl:downloadImage()
     return error("Gallerydl : no id was set")
   end
 
-  if analyser.isTwitter(link) and not analyser.isTwitterPost(link) then
+  if parser.isTwitter(link) and not parser.isTwitterPost(link) then
     return error(format("Gallerydl : ignored a Twitter profile to avoid spam (%s)", link))
   end
 

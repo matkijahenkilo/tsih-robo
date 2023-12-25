@@ -28,15 +28,15 @@ function M.sign(interaction)
 
   local id = interaction.channel.id
   local guildName = interaction.guild.name
-  local t = dataManager:readData()
+  local idTable = dataManager:readData()
 
-  if registrationExists(t, id) then
+  if registrationExists(idTable, id) then
     interaction:reply("Room is already signed for Tsih O'Clock!")
     return
   end
 
-  table.insert(t, { id = id, guildName = guildName })
-  dataManager:writeData(t)
+  table.insert(idTable, { id = id, guildName = guildName })
+  dataManager:writeData(idTable)
 
   interaction:reply("This room is now signed for Tsih O'Clock nanora!")
 end

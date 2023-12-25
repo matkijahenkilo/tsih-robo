@@ -1,4 +1,4 @@
-local signHandler = require("./signHandler")
+local idHandler = require("./idHandler")
 local tsihSender = require("./tsihSender")
 local counterHandler = require("./counterHandler")
 local discordia = require("discordia")
@@ -12,8 +12,8 @@ function TsihOClock:__init(message, client, args, command)
 end
 
 local functions = {
-  sign   = signHandler.sign,
-  unsign = signHandler.remove,
+  sign   = idHandler.sign,
+  unsign = idHandler.remove,
   manual = tsihSender.tsihClockSlash
 }
 

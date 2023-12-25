@@ -2,8 +2,8 @@ local dataManager = require("utils").DataManager("RandomEmoji")
 
 local M = {}
 
-local function isServerAlreadySaved(serverId, jsonContent)
-  for _, savedId in ipairs(jsonContent) do
+local function isServerAlreadySaved(serverId, configTable)
+  for _, savedId in ipairs(configTable) do
     if savedId == serverId then
       return true
     end
@@ -11,21 +11,21 @@ local function isServerAlreadySaved(serverId, jsonContent)
   return false
 end
 
-local function removeId(id, jsonContent)
-  for index, savedId in ipairs(jsonContent) do
+local function removeId(id, configTable)
+  for index, savedId in ipairs(configTable) do
     if savedId == id then
-      table.remove(jsonContent, index)
-      dataManager:writeData(jsonContent)
+      table.remove(configTable, index)
+      dataManager:writeData(configTable)
       return true
     end
   end
   return false
 end
 
-local function saveId(id, jsonContent)
-  if not isServerAlreadySaved(id, jsonContent) then
-    table.insert(jsonContent, id)
-    dataManager:writeData(jsonContent)
+local function saveId(id, configTable)
+  if not isServerAlreadySaved(id, configTable) then
+    table.insert(configTable, id)
+    dataManager:writeData(configTable)
     return true
   end
   return false

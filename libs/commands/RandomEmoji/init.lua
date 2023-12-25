@@ -1,4 +1,4 @@
-local emojiHandler = require("./emojiServerHandler")
+local idHandler = require("./idHandler")
 local Command = require("utils").Command
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%F %T", "randomemoji.log")
@@ -11,14 +11,14 @@ function RandomEmoji:__init(message, client, args)
 end
 
 local function getRandomServer(client)
-  local idList = emojiHandler.getIds()
+  local idList = idHandler.getIds()
   if not idList then return nil end
   local id = idList[math.random(#idList)]
   return client:getGuild(id), id
 end
 
 function RandomEmoji.getSlashCommand(tools)
-  return tools.slashCommand("randomemoji", "Do you allow me to use this server's emojis to random react messages nora? ")
+  return tools.slashCommand("randomemoji", "Do you allow me to use this server's emojis to randomly react messages nora? ")
     :addOption(
       tools.boolean("allow", "If you set true, I'll be able to randomly use your server's emojis nora! Otherwise I'll not!")
       :setRequired(true)
@@ -34,13 +34,13 @@ function RandomEmoji:executeSlashCommand()
   end
 
   if args.allow then
-    if emojiHandler.addServer(interaction.guild.id) then
+    if idHandler.addServer(interaction.guild.id) then
       interaction:reply("Nyahahaha! Now I can use this server's emojis to annoy everyone else nanora!")
     else
       interaction:reply("Nyuuu~ Server is already added nanora!")
     end
   else
-    if emojiHandler.removeServer(interaction.guild.id) then
+    if idHandler.removeServer(interaction.guild.id) then
       interaction:reply("How can I now annoy Nanako in other servers nanora!?")
     else
       interaction:reply("But your server is not even saved nanora!", true)

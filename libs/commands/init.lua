@@ -5,8 +5,7 @@ return {
   pinch       = require('commands/Pinch'),
   question    = require('commands/Question'),
   rolemanager = require('commands/RoleManager'),
-
-  randomemoji = require('commands/randomemoji'),
-  sauce       = require('commands/sauce'),
-  tsihoclock  = require('commands/tsihoclock'),
+  randomemoji = require('commands/RandomEmoji'),
+  sauce       = require('commands/Sauce'),
+  tsihoclock  = require('commands/TsihOClock'),
 }
