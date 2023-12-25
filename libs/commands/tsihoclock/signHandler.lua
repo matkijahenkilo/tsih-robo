@@ -24,17 +24,19 @@ end
 function M.sign(interaction)
   if not isInGuild(interaction) then return end
 
+  dataManager.key = "tsihoclockids"
+
   local id = interaction.channel.id
   local guildName = interaction.guild.name
-  local idTable = dataManager:readData(false, "tsihoclockids")
+  local t = dataManager:readData()
 
-  if registrationExists(idTable, id) then
+  if registrationExists(t, id) then
     interaction:reply("Room is already signed for Tsih O'Clock!")
     return
   end
 
-  table.insert(idTable, { id = id, guildName = guildName })
-  dataManager:writeData(idTable, "tsihoclockids")
+  table.insert(t, { id = id, guildName = guildName })
+  dataManager:writeData(t)
 
   interaction:reply("This room is now signed for Tsih O'Clock nanora!")
 end
@@ -42,12 +44,14 @@ end
 function M.remove(interaction)
   if not isInGuild(interaction) then return end
 
+  dataManager.key = "tsihoclockids"
+
   local id = interaction.channel.id
-  local idTable = dataManager:readData(false, "tsihoclockids")
+  local idTable = dataManager:readData()
   for key, value in pairs(idTable) do
     if value.id == id then
       table.remove(idTable, key)
-      dataManager:writeData(idTable, "tsihoclockids")
+      dataManager:writeData(idTable)
       interaction:reply("Ugeeeh! You won't be seeing my artworks here anymore nanora!")
       return
     end

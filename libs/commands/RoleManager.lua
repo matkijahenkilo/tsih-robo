@@ -47,7 +47,8 @@ local function replaceOldMemberInfoWithNewInfo(interaction, role, member)
 end
 
 local function updateJsonFile(interaction, client, role)
-  local customGuildRolesTable = dataManager:readData(false, interaction.guild.id)
+  dataManager.key = interaction.guild.id
+  local customGuildRolesTable = dataManager:readData()
 
   if not customGuildRolesTable then
     customGuildRolesTable = insertMemberInfoToTable(interaction, role, {})
@@ -56,11 +57,12 @@ local function updateJsonFile(interaction, client, role)
     customGuildRolesTable = replaceOldMemberInfoWithNewInfo(interaction, role, customGuildRolesTable)
   end
 
-  dataManager:writeData(customGuildRolesTable, interaction.guild.id)
+  dataManager:writeData(customGuildRolesTable)
 end
 
 local function deleteMemberRoleAndInfoFromJson(interaction, _, client)
-  local customGuildRolesTable = dataManager:readData(false, interaction.guild.id)
+  dataManager.key = interaction.guild.id
+  local customGuildRolesTable = dataManager:readData()
 
   if not customGuildRolesTable then
     interaction:reply("I yet have to create custom roles in this server nanora!", true)
@@ -73,7 +75,7 @@ local function deleteMemberRoleAndInfoFromJson(interaction, _, client)
       if not oldRole then return end
       oldRole:delete()
       table.remove(customGuildRolesTable, index)
-      dataManager:writeData(customGuildRolesTable, interaction.guild.id)
+      dataManager:writeData(customGuildRolesTable)
       interaction:reply("You are now free nanora!")
       return
     end
