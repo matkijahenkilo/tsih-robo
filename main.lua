@@ -60,13 +60,13 @@ end
 local function executeCommand(cmdName, message)
   local cmd = commandsTable[cmdName](message, client)
   local ok, err = pcall(cmd.execute, cmd)
-  stackTrace:log(message, ok, err)
+  stackTrace:log(nil, ok, err)
 end
 
 local function executeSlashCommand(cmdName, interaction, args, command)
   local cmd = commandsTable[cmdName](interaction, client, args, command)
   local ok, err = pcall(cmd.executeSlashCommand, cmd, interaction, client, args, command)
-  if not ok then client:error(err) interaction:reply(stackTrace:getEmbededMessage(err), true) end
+  stackTrace:log(interaction, ok, err)
 end
 
 
@@ -101,7 +101,7 @@ client:on("messageCommand", function(interaction, command, message)
     local ok, err = pcall(cmd.executeMessageCommand, cmd)
     stackTrace:log(interaction, ok, err)
   else
-    interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?")
+    interaction:reply("Failed to use command!\nMaybe I don't have access to the channel nanora?", true)
     timer.setTimeout(5000, wrap(interaction.deleteReply), interaction, interaction.getReply)
   end
 end)

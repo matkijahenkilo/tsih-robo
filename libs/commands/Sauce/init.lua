@@ -42,9 +42,9 @@ local function findLinksToSend(sauceSender)
 end
 
 ---@param message Message
----@param previousMsg Interaction | nil
-local function sendSauce(self, message, previousMsg)
-  local wasCommand = previousMsg and true or false
+---@param interaction Interaction|nil
+local function sendSauce(self, message, interaction)
+  local wasCommand = interaction and true or false
   local parser = LinkParser(message, wasCommand)
   local info = parser:getinfo()
 
@@ -79,7 +79,7 @@ local function sendSauce(self, message, previousMsg)
         end
 
         if not ok then
-          StackTrace(self._client, info.multipleLinks):log(previousMsg, ok, err)
+          StackTrace(self._client, info.multipleLinks):log(interaction, ok, err)
         end
 
       end)()
@@ -88,12 +88,13 @@ local function sendSauce(self, message, previousMsg)
 end
 
 function Sauce:executeMessageCommand()
-  local interaction, previousMessage = self._message, self._previousMsg
+  local previousMessage = self._previousMsg
+  local interaction = self._message
   if hasHttps(previousMessage.content) then
     coroutine.wrap(function ()
-      interaction:reply("Fixing a message's content nora...")
-      --deletes the reply after 5 seconds
-      timer.setTimeout(5000, coroutine.wrap(interaction.deleteReply), interaction, interaction.getReply)
+      previousMessage:addReaction('🆗')
+      timer.sleep(2000)
+      previousMessage:removeReaction('🆗')
     end)()
     sendSauce(self, previousMessage, interaction)
   else
