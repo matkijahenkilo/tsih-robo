@@ -18,7 +18,6 @@ end
 function DataManager:__init(commandName)
   if not commandName then
     error("Command name has to be set.")
-    return
   end
   self._commandName = commandName
   self._key = nil
@@ -48,7 +47,6 @@ end
 function DataManager:writeData(v)
   if type(v) ~= "table" then
     error("No value was set or value isn't a table.")
-    return
   end
 
   local n = self._commandName
