@@ -65,7 +65,7 @@ end
 
 local function executeSlashCommand(cmdName, interaction, args, command)
   local cmd = commandsTable[cmdName](interaction, client, args, command)
-  local ok, err = pcall(cmd.executeSlashCommand, cmd, interaction, client, args, command)
+  local ok, err = pcall(cmd.executeSlashCommand, cmd)
   stackTrace:log(interaction, ok, err)
 end
 
