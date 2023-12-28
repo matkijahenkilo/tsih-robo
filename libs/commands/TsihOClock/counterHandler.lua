@@ -3,7 +3,7 @@ local dataManager = require("utils").DataManager("TsihOClock")
 local M = {}
 
 local function setNewTotal(newTotal)
-  dataManager.key = "total"
+  dataManager.key = "counter"
   local total = dataManager:readData()[1]
   if total then
     total = newTotal or 1
@@ -14,9 +14,9 @@ local function setNewTotal(newTotal)
 end
 
 function M.getCurrentCounter()
-  dataManager.key = "total"
+  dataManager.key = "counter"
   local total = dataManager:readData()[1]
-  return total or nil
+  return total
 end
 
 function M.incrementTsihOClockCounter()

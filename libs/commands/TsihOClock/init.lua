@@ -61,6 +61,10 @@ function TsihOClock:executeSlashCommand()
       interaction:reply("👁️〰️👁️", true)
     end
 
+  elseif commandName == "manual" then
+
+    tsihSender.tsihClockSlash(interaction, format)
+
   elseif commandName == "sign" then
 
     if idHandler.sign(interaction, format) then

@@ -2,6 +2,7 @@ local ORIGIN = "assets/images/tsihoclock/"
 local dataManager = require("utils").DataManager("TsihOClock")
 local fs = require("fs")
 local counterHandler = require("./counterHandler.lua")
+local format = string.format
 local discordia = require("discordia")
 
 local M = {}
@@ -59,8 +60,10 @@ local function getTsihArtworkWithEmbedMessage(fileFormat)
   local embeddedMessage = {
     file = file,
     embed = {
-      title = randomTitle[math.random(#randomTitle)]
-        .. "\nThis is the Tsih O'Clock #" .. tsihClockCounter .. " nanora!",
+      title = format("%s\nThis is the Tsih O'Clock #%s nanora!",
+        randomTitle[math.random(#randomTitle)],
+        tsihClockCounter
+      ),
       timestamp = discordia.Date():toISO('T', 'Z'),
       fields = {
         {
@@ -74,7 +77,7 @@ local function getTsihArtworkWithEmbedMessage(fileFormat)
     },
   }
 
-  if type(tsihClockCounter) == "string" then
+  if not tsihClockCounter then
     embeddedMessage.embed.color = 0xfffd80
     return embeddedMessage
   end
