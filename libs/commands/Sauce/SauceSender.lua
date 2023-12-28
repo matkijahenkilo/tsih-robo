@@ -156,7 +156,7 @@ local function sendDownloadedImage(self, files, pageJson)
   local msg
 
   if pageJson then
-    msg = message.channel:send(makeEmbededMessage(messageToSend, pageJson, sourceLink))
+    msg = message.channel:send(makeEmbededMessage(messageToSend, pageJson, self._gallerydl.link))
   else
     msg = message.channel:send(messageToSend)
   end
@@ -238,8 +238,7 @@ end
 ---Gets the content's direct link to send. This function does not expect twitter links.
 ---@return boolean success
 function SauceSender:sendImageLink()
-  local message, gallerydl, hasMultipleLinks = self._message, self._gallerydl, self._multipleLinks
-  local link = gallerydl.link
+  local message, gallerydl = self._message, self._gallerydl
 
   local outputLink = gallerydl:getLink()
 
@@ -267,7 +266,7 @@ function SauceSender:downloadSendAndDeleteImages()
   local msg = {}
   local wholeFilestbl, pageJson, output
 
-  if gallerydl.linkParser:isTwitter(sourceLink) then
+  if gallerydl.linkParser:isTwitter() then
     if not message.embed then
       --if not clock:waitFor("messageUpdate", 5000) then
         wholeFilestbl, output = gallerydl:downloadImage()
