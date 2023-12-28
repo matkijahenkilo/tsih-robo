@@ -16,6 +16,10 @@ end
 
 ---Constructor should receive the class' name
 function DataManager:__init(commandName)
+  if not commandName then
+    error("Command name has to be set.")
+    return
+  end
   self._commandName = commandName
   self._key = nil
   verifyFile()
@@ -32,8 +36,9 @@ end
 ---Can be specified a return of an inner key if self._key was set.
 ---@return table
 function DataManager:readData()
-  local t = json.decode(fs.readFileSync(STORAGE))[self._commandName]
+  local n = self._commandName
   local k = self._key
+  local t = self:readFile()[n]
   if not t then return {} end
   return k and (t[k] or {}) or t
 end
@@ -41,16 +46,18 @@ end
 ---Replaces a value from storage.json with information given by a table.
 ---@param v table
 function DataManager:writeData(v)
-  if not v or type(v) ~= "table" then
+  if type(v) ~= "table" then
     error("No value was set or value isn't a table.")
     return
   end
 
   local n = self._commandName
   local k = self._key
-  local t = DataManager:readFile()
+  local t = self:readFile()
 
-  if not t[n] then t[n] = {} end
+  if not t then
+    t = {}
+  end
 
   if k then
     t[n][k] = v
