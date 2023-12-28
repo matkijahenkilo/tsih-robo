@@ -4,7 +4,13 @@ local fs = require("fs")
 local discordia = require('discordia')
 discordia.extensions()
 
-local M = {}
+local LinkParser, get, set = discordia.class("LinkParser")
+
+function LinkParser:__init(message, wasCommand)
+  self._message = message
+  self._wasCommand = wasCommand
+  self._link = nil
+end
 
 -- don't insert twitter into the nonDownloables list, lots of problem will come if so.
 local doesNotRequireDownload        = json.decode(fs.readFileSync("data/links/nonDownloables.json"))
@@ -24,52 +30,66 @@ if not blacklistIsPresent then
   discordia.Logger(loglevel, "%F %T", nil):log(loglevel, "blacklist.json is not present.")
 end
 
-local function verify(string, list)
+local function verify(str, list)
   for _, value in pairs(list) do
-    if string:find(value) then
+    if str:find(value) then
       return true
     end
   end
   return false
 end
 
-function M.linkRequireDownload(link)
+function LinkParser:linkRequireDownload(word)
+  local link = self._link or word
   return verify(link, requireDownload)
 end
 
-function M.linkDoesNotRequireDownload(link)
+function LinkParser:linkDoesNotRequireDownload(word)
+  local link = self._link or word
   return verify(link, doesNotRequireDownload)
 end
 
-function M.linkShouldBeIgnored(link)
+function LinkParser:linkShouldBeIgnored()
   if not blacklistIsPresent then
     return nil
   end
-  return verify(link, blacklist)
+  return verify(self._link, blacklist)
 end
 
-function M.isTwitterPost(link)
-  return link:find("/status/")
+function LinkParser:isTwitterPost()
+  return self._link:find("/status/")
 end
 
-function M.isTwitter(link)
+function LinkParser:isTwitter()
   IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks = {
     "https://twitter.com",
     "https://x.com",
   }
   for _, UnlimitedTwitterString in ipairs(IamtheboneofmyswordSteelismybodyandfireismybloodIhavecreatedoverathousandtwitterlinksUnawareoflossNorawareofgainWithstoodpaintocreatebloodinprogrammerseyeswaitingforonesarrivalIhaveregretsThisistheonlypathunfortunatelyMywholelifewasUnlimitedTwitterWorks) do
-    if link:find(UnlimitedTwitterString) then
+    if self._link:find(UnlimitedTwitterString) then
       return true
     end
   end
   return false
 end
 
-local function hasMultipleLinks(t)
+local function removeDuplicates(words)
+  local hash = {}
+  local newWords = {}
+  for _, v in ipairs(words) do
+    if not hash[v] then
+      newWords[#newWords+1] = v
+      hash[v] = true
+    end
+  end
+  return newWords
+end
+
+local function hasMultipleLinks(self, words)
   local count = 0
-  for _, word in ipairs(t) do
-    if M.linkRequireDownload(word)
-      or M.linkDoesNotRequireDownload(word)
+  for _, word in ipairs(words) do
+    if self:linkRequireDownload(word)
+      or self:linkDoesNotRequireDownload(word)
     then
       count = count + 1
       if count > 1 then return true end
@@ -80,25 +100,23 @@ end
 
 ---returns information about current channel's limit, message's contents, 
 ---and if the message has multiple links in it.
----@param message Message
----@param isCommand boolean
 ---@return table | nil
-function M.getinfo(message, isCommand)
-  local limit = limitHandler.getRoomImageLimit(message) or 5
+function LinkParser:getinfo()
+
+  local limit = limitHandler.getRoomImageLimit(self._message) or 5
 
   if limit == 0 then
-    if isCommand then
+    if self._wasCommand then
       limit = 5
     else
       return nil
     end
   end
 
-  local content = message.content
-
-  content = content:gsub('\n', ' '):gsub('||', ' ')
+  local content = self._message.content:gsub('\n', ' '):gsub('||', ' ')
   local words = content:split(' ')
-  local multipleLinks = hasMultipleLinks(words)
+  words = removeDuplicates(words)
+  local multipleLinks = hasMultipleLinks(self, words)
 
   return {
     words = words,
@@ -107,4 +125,12 @@ function M.getinfo(message, isCommand)
   }
 end
 
-return M
+function get.link(self)
+  return self._link
+end
+
+function set.link(self, link)
+  self._link = link
+end
+
+return LinkParser

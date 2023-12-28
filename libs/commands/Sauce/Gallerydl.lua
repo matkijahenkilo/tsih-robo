@@ -2,7 +2,6 @@ local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
-local parser = require("./linkParser")
 local json = require("json")
 local format = string.format
 discordia.extensions()
@@ -13,11 +12,12 @@ local BARAAG_MEDIA = "media.baraag.net"
 
 local Gallerydl, get = discordia.class("Gallerydl")
 
----@param link string
+---@param linkParser LinkParser
 ---@param channelId string|nil
 ---@param limit integer
-function Gallerydl:__init(link, channelId, limit)
-	self._link = link
+function Gallerydl:__init(linkParser, channelId, limit)
+	self._linkParser = linkParser
+	self._link = linkParser.link
   self._id = channelId
   self._limit = limit
 end
@@ -49,7 +49,7 @@ local function logDownloadedInfo(link, files, stopwatch, wasDownloaded)
     msg = "Gallerydl : %s files from %s = %.2fmb. Took %.2f seconds"
     logger:log(3, msg, #files, link, mb, time:toSeconds())
   else
-    msg = "Gallerydl : got links from %s. Took %.2f seconds"
+    msg = "Gallerydl : Got links from %s. Took %.2f seconds"
     logger:log(3, msg, link, mb, time:toSeconds())
   end
 end
@@ -163,18 +163,19 @@ end
 function Gallerydl:downloadImage()
   local stopwatch = discordia.Stopwatch()
 
-  local link = self._link
+  local parser = self._linkParser
+  local link = parser.link
   local id = self._id
   local limit = self._limit
 
-  logger:log(3, "Gallerydl : downloading images from %s ...", link)
+  logger:log(3, "Gallerydl : Downloading images from %s ...", link)
 
   if not id then
-    return error("Gallerydl : no id was set")
+    return error("Gallerydl : No id was set")
   end
 
-  if parser.isTwitter(link) and not parser.isTwitterPost(link) then
-    return error(format("Gallerydl : ignored a Twitter profile to avoid spam (%s)", link))
+  if parser:isTwitter() and not parser:isTwitterPost() then
+    return error(format("Gallerydl : Ignored a Twitter profile to avoid spam (%s)", link))
   end
 
   local child = spawn("gallery-dl", {
@@ -267,5 +268,6 @@ function Gallerydl:getLink()
 end
 
 function get.link(self) return self._link end
+function get.linkParser(self) return self._linkParser end
 
 return Gallerydl

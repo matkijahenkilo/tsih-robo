@@ -2,7 +2,7 @@ local discordia = require("discordia")
 local limitHandler = require("./limitHandler")
 local Gallerydl = require("./Gallerydl")
 local SauceSender = require("./SauceSender")
-local analyser = require("./linkParser")
+local LinkParser = require("./LinkParser")
 local timer = require("timer")
 local utils = require("utils")
 local StackTrace = utils.StackTrace
@@ -30,12 +30,11 @@ local function hasHttps(str)
 end
 
 local function findLinksToSend(sauceSender)
-  local link = sauceSender.gallerydl.link
-  if analyser.linkDoesNotRequireDownload(link) then
+  if sauceSender.gallerydl.linkParser:linkDoesNotRequireDownload() then
 
     sauceSender:sendImageLink()
 
-  elseif analyser.linkRequireDownload(link) then
+  elseif sauceSender.gallerydl.linkParser:linkRequireDownload() then
 
     sauceSender:downloadSendAndDeleteImages()
 
@@ -46,7 +45,8 @@ end
 ---@param previousMsg Interaction | nil
 local function sendSauce(self, message, previousMsg)
   local wasCommand = previousMsg and true or false
-  local info = analyser.getinfo(message, wasCommand)
+  local parser = LinkParser(message, wasCommand)
+  local info = parser:getinfo()
 
   if not info then return end
 
@@ -60,11 +60,13 @@ local function sendSauce(self, message, previousMsg)
     if condition(link) then
       coroutine.wrap(function()
 
+        parser.link = link
+
         if not wasCommand then -- ignore blacklisted links if function call was automated
-          if analyser.linkShouldBeIgnored(link) then return end
+          if parser:linkShouldBeIgnored() then return end
         end
 
-        local gdl = Gallerydl(link, message.channel.id, info.limit)
+        local gdl = Gallerydl(parser, message.channel.id, info.limit)
         local sauceSender = SauceSender(message, gdl, info.multipleLinks)
 
         local ok, err
@@ -77,7 +79,7 @@ local function sendSauce(self, message, previousMsg)
         end
 
         if not ok then
-          StackTrace(self._client):log(wasCommand and message or nil, ok, err)
+          StackTrace(self._client, info.multipleLinks):log(previousMsg, ok, err)
         end
 
       end)()

@@ -1,5 +1,4 @@
 local fs = require("fs")
-local parser = require("./linkParser")
 local discordia = require("discordia")
 local timer = require("timer")
 local clock = discordia.Clock()
@@ -139,9 +138,11 @@ local function makeEmbededMessage(messageToSend, pageJson, sourceLink)
 end
 
 ---@return Message
-local function sendDownloadedImage(message, images, sourceLink, pageJson, guaranteedSourceLink)
+local function sendDownloadedImage(self, files, pageJson)
+  local message = self._message
+  local sourceLink = self._multipleLinks and self._gallerydl.link
   local messageToSend = {
-    files = images,
+    files = files,
     reference = {
       message = message,
       mention = false,
@@ -155,7 +156,7 @@ local function sendDownloadedImage(message, images, sourceLink, pageJson, guaran
   local msg
 
   if pageJson then
-    msg = message.channel:send(makeEmbededMessage(messageToSend, pageJson, guaranteedSourceLink))
+    msg = message.channel:send(makeEmbededMessage(messageToSend, pageJson, sourceLink))
   else
     msg = message.channel:send(messageToSend)
   end
@@ -164,7 +165,9 @@ local function sendDownloadedImage(message, images, sourceLink, pageJson, guaran
 end
 
 ---@return Message
-local function sendLink(message, outputLink, link)
+local function sendLink(self, outputLink)
+  local message = self._message
+  local sourceLink = self._multipleLinks and self._gallerydl.link
   local messageToSend = {
     reference = {
       message = message,
@@ -172,8 +175,8 @@ local function sendLink(message, outputLink, link)
     }
   }
 
-  if link then -- attach original link before it's contents
-    messageToSend.content = string.format("`%s`\n%s", link, outputLink)
+  if sourceLink then -- attach original link before it's contents
+    messageToSend.content = string.format("<%s>\n%s", sourceLink, outputLink)
   else
     messageToSend.content = outputLink
   end
@@ -208,19 +211,21 @@ local function shouldSendBaraagLinks(link)
   return quantity > 1
 end
 
-local function sendImages(message, separatedFilestbl, sourceLink, hasMultipleLinks, pageJson, guaranteedSourceLink)
-  local msg = sendDownloadedImage(message, separatedFilestbl, hasMultipleLinks and sourceLink, pageJson, guaranteedSourceLink)
-  if not msg then react(message) end
+local function sendImages(self, separatedFilestbl, pageJson)
+  local msg = sendDownloadedImage(self, separatedFilestbl, pageJson)
+  if not msg then
+    react(self._message)
+  end
   return msg
 end
 
-local function sendPartitionedImages(message, filestbl, sourceLink, hasMultipleLinks, pageJson, guaranteedSourceLink)
+local function sendPartitionedImages(self, filestbl, pageJson)
   local msgs = {}
   local partitionedFilestbl = {}
   for index, file in ipairs(filestbl)  do
     table.insert(partitionedFilestbl, file)
     if #partitionedFilestbl == 10 or index == #filestbl then
-      local msg = sendImages(message, partitionedFilestbl, sourceLink, hasMultipleLinks, pageJson, guaranteedSourceLink)
+      local msg = sendImages(self, partitionedFilestbl, pageJson)
       table.insert(msgs, msg)
       partitionedFilestbl = {}
     end
@@ -240,7 +245,7 @@ function SauceSender:sendImageLink()
 
   if hasString(outputLink) then
     if shouldSendBaraagLinks(outputLink) or not outputLink:find(BARAAG_MEDIA) then
-      local msg = sendLink(message, outputLink, hasMultipleLinks and link)
+      local msg = sendLink(self, outputLink)
       if not msg then
         react(message)
         return false
@@ -255,14 +260,14 @@ end
 ---@return boolean success
 ---@return string|nil output
 function SauceSender:downloadSendAndDeleteImages()
-  local message, gallerydl, hasMultipleLinks = self._message, self._gallerydl, self._multipleLinks
+  local message, gallerydl = self._message, self._gallerydl
   local sourceLink = gallerydl.link
   local id = message.channel.id
   local okMsgs = {}
   local msg = {}
   local wholeFilestbl, pageJson, output
 
-  if parser.isTwitter(sourceLink) then
+  if gallerydl.linkParser:isTwitter(sourceLink) then
     if not message.embed then
       --if not clock:waitFor("messageUpdate", 5000) then
         wholeFilestbl, output = gallerydl:downloadImage()
@@ -279,12 +284,12 @@ function SauceSender:downloadSendAndDeleteImages()
   end
 
   if #wholeFilestbl > 10 then
-    local msgs = sendPartitionedImages(message, wholeFilestbl, sourceLink, hasMultipleLinks, pageJson, sourceLink)
+    local msgs = sendPartitionedImages(self, wholeFilestbl, pageJson)
     for _, returnedMsg in ipairs(msgs) do
       table.insert(okMsgs, returnedMsg)
     end
   else
-    msg = sendImages(message, wholeFilestbl, sourceLink, hasMultipleLinks, pageJson, sourceLink)
+    msg = sendImages(self, wholeFilestbl, pageJson)
     table.insert(okMsgs, msg)
   end
 
