@@ -108,7 +108,8 @@ local function tsihClock(interaction, fileType)
 end
 
 function M.sendAllTOC(client)
-  local idTable = dataManager:readData(false, "tsihoclockids")
+  dataManager.key = "tsihoclockids"
+  local idTable = dataManager:readData()
   local total = 0
 
   if not idTable then
