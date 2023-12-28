@@ -30,7 +30,7 @@ function M.sign(interaction)
   return true
 end
 
-function M.remove(interaction)
+function M.unsign(interaction)
   dataManager.key = "tsihoclockids"
 
   local id = interaction.channel.id

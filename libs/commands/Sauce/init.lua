@@ -125,12 +125,15 @@ function Sauce:executeSlashCommand()
       end
     end
     limitHandler.setSauceLimitOnServer(interaction, args.global)
-  else
+    interaction:reply(string.format("I will now send up to %s images around this server nanora!", args.global.limit))
+  elseif args.channel then
     limitHandler.setSauceLimitOnChannel(interaction, args.channel)
+    interaction:reply(string.format("I will now send up to %s images in this channel nanora!", args.channel.limit))
   end
 end
 
 function Sauce.getSlashCommand(tools)
+  --TODO: config deletion/reset
   return tools.slashCommand("sauce", "Sets a limit for images I send nanora!")
     :addOption(
       tools.subCommand("channel", "Sets a limit for this channel only nanora!")

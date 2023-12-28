@@ -69,9 +69,9 @@ function TsihOClock:executeSlashCommand()
       interaction:reply("Room is already signed for Tsih O'Clock!")
     end
 
-  elseif commandName == "remove" then
+  elseif commandName == "unsign" then
 
-    if idHandler.remove(interaction, format) then
+    if idHandler.unsign(interaction, format) then
       interaction:reply("B-but this room isn't even signed up nora!")
     else
       interaction:reply("Ugeeeh! You won't be seeing my artworks here anymore nanora!")

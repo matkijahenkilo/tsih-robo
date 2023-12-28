@@ -43,7 +43,7 @@ function RandomEmoji:executeSlashCommand()
     if idHandler.removeServer(interaction.guild.id) then
       interaction:reply("How can I now annoy Nanako in other servers nanora!?")
     else
-      interaction:reply("But your server is not even saved nanora!", true)
+      interaction:reply("But this server is not even saved nanora!", true)
     end
   end
 end
