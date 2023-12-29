@@ -114,9 +114,9 @@ end)
 clock:on("hour", function(now)
   if now.hour == 21 then
     client:info("Tsih O'Clock!")
-    local cmd = commandsTable["tsihoclock"]
+    local cmd = commandsTable["tsihoclock"](nil, client, nil)
     local ok, err = pcall(cmd.executeWithTimer, cmd)
-    if not ok then client:error(err) end
+    stackTrace:log(nil, ok, err)
   end
 end)
 
