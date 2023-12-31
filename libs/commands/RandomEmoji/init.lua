@@ -1,8 +1,9 @@
 local idHandler = require("./idHandler")
-local Command = require("utils").Command
+local utils = require("utils")
+local Command = utils.Command
+local PermissionParser = utils.PermissionParser
 local discordia = require("discordia")
-local logger = discordia.Logger(3, "%F %T", "randomemoji.log")
-local permissionsEnum = discordia.enums.permission
+local logger = discordia.Logger(3, "%F %T", "RandomEmoji.log")
 
 local RandomEmoji = discordia.class("RandomEmoji", Command)
 
@@ -18,7 +19,7 @@ local function getRandomServer(client)
 end
 
 function RandomEmoji.getSlashCommand(tools)
-  return tools.slashCommand("randomemoji", "Do you allow me to use this server's emojis to randomly react messages nora? ")
+  return tools.slashCommand("RandomEmoji", "Do you allow me to use this server's emojis to randomly react messages nora? ")
     :addOption(
       tools.boolean("allow", "If you set true, I'll be able to randomly use your server's emojis nora! Otherwise I'll not!")
       :setRequired(true)
@@ -27,9 +28,15 @@ end
 
 function RandomEmoji:executeSlashCommand()
   local interaction, args = self._message, self._args
+  local pp = PermissionParser(interaction, self._client)
 
-  if not interaction.member:hasPermission(interaction.channel, permissionsEnum.administrator) then
-    interaction:reply("Only the server's administrator can use this command nanora!", true)
+  if pp:unavailableGuild() then
+    interaction:reply(pp.replies.lackingGuild, true)
+    return
+  end
+
+  if not pp:admin() then
+    interaction:reply(pp.replies.lackingAdmin, true)
     return
   end
 
@@ -58,7 +65,7 @@ function RandomEmoji:execute()
     repeat
       guild, id = getRandomServer(client)
       if limit >= 100 then
-        logger:log(2, "randomemoji : fetch limit hit 100. Last guild id fetched: %s", id)
+        logger:log(2, "RandomEmoji : fetch limit hit 100. Last guild id fetched: %s", id)
         return
       end
       limit = limit + 1
@@ -69,12 +76,12 @@ function RandomEmoji:execute()
   local ok, err = message:addReaction(emoji)
 
   if ok then
-    logger:log(3, "randomemoji : sent emoji '%s' after %s retries",
+    logger:log(3, "RandomEmoji : sent emoji '%s' after %s retries",
       emoji.name,
       limit
     )
   else
-    logger:log(1, "randomemoji : Failed to send emoji '%s' - %s", emoji.name, err)
+    logger:log(1, "RandomEmoji : Failed to send emoji '%s' - %s", emoji.name, err)
   end
 end
 

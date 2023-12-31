@@ -18,7 +18,8 @@ function PermissionParser:__init(message, client)
   self._client = client
 end
 
-function PermissionParser:guild()
+---If guild is unavailable, it returns true.
+function PermissionParser:unavailableGuild()
   return self._message.guild.unavailable
 end
 

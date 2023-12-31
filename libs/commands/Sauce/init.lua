@@ -7,7 +7,7 @@ local timer = require("timer")
 local utils = require("utils")
 local StackTrace = utils.StackTrace
 local Command = utils.Command
-local permissionsEnum = discordia.enums.permission
+local PermissionsParser = utils.PermissionParser
 discordia.extensions()
 
 local Sauce = discordia.class("Sauce", Command)
@@ -110,19 +110,22 @@ end
 
 function Sauce:executeSlashCommand()
   local interaction, args = self._message, self._args
-  if not interaction.member:hasPermission(interaction.channel, permissionsEnum.manageMessages) then
-    if self._client.owner.id ~= self._message.user.id then
-      interaction:reply("You're either not the not the bot's owner or you are missing permissions to `manage messages` nanora!", true)
-      return
-    end
+  local pp = PermissionsParser(interaction, self._client)
+
+  if pp:unavailableGuild() then
+    interaction:reply(pp.replies.lackingGuild, true)
+    return
+  end
+
+  if not pp:manageMessages() or not pp:owner() then
+    interaction:reply(pp.replies.lackingManageMessagesOrOwner, true)
+    return
   end
 
   if args.global then
-    if not interaction.member:hasPermission(interaction.channel, permissionsEnum.administrator) then
-      if self._client.owner.id ~= self._message.user.id then
-        interaction:reply("Only the server's administrator and the bot's owner can use this command nanora!", true)
-        return
-      end
+    if not pp:admin() or not pp:owner() then
+      interaction:reply(pp.replies.lackingAdminOrOwner, true)
+      return
     end
     limitHandler.setSauceLimitOnServer(interaction, args.global)
     interaction:reply(string.format("I will now send up to %s images around this server nanora!", args.global.limit))

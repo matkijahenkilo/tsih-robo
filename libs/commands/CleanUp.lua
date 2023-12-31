@@ -1,5 +1,7 @@
 local discordia = require("discordia")
-local Command = require("utils").Command
+local utils = require("utils")
+local Command = utils.Command
+local PermissionsParser = utils.PermissionParser
 
 local CleanUp = discordia.class("CleanUp", Command)
 
@@ -20,6 +22,12 @@ end
 function CleanUp:executeSlashCommand()
   local interaction, client, args = self._message, self._client, self._args
   local limit = args.limit
+  local pp = PermissionsParser(interaction, client)
+
+  if not pp:manageMessages() or not pp:owner() then
+    interaction:reply(pp.replies.lackingAdminOrOwner, true)
+    return
+  end
 
   interaction:reply(string.format("Deleting my last %s messages nanora!", limit), true)
 

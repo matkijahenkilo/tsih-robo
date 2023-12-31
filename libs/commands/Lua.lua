@@ -1,5 +1,7 @@
 local pp = require('pretty-print')
-local Command = require("utils").Command
+local utils = require("utils")
+local Command = utils.Command
+local PermissionParser = utils.PermissionParser
 
 local Lua = require("discordia").class("Lua", Command)
 
@@ -40,9 +42,10 @@ end
 -- https://github.com/SinisterRectus/Discordia/wiki/Executing-Lua-with-your-bot
 function Lua:executeSlashCommand()
   local interaction, client, args = self._message, self._client, self._args
+  local permparser = PermissionParser(interaction, client)
 
-  if client.owner.id ~= interaction.user.id then
-    interaction:reply("Only my owner can run this command nora.", true)
+  if not permparser:owner() then
+    interaction:reply(permparser.replies.lackingOwner, true)
     return
   end
 

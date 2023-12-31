@@ -2,8 +2,9 @@ local idHandler = require("./idHandler")
 local tsihSender = require("./tsihSender")
 local counterHandler = require("./counterHandler")
 local discordia = require("discordia")
-local Command = require("utils").Command
-local permissionsEnum = discordia.enums.permission
+local utils = require("utils")
+local Command = utils.Command
+local PermissionsParser = utils.PermissionParser
 local TsihOClock = discordia.class("TsihOClock", Command)
 
 function TsihOClock:__init(message, client, args, command)
@@ -34,14 +35,15 @@ end
 
 function TsihOClock:executeSlashCommand()
   local interaction, command, args, client = self._message, self._command, self._args, self._client
+  local pp = PermissionsParser(interaction, client)
 
-  if not interaction.guild then
-    interaction:reply("This function only works within servers nanora!", true)
+  if pp:unavailableGuild() then
+    interaction:reply(pp.replies.lackingGuild, true)
     return
   end
 
-  if not interaction.member:hasPermission(interaction.channel, permissionsEnum.administrator) and not args.manual then
-    interaction:reply("Only the server's administrator can use this command nanora!", true)
+  if not pp:admin() and not args.manual then
+    interaction:reply(pp.replies.lackingAdmin, true)
     return
   end
 
@@ -53,7 +55,7 @@ function TsihOClock:executeSlashCommand()
 
   if commandName == "auto" then
 
-    if client.owner.id == interaction.user.id then
+    if pp:owner() then
       interaction:reply("Oki nanora!", true)
       counterHandler.incrementTsihOClockCounter()
       tsihSender.sendAllTOC(client)

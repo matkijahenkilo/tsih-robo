@@ -1,6 +1,7 @@
 local discordia = require("discordia")
 local utils = require("utils")
 local Command = utils.Command
+local PermissionParser = utils.PermissionParser
 local dataManager = utils.DataManager("RoleManager")
 local color = discordia.Color()
 
@@ -136,9 +137,10 @@ end
 
 function RoleManager:executeSlashCommand()
   local interaction, client, args, command = self._message, self._client, self._args, self._command
+  local pp = PermissionParser(interaction, client)
 
-  if not interaction.guild then
-    interaction:reply("This isn't a server nanola,,,,,", true)
+  if pp:unavailableGuild() then
+    interaction:reply(pp.replies.lackingGuild, true)
     return
   end
 
