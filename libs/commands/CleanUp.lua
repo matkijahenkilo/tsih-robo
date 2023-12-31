@@ -24,6 +24,11 @@ function CleanUp:executeSlashCommand()
   local limit = args.limit
   local pp = PermissionsParser(interaction, client)
 
+  if pp:unavailableGuild() then
+    interaction:reply(pp.replies.lackingGuild, true)
+    return
+  end
+
   if not pp:manageMessages() or not pp:owner() then
     interaction:reply(pp.replies.lackingAdminOrOwner, true)
     return

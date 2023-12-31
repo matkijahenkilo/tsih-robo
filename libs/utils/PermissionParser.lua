@@ -18,9 +18,10 @@ function PermissionParser:__init(message, client)
   self._client = client
 end
 
----If guild is unavailable, it returns true.
+---If guild is unavailable or does not exist, it returns true.
 function PermissionParser:unavailableGuild()
-  return self._message.guild.unavailable
+  local guild = self._message.guild
+  return guild and guild.unavailable or true
 end
 
 function PermissionParser:owner()
@@ -28,10 +29,12 @@ function PermissionParser:owner()
 end
 
 function PermissionParser:admin()
+  if not self._message.member then return true end
   return self._message.member:hasPermission(self._message.channel, permissionsEnum.administrator)
 end
 
 function PermissionParser:manageMessages()
+  if not self._message.member then return true end
   return self._message.member:hasPermission(self._message.channel, permissionsEnum.manageMessages)
 end
 
