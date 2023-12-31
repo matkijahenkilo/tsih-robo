@@ -21,7 +21,7 @@ end
 ---If guild is unavailable or does not exist, it returns true.
 function PermissionParser:unavailableGuild()
   local guild = self._message.guild
-  return guild and guild.unavailable or true
+  return not (guild and not guild.unavailable)
 end
 
 function PermissionParser:owner()
