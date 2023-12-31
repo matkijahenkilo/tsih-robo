@@ -92,6 +92,7 @@ function Sauce:executeMessageCommand()
   local interaction = self._message
   if hasHttps(previousMessage.content) then
     coroutine.wrap(function ()
+      interaction:reply("Sending images of a message's links nanora...", true)
       previousMessage:addReaction('🆗')
       timer.sleep(2000)
       previousMessage:removeReaction('🆗')

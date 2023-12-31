@@ -32,7 +32,7 @@ function CleanUp:executeMessageCommand()
     return
   end
 
-  interaction:reply("Deleting this really quick nora...~")
+  interaction:reply("Ogei, deleting this really quick nora...~", true)
   oldMessage:delete()
 end
 
