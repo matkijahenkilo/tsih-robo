@@ -47,7 +47,7 @@ function CleanUp:executeSlashCommand()
   end
 
   if not pp:manageMessages() or not pp:owner() then
-    interaction:reply(pp.replies.lackingAdminOrOwner, true)
+    interaction:reply(pp.replies.lackingManageMessagesOrOwner, true)
     return
   end
 

@@ -8,8 +8,8 @@ local PermissionParser = discordia.class("PermissionParser")
 PermissionParser.replies = enums.enum {
   lackingGuild = "You are not currently in a server nanora.",
   lackingOwner = "Only my owner can use this command nora. (￣y▽,￣)╭",
-  lackingAdminOrOwner = "Only the server's administrator and the bot's owner can use this command nanora!",
-  lackingManageMessagesOrOwner = "You're either not the bot's owner or you are missing permissions to manage messages nanora!",
+  lackingAdminOrOwner = "Only the server's administrator and my owner can use this command nanora!",
+  lackingManageMessagesOrOwner = "Either you aren't my owner or you don't have permission to manage messages nanora!",
   lackingAdmin = "Only the server's administrator can use this command nanora!",
   lackingManageMessages = "You are missing permissions to manage messages nanora!",
 }
