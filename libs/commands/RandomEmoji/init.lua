@@ -19,7 +19,7 @@ local function getRandomServer(client)
 end
 
 function RandomEmoji.getSlashCommand(tools)
-  return tools.slashCommand("RandomEmoji", "Do you allow me to use this server's emojis to randomly react messages nora? ")
+  return tools.slashCommand("randomemoji", "Do you allow me to use this server's emojis to randomly react messages nora? ")
     :addOption(
       tools.boolean("allow", "If you set true, I'll be able to randomly use your server's emojis nora! Otherwise I'll not!")
       :setRequired(true)
