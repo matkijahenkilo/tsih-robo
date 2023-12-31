@@ -28,7 +28,7 @@ local function initializeCommands()
   client:info("Bot was opted to reset all global commands~")
   local i, j = 1, 1
   for commandId in pairs(client:getGlobalApplicationCommands()) do
-    client:info("Deleting command #"..i)
+    client:info("Deleting command #%s", i)
     client:deleteGlobalApplicationCommand(commandId)
     i = i + 1
   end
@@ -38,12 +38,12 @@ local function initializeCommands()
   i = 1
   for _, command in pairs(commandsTable) do
     if command.getSlashCommand then
-      client:info(string.format("Creating slash command #%s - %s", i, command.__name))
+      client:info("Creating slash command #%s - %s", i, command.__name)
       client:createGlobalApplicationCommand(command.getSlashCommand(tools))
       i = i + 1
     end
     if command.getMessageCommand then
-      client:info(string.format("Creating message command #%s - %s", i, command.__name))
+      client:info("Creating message command #%s - %s", i, command.__name)
       client:createGlobalApplicationCommand(command.getMessageCommand(tools))
       j = j + 1
     end
@@ -72,8 +72,8 @@ end
 
 
 client:on("ready", function()
-  client:info("I'm currently in " .. #client.guilds .. " servers nanora!")
-  for _, guild in pairs(client.guilds) do client:info(guild.id .. ' ' .. guild.name) end
+  client:info("I'm currently in %s servers nanora!", #client.guilds)
+  for _, guild in pairs(client.guilds) do client:info('%s %s', guild.id, guild.name) end
 
   clock:start(true)
   client:setActivity(statusTable[math.random(#statusTable)])
@@ -114,7 +114,7 @@ end)
 clock:on("hour", function(now)
   if now.hour == 21 then
     client:info("Tsih O'Clock!")
-    local cmd = commandsTable["tsihoclock"](nil, client, nil)
+    local cmd = commandsTable["tsihoclock"](nil, client)
     local ok, err = pcall(cmd.executeWithTimer, cmd)
     stackTrace:log(nil, ok, err)
   end

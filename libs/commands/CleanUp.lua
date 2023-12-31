@@ -5,8 +5,9 @@ local PermissionsParser = utils.PermissionParser
 
 local CleanUp = discordia.class("CleanUp", Command)
 
-function CleanUp:__init(message, client, args)
+function CleanUp:__init(message, client, args, oldMessage)
   Command.__init(self, message, client, args)
+  self._oldMessage = oldMessage
 end
 
 function CleanUp.getSlashCommand(tools)
@@ -17,6 +18,22 @@ function CleanUp.getSlashCommand(tools)
         :setMaxValue(100)
         :setRequired(true)
     )
+end
+
+function CleanUp.getMessageCommand(tools)
+  return tools.messageCommand("cleanup")
+end
+
+function CleanUp:executeMessageCommand()
+  local interaction, client, oldMessage = self._message, self._client, self._oldMessage
+
+  if client.user.id ~= oldMessage.author.id then
+    interaction:reply("I will only delete my own messages nanora.", true)
+    return
+  end
+
+  interaction:reply("Deleting this really quick nora...~")
+  oldMessage:delete()
 end
 
 function CleanUp:executeSlashCommand()
