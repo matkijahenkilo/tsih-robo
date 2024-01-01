@@ -137,7 +137,7 @@ local function convertFiles(tbl, oldFormat, newFormat)
   local newFileFormatTbl = {}
   for _, file in ipairs(tbl) do
     if file:find(oldFormat) then
-      local newFile = file:sub(1, #file-#oldFormat)..newFormat
+      local newFile = file:gsub(oldFormat, newFormat)
       spawn("ffmpeg", {
         args = { "-i", file, newFile }
       }).waitExit()
@@ -197,7 +197,7 @@ function Gallerydl:downloadImage()
   filestbl, err = filterNilFiles(filestbl)
   filestbl, err = filterLargeFiles(filestbl)
   filestbl = replaceSlash(filestbl)
-  --filestbl = convertFiles(filestbl, ".mp4", ".gif")
+  filestbl = convertFiles(filestbl, ".webp", ".png")
 
   stopwatch:stop()
 
