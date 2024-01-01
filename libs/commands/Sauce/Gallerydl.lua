@@ -126,26 +126,28 @@ local function replaceSlash(t)
   return t
 end
 
----Converts a table of files into a new format.
+---Converts a table of files into a new format using ffmpeg, if possible.
 ---Returns the same inputed table if no changes were made.
 ---Formats should be named as ".mp4", ".gif" etc.
 ---@param tbl table
 ---@param oldFormat string
 ---@param newFormat string
----@return table newTbl
+---@return table ret
 local function convertFiles(tbl, oldFormat, newFormat)
-  local newFileFormatTbl = {}
-  for _, file in ipairs(tbl) do
+  local ret = table.copy(tbl)
+
+  for i, file in ipairs(tbl) do
     if file:find(oldFormat) then
       local newFile = file:gsub(oldFormat, newFormat)
       spawn("ffmpeg", {
         args = { "-i", file, newFile }
       }).waitExit()
       fs.unlinkSync(file)
-      table.insert(newFileFormatTbl, newFile)
+      ret[i] = newFile
     end
   end
-  return newFileFormatTbl[1] and newFileFormatTbl or tbl
+
+  return ret
 end
 
 
