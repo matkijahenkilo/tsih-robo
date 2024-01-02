@@ -118,15 +118,19 @@ function Sauce:executeSlashCommand()
     return
   end
 
-  if not pp:manageMessages() or not pp:owner() then
-    interaction:reply(pp.replies.lackingManageMessagesOrOwner, true)
-    return
+  if not pp:manageMessages() then
+    if not pp:owner() then
+      interaction:reply(pp.replies.lackingManageMessagesOrOwner, true)
+      return
+    end
   end
 
   if args.global then
-    if not pp:admin() or not pp:owner() then
-      interaction:reply(pp.replies.lackingAdminOrOwner, true)
-      return
+    if not pp:admin() then
+      if not pp:owner() then
+        interaction:reply(pp.replies.lackingAdminOrOwner, true)
+        return
+      end
     end
     limitHandler.setSauceLimitOnServer(interaction, args.global)
     interaction:reply(string.format("I will now send up to %s images around this server nanora!", args.global.limit))

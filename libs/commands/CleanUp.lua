@@ -46,9 +46,11 @@ function CleanUp:executeSlashCommand()
     return
   end
 
-  if not pp:manageMessages() or not pp:owner() then
-    interaction:reply(pp.replies.lackingManageMessagesOrOwner, true)
-    return
+  if not pp:manageMessages() then
+    if not pp:owner() then
+      interaction:reply(pp.replies.lackingManageMessagesOrOwner, true)
+      return
+    end
   end
 
   interaction:reply(string.format("Deleting my last %s messages nanora!", limit), true)
