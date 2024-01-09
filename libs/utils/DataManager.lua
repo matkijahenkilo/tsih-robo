@@ -57,6 +57,11 @@ function DataManager:writeData(v)
     t = {}
   end
 
+  if not t[n] then
+    t[n] = {}
+    fs.writeFileSync(STORAGE, json.encode(t))
+  end
+
   if k then
     t[n][k] = v
   else

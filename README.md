@@ -94,7 +94,7 @@ When using `gallery-dl.conf`, be sure to drag it inside tsih-robo folder in case
 This project wouldn't be possible without:
 
 - People that developed gallery-dl, luvit, Discordia API and it's extensions
-- Bilal2453, Ta-noshii, Nameless and other brilliant minds for helping me deal with my stupidity
+- Discordia's brilliant minds for helping me deal with my stupidity
 - Asuran95 and rafaelrc7 for telling me the bot was based and that I should rewrite most of the scripts
 - Ikuse for making incentivising Tsih art to keep the darkness away
 - People that use tsih-robo (and criticised her)
