@@ -1,6 +1,6 @@
 # tsih-robo
 
-**A Discordia-slash bot that uses gallery-dl to fill in badly embeded art websites**
+**A private Discordia-slash bot that uses gallery-dl to fill in badly embeded art websites**
 
 ### Introduction
 
