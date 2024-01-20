@@ -67,7 +67,7 @@ local function sendSauce(self, message, interaction)
         end
 
         local gdl = Gallerydl(parser, message.channel.id, info.limit)
-        local sauceSender = SauceSender(message, gdl, info.multipleLinks)
+        local sauceSender = SauceSender(message, gdl, info.multipleLinks, self._client)
 
         local ok, err
 

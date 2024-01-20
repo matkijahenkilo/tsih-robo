@@ -1,7 +1,6 @@
 local fs = require("fs")
 local discordia = require("discordia")
 local timer = require("timer")
-local clock = discordia.Clock()
 local class = discordia.class
 local format = string.format
 discordia.extensions()
@@ -15,10 +14,11 @@ local SauceSender, get = class("SauceSender")
 ---@param message Message
 ---@param gallerydl Gallerydl
 ---@param multipleLinks boolean
-function SauceSender:__init(message, gallerydl, multipleLinks)
+function SauceSender:__init(message, gallerydl, multipleLinks, client)
   self._message = message
   self._gallerydl = gallerydl
   self._multipleLinks = multipleLinks
+  self._client = client
 end
 
 local failEmojis = {
@@ -260,7 +260,6 @@ end
 ---@return string|nil output
 function SauceSender:downloadSendAndDeleteImages()
   local message, gallerydl = self._message, self._gallerydl
-  local sourceLink = gallerydl.link
   local id = message.channel.id
   local okMsgs = {}
   local msg = {}
@@ -268,10 +267,12 @@ function SauceSender:downloadSendAndDeleteImages()
 
   if gallerydl.linkParser:isTwitter() then
     if not message.embed then
-      --if not clock:waitFor("messageUpdate", 5000) then
+      if not self._client:waitFor("messageUpdate", 5000) then
         wholeFilestbl, output = gallerydl:downloadImage()
         pageJson = gallerydl:getJson()
-      --end
+      end
+    else
+      return true, "Already embeded"
     end
   else
     wholeFilestbl, output = gallerydl:downloadImage()
