@@ -265,14 +265,28 @@ function SauceSender:downloadSendAndDeleteImages()
   local msg = {}
   local wholeFilestbl, pageJson, output
 
+  -- I hate twitter
   if gallerydl.linkParser:isTwitter() then
     if not message.embed then
+      --if doesn't update, download anyway
       if not self._client:waitFor("messageUpdate", 5000) then
         wholeFilestbl, output = gallerydl:downloadImage()
         pageJson = gallerydl:getJson()
+      else
+        --if updates but it's a video, download it
+        if gallerydl.linkParser.isTwitterVideo(message.embed.image.url) then
+          wholeFilestbl, output = gallerydl:downloadImage()
+          pageJson = gallerydl:getJson()
+        end
       end
     else
-      return true, "Already embeded"
+      --if is already embedded and it's a video, download it
+      if gallerydl.linkParser.isTwitterVideo(message.embed.image.url) then
+        wholeFilestbl, output = gallerydl:downloadImage()
+        pageJson = gallerydl:getJson()
+      else
+        return true, "Already embeded"
+      end
     end
   else
     wholeFilestbl, output = gallerydl:downloadImage()

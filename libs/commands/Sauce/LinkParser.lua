@@ -73,6 +73,19 @@ function LinkParser:isTwitter()
   return false
 end
 
+function LinkParser.isTwitterVideo(str)
+  local fuckinghell = {
+    "https://pbs.twimg.com/ext_tw_video_thumb",
+    "https://pbs.twimg.com/amplify_video_thumb"
+  }
+  for _, shit in ipairs(fuckinghell) do
+    if str:find(shit) then
+      return true
+    end
+  end
+  return false
+end
+
 local function removeDuplicates(words)
   local hash = {}
   local newWords = {}
