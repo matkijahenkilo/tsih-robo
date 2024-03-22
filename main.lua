@@ -25,14 +25,6 @@ do
   commandsTable = setmetatable(require("commands"), commandsMetaTable)
 end
 
-local function deleteTempFiles(file)
-  for _, value in ipairs(file) do
-    fs.unlinkSync(value)
-  end
-  local directory = string.format("./temp/%s", dirName)
-  fs.rmdir(directory)
-end
-
 local function initializeCommands()
   client:info("Bot was opted to reset all global commands~")
   local i, j = 1, 1
