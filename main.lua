@@ -4,6 +4,7 @@ local tools         = require("discordia-slash").util.tools()
 local timer         = require("timer")
 local utils         = require("utils")
 local fs            = require("fs")
+local json          = require("json")
 local client        = discordia.Client():useApplicationCommands()
 local clock         = discordia.Clock()
 local statusTable   = utils.statusTable
@@ -131,10 +132,20 @@ clock:on("hour", function(now)
 end)
 
 do
-  local file = io.open("data/token.txt", "r")
-  if not file then error("token.txt not found in ./data/") end
-  local token = file:read("a")
-  file:close()
-  client:run('Bot ' .. token)
+  --[[ config.json structure:
+    [
+      {
+        "name": "main profile",
+        "token": "asd123"
+      },
+      {
+        "name": "fucking test",
+        "token": "fgh456"
+      }
+    ]
+  --]]
+  local bots = json.decode(fs.readFileSync("data/config.json"))
+  local bot = bots[1]
+  client:run('Bot ' .. bot.token)
   if args[2] then initializeCommands() end
 end

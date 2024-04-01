@@ -16,7 +16,6 @@ interaction.lua
 cookies.txt
 *.json
 *.log
-token.txt
 gallery-dl.conf
 NanakosStolenDataBase
 
