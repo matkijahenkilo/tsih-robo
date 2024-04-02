@@ -45,7 +45,7 @@ end
 ---@param interaction Interaction|nil
 local function sendSauce(self, message, interaction)
   local wasCommand = interaction and true or false
-  local parser = LinkParser(message, wasCommand)
+  local parser = LinkParser(message, wasCommand) -- this class sucks, better organize this and other classes as well
   local info = parser:getinfo()
 
   if not info then return end
@@ -60,6 +60,9 @@ local function sendSauce(self, message, interaction)
     if condition(link) then
       coroutine.wrap(function()
 
+        -- if not re-creating the same class again,
+        -- it's instance before the loop will have it's link value replaced over and over again
+        parser = LinkParser(message, wasCommand)
         parser.link = link
 
         if not wasCommand then -- ignore blacklisted links if function call was automated
