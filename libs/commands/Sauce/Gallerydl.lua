@@ -2,6 +2,7 @@ local fs = require("fs")
 local spawn = require("coro-spawn")
 local discordia = require("discordia")
 local logger = discordia.Logger(3, "%F %T", "gallery-dl.log")
+local logLevel = discordia.enums.logLevel
 local json = require("json")
 local format = string.format
 discordia.extensions()
@@ -47,10 +48,10 @@ local function logDownloadedInfo(link, files, stopwatch, wasDownloaded)
   local msg = ""
   if wasDownloaded then
     msg = "Gallerydl : %s files from %s = %.2fmb. Took %.2f seconds"
-    logger:log(3, msg, #files, link, mb, time:toSeconds())
+    logger:log(logLevel.info, msg, #files, link, mb, time:toSeconds())
   else
     msg = "Gallerydl : Got links from %s. Took %.2f seconds"
-    logger:log(3, msg, link, mb, time:toSeconds())
+    logger:log(logLevel.info, msg, link, mb, time:toSeconds())
   end
 end
 
@@ -82,9 +83,10 @@ local function filterLinks(links)
 end
 
 ---@return string | nil stdout
+---@return string | nil stderr
 local function readProcess(child)
   child:waitExit()
-  return child.stdout.read()
+  return child.stdout.read(), child.stderr.read()
 end
 
 local function fillNewTable(t)
@@ -153,8 +155,11 @@ end
 
 ---@return table | nil pageJson
 function Gallerydl:getJson()
-  local stdout = readProcess(spawn("gallery-dl", { args = { "-j", "--cookies", "cookies.txt", self._link } }))
-  if not stdout then return end
+  local stdout, stderr = readProcess(spawn("gallery-dl", { args = { "-j", "--cookies", "cookies.txt", self._link } }))
+  if not stdout then
+    logger:log(logLevel.error, "Gallerydl : Failed to fetch Twitter Json: %s", stderr)
+    return
+  end
   local pageJson = json.decode(stdout)
   if not pageJson or not pageJson[1] then return end
   return pageJson[#pageJson][3].author and pageJson or nil
@@ -170,7 +175,7 @@ function Gallerydl:downloadImage()
   local id = self._id
   local limit = self._limit
 
-  logger:log(3, "Gallerydl : Downloading images from %s ...", link)
+  logger:log(logLevel.info, "Gallerydl : Downloading images from %s ...", link)
 
   if not id then
     return error("Gallerydl : No id was set")
@@ -191,11 +196,14 @@ function Gallerydl:downloadImage()
 
   if not child then return nil end
 
-  local outputstr = readProcess(child)
-  if not outputstr or outputstr == '' then
-    return error(format("Gallerydl : Couldn't get anything from `%s`, reason: %s", link, outputstr))
+  local stdout, stderr = readProcess(child)
+  if not stdout or stdout == '' then
+    return error(format("Gallerydl : Couldn't get anything from `%s`, reason: %s",
+      link,
+      stderr
+    ))
   end
-  local filestbl, err = getCleanedTable(outputstr)
+  local filestbl, err = getCleanedTable(stdout)
   filestbl, err = filterNilFiles(filestbl)
   filestbl, err = filterLargeFiles(filestbl)
   filestbl = replaceSlash(filestbl)
@@ -204,11 +212,11 @@ function Gallerydl:downloadImage()
   stopwatch:stop()
 
   if isEmpty(filestbl) then
-    outputstr = outputstr:gsub("\n", "")
+    stdout = stdout:gsub("\n", "")
     return error(format("Gallerydl : Could not download files from `%s` nanora!\nreason: %s\nfile(s): `%s`",
       link,
       err,
-      outputstr
+      stderr
     ))
   end
 
@@ -238,22 +246,22 @@ function Gallerydl:getLink()
     }
   })
 
-  local outputstr = readProcess(child)
-  if not outputstr then
+  local stdout, stderr = readProcess(child)
+  if not stdout then
     return "", error(format(("Gallerydl : Could not get anything from '%s', reason: '%s'"),
       link,
-      outputstr
+      stderr
     ))
   end
 
-  local links = filterLinks(outputstr)
+  local links = filterLinks(stdout)
 
   stopwatch:stop()
   if isEmpty(links) then
     if not link:find(BARAAG_LINK) then
       return "", error(format(("Gallerydl : Could not get links from '%s', reason: '%s'"),
         link,
-        outputstr
+        stderr
       ))
     end
   end
