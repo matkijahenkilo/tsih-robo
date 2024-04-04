@@ -165,9 +165,10 @@ function Gallerydl:getJson()
   return pageJson[#pageJson][3].author and pageJson or nil
 end
 
+---@param isPersistent boolean 
 ---@return table | nil files
 ---@return string | nil gallerydlOutput
-function Gallerydl:downloadImage()
+function Gallerydl:downloadImage(isPersistent)
   local stopwatch = discordia.Stopwatch()
 
   local parser = self._linkParser
@@ -185,14 +186,25 @@ function Gallerydl:downloadImage()
     return error(format("Gallerydl : Ignored a Twitter profile to avoid spam (%s)", link))
   end
 
-  local child = spawn("gallery-dl", {
+  local args
+
+  if isPersistent then
     args = {
       "--cookies", "cookies.txt",
       "--range", "1-"..limit, "--ugoira-conv",
       "-D", "./temp/"..id,
       link
     }
-  })
+  else
+    args = {
+      "--cookies", "cookies.txt",
+      "--range", "1-"..limit, "--ugoira-conv",
+      "-D", "./temp/",
+      link
+    }
+  end
+
+  local child = spawn("gallery-dl", { args = args })
 
   if not child then return nil end
 

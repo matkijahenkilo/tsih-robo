@@ -5,6 +5,7 @@ local SauceSender = require("./SauceSender")
 local LinkParser = require("./LinkParser")
 local timer = require("timer")
 local utils = require("utils")
+local persistentDownload = require("data/persistentDownload")
 local StackTrace = utils.StackTrace
 local Command = utils.Command
 local PermissionsParser = utils.PermissionParser
@@ -36,7 +37,7 @@ local function findLinksToSend(sauceSender)
 
   elseif sauceSender.gallerydl.linkParser:linkRequireDownload() then
 
-    sauceSender:downloadSendAndDeleteImages()
+    sauceSender:downloadSendAndDeleteImages(persistentDownload)
 
   end
 end

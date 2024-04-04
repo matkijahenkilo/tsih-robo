@@ -77,13 +77,15 @@ client:on("ready", function()
   client:info("I'm currently in %s servers nanora!", #client.guilds)
   for _, guild in pairs(client.guilds) do client:info('%s %s', guild.id, guild.name) end
 
-  --clear ./temp/ folder completely
-  for _, dir in ipairs(fs.readdirSync("./temp/")) do
-    local fullPath = ("./temp/%s/"):format(dir)
-    for _, file in ipairs(fs.readdirSync(fullPath)) do
-      fs.unlinkSync(fullPath..file)
+  --clear ./temp/ folder completely if data/persistentDownload.lua is returning false
+  if not require("data/persistentDownload") then
+    for _, dir in ipairs(fs.readdirSync("./temp/")) do
+      local fullPath = ("./temp/%s/"):format(dir)
+      for _, file in ipairs(fs.readdirSync(fullPath)) do
+        fs.unlinkSync(fullPath..file)
+      end
+      fs.rmdir(fullPath)
     end
-    fs.rmdir(fullPath)
   end
 
   clock:start(true)

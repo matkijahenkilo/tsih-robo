@@ -256,9 +256,10 @@ function SauceSender:sendImageLink()
 end
 
 ---Downloads files, send them into a channel and deletes them from host after finished.
+---@param isPersistent boolean
 ---@return boolean success
 ---@return string|nil output
-function SauceSender:downloadSendAndDeleteImages()
+function SauceSender:downloadSendAndDeleteImages(isPersistent)
   local message, gallerydl = self._message, self._gallerydl
   local id = message.channel.id
   local okMsgs = {}
@@ -307,7 +308,9 @@ function SauceSender:downloadSendAndDeleteImages()
     table.insert(okMsgs, msg)
   end
 
-  deleteDownloadedImage(wholeFilestbl, id)
+  if not isPersistent then
+    deleteDownloadedImage(wholeFilestbl, id)
+  end
 
   if checkErrors(okMsgs) then
     react(message)
