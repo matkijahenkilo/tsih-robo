@@ -219,7 +219,7 @@ function Gallerydl:downloadImage(isPersistent)
   filestbl, err = filterNilFiles(filestbl)
   filestbl, err = filterLargeFiles(filestbl)
   filestbl = replaceSlash(filestbl)
-  filestbl = convertFiles(filestbl, ".webp", ".png")
+  --filestbl = convertFiles(filestbl, ".webp", ".png") -- replaced to gallery-dl.conf config: "extension-map": { "webp": "png" }
 
   stopwatch:stop()
 
