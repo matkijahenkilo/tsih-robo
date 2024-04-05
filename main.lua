@@ -77,17 +77,6 @@ client:on("ready", function()
   client:info("I'm currently in %s servers nanora!", #client.guilds)
   for _, guild in pairs(client.guilds) do client:info('%s %s', guild.id, guild.name) end
 
-  --clear ./temp/ folder completely if data/persistentDownload.lua is returning false
-  if not require("data/persistentDownload") then
-    for _, dir in ipairs(fs.readdirSync("./temp/")) do
-      local fullPath = ("./temp/%s/"):format(dir)
-      for _, file in ipairs(fs.readdirSync(fullPath)) do
-        fs.unlinkSync(fullPath..file)
-      end
-      fs.rmdir(fullPath)
-    end
-  end
-
   clock:start(true)
   client:setActivity(statusTable[math.random(#statusTable)])
 
@@ -134,6 +123,25 @@ clock:on("hour", function(now)
 end)
 
 do
+  --clear ./temp/ folder completely if ./data/persistentDownload.lua is returning false
+  if not require("data/persistentDownload") then
+    local folder = "./temp/%s/"
+    local tempFolder = fs.readdirSync("./temp/")
+    for _, content in ipairs(tempFolder) do
+      local fullPath = folder:format(content)
+      local thingy = fs.statSync(fullPath)
+      if thingy.type == 'file' then -- rm temp/file
+        fs.unlinkSync(fullPath)
+      elseif thingy.type == 'directory' then -- rm -r temp/folder
+        local subFolder = folder:format(content)
+        for _, file in ipairs(fs.readdirSync(subFolder)) do
+          fs.unlinkSync(subFolder..file)
+        end
+        fs.rmdir(subFolder)
+      end
+    end
+  end
+
   --[[ config.json structure:
     [
       {
