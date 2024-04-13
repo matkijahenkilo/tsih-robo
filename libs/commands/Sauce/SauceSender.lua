@@ -271,26 +271,26 @@ function SauceSender:downloadSendAndDeleteImages(isPersistent)
     if not message.embed then
       --if doesn't update, download anyway
       if not self._client:waitFor("messageUpdate", 5000) then
-        wholeFilestbl, output = gallerydl:downloadImage()
+        wholeFilestbl, output = gallerydl:downloadImage(isPersistent)
         pageJson = gallerydl:getJson()
       else
         --if updates but it's a video or doesn't have an image attached, download it
         if not message.embed.image or gallerydl.linkParser.isTwitterVideo(message.embed.image.url) then
-          wholeFilestbl, output = gallerydl:downloadImage()
+          wholeFilestbl, output = gallerydl:downloadImage(isPersistent)
           pageJson = gallerydl:getJson()
         end
       end
     else
       --if is already embedded and it's a video or doesn't have image, download it
       if not message.embed.image or gallerydl.linkParser.isTwitterVideo(message.embed.image.url) then
-        wholeFilestbl, output = gallerydl:downloadImage()
+        wholeFilestbl, output = gallerydl:downloadImage(isPersistent)
         pageJson = gallerydl:getJson()
       else
         return true, "Already embeded"
       end
     end
   else
-    wholeFilestbl, output = gallerydl:downloadImage()
+    wholeFilestbl, output = gallerydl:downloadImage(isPersistent)
   end
 
   if not wholeFilestbl or not hasFile(wholeFilestbl) then

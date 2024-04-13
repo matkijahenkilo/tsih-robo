@@ -192,14 +192,14 @@ function Gallerydl:downloadImage(isPersistent)
     args = {
       "--cookies", "cookies.txt",
       "--range", "1-"..limit, "--ugoira-conv",
-      "-D", "./temp/"..id,
+      "-D", "./temp/",
       link
     }
   else
     args = {
       "--cookies", "cookies.txt",
       "--range", "1-"..limit, "--ugoira-conv",
-      "-D", "./temp/",
+      "-D", "./temp/"..id,
       link
     }
   end
