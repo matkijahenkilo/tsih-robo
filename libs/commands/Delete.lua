@@ -3,28 +3,28 @@ local utils = require("utils")
 local Command = utils.Command
 local PermissionsParser = utils.PermissionParser
 
-local CleanUp = discordia.class("CleanUp", Command)
+local Delete = discordia.class("Delete", Command)
 
-function CleanUp:__init(message, client, args, oldMessage)
+function Delete:__init(message, client, args, oldMessage)
   Command.__init(self, message, client, args)
   self._oldMessage = oldMessage
 end
 
-function CleanUp.getSlashCommand(tools)
-  return tools.slashCommand("cleanup", "I'll delete my past n messages nanora!")
+function Delete.getSlashCommand(tools)
+  return tools.slashCommand("delete", "I'll delete my past n messages nanora!")
     :addOption(
-      tools.integer("limit", "The number of messages I'll delete! with 1 meaning the last sent on this channel nora.")
+      tools.integer("limit", "The number of messages that I'll delete! With 1 meaning my last message sent on this channel nora.")
         :setMinValue(1)
         :setMaxValue(100)
         :setRequired(true)
     )
 end
 
-function CleanUp.getMessageCommand(tools)
-  return tools.messageCommand("cleanup")
+function Delete.getMessageCommand(tools)
+  return tools.messageCommand("delete")
 end
 
-function CleanUp:executeMessageCommand()
+function Delete:executeMessageCommand()
   local interaction, client, oldMessage = self._message, self._client, self._oldMessage
 
   if client.user.id ~= oldMessage.author.id then
@@ -36,7 +36,7 @@ function CleanUp:executeMessageCommand()
   oldMessage:delete()
 end
 
-function CleanUp:executeSlashCommand()
+function Delete:executeSlashCommand()
   local interaction, client, args = self._message, self._client, self._args
   local limit = args.limit
   local pp = PermissionsParser(interaction, client)
@@ -77,4 +77,4 @@ function CleanUp:executeSlashCommand()
   interaction.channel:bulkDelete(messages)
 end
 
-return CleanUp
+return Delete
