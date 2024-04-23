@@ -28,6 +28,7 @@ return {
   "[Made in Nanako]!",
   "Remember to be patient!",
   "WooooOOOOoooOOOooooooo...~",
+  "I am watching your links nora 👁〰👁",
   "Did you brush your teeth today nora?",
   "Maybe I am pettanko after all... good.",
   "I wonder... What is Nanako studying today?",
