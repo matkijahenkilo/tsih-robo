@@ -22,7 +22,7 @@ function SauceSender:__init(message, gallerydl, multipleLinks, client)
 end
 
 local failEmojis = {
-  "🇳","🇴"
+  "❌"
 }
 
 ---@return boolean|table
@@ -42,7 +42,7 @@ end
 local function react(message)
   coroutine.wrap(function ()
     for _, emoji in ipairs(failEmojis) do message:addReaction(emoji)    end
-    timer.sleep(1000)
+    timer.sleep(2000)
     for _, emoji in ipairs(failEmojis) do message:removeReaction(emoji) end
   end)()
 end
