@@ -90,7 +90,18 @@ client:on("messageCreate", function(message)
     executeCommand("randomemoji", message)
   end
 
-  executeCommand("sauce", message)
+  if message.content:find("tsih pls") then
+    local args = message.content:split(" ")
+    if args[1] == "tsih" and args[2] == "pls" then
+      message.channel:getMessagesBefore(message.id, (args[3] and type(tonumber(args[3])) == "number") and tonumber(args[3]) or 1):forEach(function (msg)
+        local cmd = commandsTable["sauce"](message, client, nil, msg, true)
+        local ok, err = pcall(cmd.executeMessageCommand, cmd)
+        stackTrace:log(interaction, ok, err)
+      end)
+    end
+  else
+    executeCommand("sauce", message)
+  end
 end)
 
 client:on("slashCommand", function(interaction, command, args)

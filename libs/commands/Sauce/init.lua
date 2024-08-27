@@ -13,9 +13,10 @@ discordia.extensions()
 
 local Sauce = discordia.class("Sauce", Command)
 
-function Sauce:__init(message, client, args, previousMsg)
+function Sauce:__init(message, client, args, previousMsg, isFavour)
   Command.__init(self, message, client, args)
   self._previousMsg = previousMsg
+  self._isFavour = isFavour
 end
 
 local function specificLinkCondition(str)
@@ -94,16 +95,27 @@ end
 function Sauce:executeMessageCommand()
   local previousMessage = self._previousMsg
   local interaction = self._message
+  local isFavour = self._isFavour
   if hasHttps(previousMessage.content) then
     coroutine.wrap(function ()
-      interaction:reply("Sending images of a message's links nanora...", true)
+      if not isFavour then
+        interaction:reply("Sending images of a message's links nanora...", true)
+      end
       previousMessage:addReaction('🆗')
       timer.sleep(2000)
       previousMessage:removeReaction('🆗')
+      sendSauce(self, previousMessage, interaction)
     end)()
-    sendSauce(self, previousMessage, interaction)
   else
-    interaction:reply("This message has no links nanora!", true)
+    coroutine.wrap(function ()
+      if isFavour then
+        previousMessage:addReaction('❌')
+        timer.sleep(2000)
+        previousMessage:removeReaction('❌')
+      else
+        interaction:reply("This message has no links nanora!", true)
+      end
+    end)()
   end
 end
 
