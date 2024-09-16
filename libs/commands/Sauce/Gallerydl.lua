@@ -7,7 +7,7 @@ local json = require("json")
 local format = string.format
 discordia.extensions()
 
-local MAX_UPLOAD_LIMIT = 25
+local MAX_UPLOAD_LIMIT = 10
 local BARAAG_LINK = "https://baraag.net/"
 local BARAAG_MEDIA = "media.baraag.net"
 
